@@ -23,7 +23,7 @@ export default function FrontPage() {
       title: "FAQs",
       description: "Frequently Asked Questions and help documentation",
       icon: <HelpCircle className="h-5 w-5" />,
-      href: "/faq",
+      href: "/faqs",
     },
   ]
 
