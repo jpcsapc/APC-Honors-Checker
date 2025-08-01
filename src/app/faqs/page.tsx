@@ -1,14 +1,16 @@
 "use client"
 
 import { Button } from "@/components/ui/button"
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion"
 import { ArrowLeft, HelpCircle } from "lucide-react"
 import Link from "next/link"
-import { useState } from "react"
 
 export default function FAQPage() {
-  const [openItem, setOpenItem] = useState<number | null>(null)
-
   const faqItems = [
     {
       question: "How do I calculate my GPA?",
@@ -52,10 +54,6 @@ export default function FAQPage() {
     }
   ]
 
-  const handleToggle = (index: number) => {
-    setOpenItem(openItem === index ? null : index)
-  }
-
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
@@ -89,17 +87,17 @@ export default function FAQPage() {
 
         {/* FAQ Accordion */}
         <div className="max-w-4xl mx-auto">
-          <Accordion className="w-full">
+          <Accordion
+            type="single"
+            collapsible
+            className="w-full"
+          >
             {faqItems.map((item, index) => (
-              <AccordionItem key={index}>
-                <AccordionTrigger 
-                  className="text-left"
-                  isOpen={openItem === index}
-                  onToggle={() => handleToggle(index)}
-                >
+              <AccordionItem key={index} value={`item-${index}`}>
+                <AccordionTrigger className="text-left">
                   {item.question}
                 </AccordionTrigger>
-                <AccordionContent isOpen={openItem === index} className="text-muted-foreground">
+                <AccordionContent className="text-muted-foreground">
                   {item.answer}
                 </AccordionContent>
               </AccordionItem>
