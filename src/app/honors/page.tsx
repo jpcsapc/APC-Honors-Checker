@@ -1,18 +1,13 @@
 "use client"
-
+import * as React from 'react';
 import { Button } from "@/components/ui/button"
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
 import { ArrowLeft, HelpCircle, Calculator } from "lucide-react"
+import { ToggleLevelSelector } from '../../components/ToggleLevelSelector';
 import Link from "next/link"
-import { useState } from "react"
 
-export default function FAQPage() {
-  const [openItem, setOpenItem] = useState<number | null>(null)
-
-  const handleToggle = (index: number) => {
-    setOpenItem(openItem === index ? null : index)
-  }
-
+export default function HonorsCalcu() {
+  const [level, setLevel] = React.useState('college');
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
@@ -24,7 +19,7 @@ export default function FAQPage() {
                 <ArrowLeft className="h-4 w-4" />
               </Button>
             </Link>
-            <h1 className="text-sm text-muted-foreground">Frequently Asked Questions</h1>
+            <h1 className="text-sm text-muted-foreground">Honors Calculator</h1>
           </div>
         </div>
       </header>
@@ -32,7 +27,7 @@ export default function FAQPage() {
       {/* Main Content */}
       <main className="container mx-auto px-4 py-16">
         {/* Hero Section */}
-        <div className="text-center mb-16">
+        <div className="text-center mb-10">
           <div className="flex justify-center mb-4">
             <Calculator className="h-12 w-12 text-muted-foreground" />
           </div>
@@ -44,6 +39,9 @@ export default function FAQPage() {
           </p>
         </div>
 
+        {/* Toggle Level Selector */}
+        <ToggleLevelSelector value={level} onChange={setLevel} />
+    
         {/* Footer */}
         <footer className="border-t pt-8 mt-16">
           <p className="text-center text-xs text-muted-foreground">
@@ -52,5 +50,5 @@ export default function FAQPage() {
         </footer>
       </main>
     </div>
-  )
-} 
+  );
+}
