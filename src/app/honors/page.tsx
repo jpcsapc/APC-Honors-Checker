@@ -1,9 +1,11 @@
 "use client"
 import * as React from 'react';
 import { Button } from "@/components/ui/button"
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
-import { ArrowLeft, HelpCircle, Calculator } from "lucide-react"
+import { ArrowLeft, Calculator } from "lucide-react"
 import { ToggleLevelSelector } from '../../components/ToggleLevelSelector';
+import { TermTable } from '../../components/TermTable';
+
+
 import Link from "next/link"
 
 export default function HonorsCalcu() {
@@ -41,6 +43,19 @@ export default function HonorsCalcu() {
 
         {/* Toggle Level Selector */}
         <ToggleLevelSelector value={level} onChange={setLevel} />
+
+        {/* GPA Display */}
+        <div className="flex justify-center mt-8 gap-4">
+            <div className="border px-4 py-2 shadow-sm rounded">Current GPA:</div>
+            <div className="border px-4 py-2 shadow-sm rounded">Eligible for Honors:</div>
+        </div>
+
+        {/* Tables */}
+         <div className="grid md:grid-cols-3 gap-4 mt-8 justify-center">
+            <TermTable term="Term 1" />
+            <TermTable term="Term 2" />
+            <TermTable term="Term 3" />
+        </div>
     
         {/* Footer */}
         <footer className="border-t pt-8 mt-16">
