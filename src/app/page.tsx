@@ -77,7 +77,7 @@ export default function FrontPage() {
         {/* Footer */}
         <footer className="border-t pt-8">
           <p className="text-center text-xs text-muted-foreground">
-            Designed for Asia Pacific College (APC) BSIT & Other Courses (c) 2024-25
+            Created by the Developers of JPCS - APC | Edwin Gumba Jr. (SS221) & Marwin John Gonzales (IT241)
           </p>
         </footer>
       </main>
