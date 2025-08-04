@@ -51,7 +51,7 @@ export default function FrontPage() {
         {/* Calculator Cards */}
         <div className="grid md:grid-cols-3 gap-6 mb-16">
           {calculatorCards.map((card, index) => (
-            <Card key={index} className="hover:shadow-md transition-shadow">
+            <Card key={index} className="hover:shadow-md transition-shadow flex flex-col">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2 text-lg">
                   {card.icon}
@@ -59,17 +59,19 @@ export default function FrontPage() {
                 </CardTitle>
               </CardHeader>
 
-              <CardContent className="space-y-4">
+              <CardContent className="flex-1 space-y-4">
                 <p className="text-muted-foreground text-sm leading-relaxed">
                   {card.description}
                 </p>
+              </CardContent>
 
+              <div className="p-6 pt-0">
                 <Link href={card.href}>
                   <Button variant="outline" className="w-full">
                     Get Started
                   </Button>
                 </Link>
-              </CardContent>
+              </div>
             </Card>
           ))}
         </div>
