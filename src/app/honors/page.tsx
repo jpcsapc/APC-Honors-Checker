@@ -8,8 +8,47 @@ import { TermTable } from '../../components/TermTable';
 
 import Link from "next/link"
 
+interface TermStats {
+  gpa: number;
+  totalHonorPoints: number;
+  totalUnits: number;
+}
+
 export default function HonorsCalcu() {
   const [level, setLevel] = React.useState('college');
+  const [termStats, setTermStats] = React.useState<Record<string, TermStats>>({});
+  const [currentGPA, setCurrentGPA] = React.useState("0.00");
+  const [eligibleForHonors, setEligibleForHonors] = React.useState("-");
+
+  const handleStatsChange = (term: string, stats: TermStats) => {
+    setTermStats(prev => ({
+      ...prev,
+      [term]: stats
+    }));
+  };
+
+  const calculateHonors = () => {
+    const terms = Object.values(termStats);
+    
+    if (terms.length === 0) {
+      setCurrentGPA("0.00");
+      setEligibleForHonors("-");
+      return;
+    }
+
+    // Calculate average GPA across all terms
+    const totalGPA = terms.reduce((sum, term) => sum + term.gpa, 0);
+    const averageGPA = totalGPA / terms.length;
+    
+    setCurrentGPA(averageGPA.toFixed(2));
+
+    // Check if eligible for honors (GPA >= 3.0)
+    if (averageGPA >= 3.0) {
+      setEligibleForHonors("Yes");
+    } else {
+      setEligibleForHonors("No");
+    }
+  };
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
@@ -46,15 +85,36 @@ export default function HonorsCalcu() {
 
         {/* GPA Display */}
         <div className="flex justify-center mt-8 gap-4">
-            <div className="border px-4 py-2 shadow-sm rounded">Current GPA: Test</div>
-            <div className="border px-4 py-2 shadow-sm rounded">Eligible for Honors: testing one</div>
+            <div className="border px-4 py-2 shadow-sm rounded">Current GPA: {currentGPA}</div>
+            <div className="border px-4 py-2 shadow-sm rounded">Eligible for Honors: {eligibleForHonors}</div>
         </div>
 
         {/* Tables */}
          <div className="grid md:grid-cols-3 gap-4 mt-8 justify-center">
-            <TermTable term="Term 1" level={level as 'shs' | 'college'} />
-            <TermTable term="Term 2" level={level as 'shs' | 'college'} />
-            <TermTable term="Term 3" level={level as 'shs' | 'college'} />
+            <TermTable 
+              term="Term 1" 
+              level={level as 'shs' | 'college'} 
+              onStatsChange={handleStatsChange}
+            />
+            <TermTable 
+              term="Term 2" 
+              level={level as 'shs' | 'college'} 
+              onStatsChange={handleStatsChange}
+            />
+            <TermTable 
+              term="Term 3" 
+              level={level as 'shs' | 'college'} 
+              onStatsChange={handleStatsChange}
+            />
+        </div>
+
+        <div className="flex justify-center mt-8 gap-4">
+          <Button 
+            onClick={calculateHonors}
+            className="w-1/3 h-15"
+          >
+            Calculate Honors
+          </Button>
         </div>
     
         {/* Footer */}

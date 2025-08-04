@@ -24,9 +24,10 @@ interface SubjectOption {
 interface TermTableProps {
   term: string;
   level: 'shs' | 'college';
+  onStatsChange?: (term: string, stats: { gpa: number; totalHonorPoints: number; totalUnits: number }) => void;
 }
 
-export function TermTable({ term, level }: TermTableProps) {
+export function TermTable({ term, level, onStatsChange }: TermTableProps) {
   const [rows, setRows] = useState<RowData[]>(() => 
     Array(4).fill(null).map(() => ({
       subjectCode: '',
@@ -47,11 +48,17 @@ export function TermTable({ term, level }: TermTableProps) {
     label: code
   }));
 
-  // Function to get a random subject code for placeholder
-  const getRandomSubjectCode = () => {
+  // Generate random subject code for placeholder based on current level
+  const [randomPlaceholder, setRandomPlaceholder] = useState(() => {
     const subjectCodes = Object.keys(getSubjectData());
     return subjectCodes[Math.floor(Math.random() * subjectCodes.length)];
-  };
+  });
+
+  // Update placeholder when level changes
+  useEffect(() => {
+    const subjectCodes = Object.keys(getSubjectData());
+    setRandomPlaceholder(subjectCodes[Math.floor(Math.random() * subjectCodes.length)]);
+  }, [level]);
 
   const updateRow = (index: number, field: keyof RowData, value: string | number) => {
     const newRows = [...rows];
@@ -133,6 +140,13 @@ export function TermTable({ term, level }: TermTableProps) {
 
   const termStats = calculateTermStats();
 
+  // Notify parent component when stats change
+  useEffect(() => {
+    if (onStatsChange) {
+      onStatsChange(term, termStats);
+    }
+  }, [termStats, term, onStatsChange]);
+
   return (
     <Card className="shadow-md min-w-[250px]">
       <CardContent>
@@ -152,7 +166,7 @@ export function TermTable({ term, level }: TermTableProps) {
                 onChange={(option) => handleSubjectCodeChange(i, option)}
                 
                 // Place Holder is some random subject code in the subjectcodelist
-                placeholder={getRandomSubjectCode()}
+                placeholder={randomPlaceholder}
                 isClearable
                 isSearchable
                 className="text-sm"
