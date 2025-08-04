@@ -43,7 +43,7 @@ export default function HonorsCalcu() {
     setCurrentGPA(averageGPA.toFixed(2));
 
     // Check if eligible for honors (GPA >= 3.0)
-    if (averageGPA >= 3.0) {
+    if (averageGPA >= 3.0 && averageGPA <= 4.00) {
       setEligibleForHonors("Yes");
     } else {
       setEligibleForHonors("No");
