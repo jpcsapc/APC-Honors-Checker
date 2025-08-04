@@ -52,9 +52,9 @@ export default function HonorsCalcu() {
 
         {/* Tables */}
          <div className="grid md:grid-cols-3 gap-4 mt-8 justify-center">
-            <TermTable term="Term 1" />
-            <TermTable term="Term 2" />
-            <TermTable term="Term 3" />
+            <TermTable term="Term 1" level={level as 'shs' | 'college'} />
+            <TermTable term="Term 2" level={level as 'shs' | 'college'} />
+            <TermTable term="Term 3" level={level as 'shs' | 'college'} />
         </div>
     
         {/* Footer */}

@@ -3,7 +3,8 @@ import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
 import { useState, useEffect } from 'react';
 import Select from 'react-select';
-import subjectData from '@/lib/subjectData.json';
+import collegeSubjectData from '@/lib/collegeSubjects.json';
+import shsSubjectData from '@/lib/shsSubjects.json';
 
 interface RowData {
   subjectCode: string;
@@ -17,7 +18,12 @@ interface SubjectOption {
   label: string;
 }
 
-export function TermTable({ term }: { term: string }) {
+interface TermTableProps {
+  term: string;
+  level: 'shs' | 'college';
+}
+
+export function TermTable({ term, level }: TermTableProps) {
   const [rows, setRows] = useState<RowData[]>(() => 
     Array(4).fill(null).map(() => ({
       subjectCode: '',
@@ -27,13 +33,20 @@ export function TermTable({ term }: { term: string }) {
     }))
   );
 
-  const subjectOptions: SubjectOption[] = Object.keys(subjectData).map(code => ({
+  // Get the appropriate subject data based on level
+  const getSubjectData = () => {
+    return level === 'college' ? collegeSubjectData : shsSubjectData;
+  };
+
+  // Create options for React Select from subject data
+  const subjectOptions: SubjectOption[] = Object.keys(getSubjectData()).map(code => ({
     value: code,
     label: code
   }));
 
+  // Function to get a random subject code for placeholder
   const getRandomSubjectCode = () => {
-    const subjectCodes = Object.keys(subjectData);
+    const subjectCodes = Object.keys(getSubjectData());
     return subjectCodes[Math.floor(Math.random() * subjectCodes.length)];
   };
 
@@ -44,6 +57,7 @@ export function TermTable({ term }: { term: string }) {
     // So what this does is that it updates the unit of the subject code based on the subject code
     if (field === 'subjectCode' && typeof value === 'string') {
       const subjectCode = value.toUpperCase();
+      const subjectData = getSubjectData();
       const unit = subjectData[subjectCode as keyof typeof subjectData];
       newRows[index].unit = unit || 0;
     }
@@ -59,6 +73,7 @@ export function TermTable({ term }: { term: string }) {
 
   const handleSubjectCodeChange = (index: number, selectedOption: SubjectOption | null) => {
     const subjectCode = selectedOption ? selectedOption.value : '';
+    const subjectData = getSubjectData();
     const unit = selectedOption ? subjectData[selectedOption.value as keyof typeof subjectData] : 0;
     
     const newRows = [...rows];
@@ -72,7 +87,28 @@ export function TermTable({ term }: { term: string }) {
     setRows(newRows);
   };
 
-  
+  // Reset rows when level changes
+  useEffect(() => {
+    setRows(Array(4).fill(null).map(() => ({
+      subjectCode: '',
+      unit: 0,
+      grade: '',
+      honorPoints: 0
+    })));
+  }, [level]);
+
+  // Function to get the display value for unit field
+  const getUnitDisplayValue = (row: RowData) => {
+    if (row.unit) return row.unit.toString();
+    if (row.subjectCode) {
+      const subjectData = getSubjectData();
+      if (!subjectData[row.subjectCode as keyof typeof subjectData]) {
+        return "CODE NOT FOUND";
+      }
+    }
+    return "";
+  };
+
   return (
     <Card className="shadow-md min-w-[250px]">
       <CardContent>
@@ -100,7 +136,7 @@ export function TermTable({ term }: { term: string }) {
             </div>
             <Input 
               placeholder="0" 
-              value={row.unit ? row.unit.toString() : (row.subjectCode && !subjectData[row.subjectCode as keyof typeof subjectData] ? "CODE NOT FOUND" : "")}
+              value={getUnitDisplayValue(row)}
               readOnly
               className="bg-gray-100"
             />
