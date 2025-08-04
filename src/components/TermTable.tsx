@@ -27,11 +27,15 @@ export function TermTable({ term }: { term: string }) {
     }))
   );
 
-  // Create options for React Select from subject data
   const subjectOptions: SubjectOption[] = Object.keys(subjectData).map(code => ({
     value: code,
     label: code
   }));
+
+  const getRandomSubjectCode = () => {
+    const subjectCodes = Object.keys(subjectData);
+    return subjectCodes[Math.floor(Math.random() * subjectCodes.length)];
+  };
 
   const updateRow = (index: number, field: keyof RowData, value: string | number) => {
     const newRows = [...rows];
@@ -86,7 +90,9 @@ export function TermTable({ term }: { term: string }) {
                 options={subjectOptions}
                 value={row.subjectCode ? { value: row.subjectCode, label: row.subjectCode } : null}
                 onChange={(option) => handleSubjectCodeChange(i, option)}
-                placeholder="SHEAPPS"
+                
+                // Place Holder is some random subject code in the subjectcodelist
+                placeholder={getRandomSubjectCode()}
                 isClearable
                 isSearchable
                 className="text-sm"
