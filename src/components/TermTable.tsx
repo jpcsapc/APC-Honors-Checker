@@ -6,6 +6,9 @@ import Select from 'react-select';
 import collegeSubjectData from '@/lib/collegeSubjects.json';
 import shsSubjectData from '@/lib/shsSubjects.json';
 
+
+// WARNING: CONNECTING TOGGLELEVELSELECTOR COMPONENT TO SYNCH WITH SELECTED GRADE IS VIBE CODED.
+
 interface RowData {
   subjectCode: string;
   unit: number;
@@ -109,6 +112,27 @@ export function TermTable({ term, level }: TermTableProps) {
     return "";
   };
 
+  // Calculate GPA and total honor points for the term
+  const calculateTermStats = () => {
+    const validRows = rows.filter(row => row.subjectCode && row.grade && row.unit > 0);
+    
+    if (validRows.length === 0) {
+      return { gpa: 0, totalHonorPoints: 0, totalUnits: 0 };
+    }
+
+    const totalHonorPoints = validRows.reduce((sum, row) => sum + row.honorPoints, 0);
+    const totalUnits = validRows.reduce((sum, row) => sum + row.unit, 0);
+    const gpa = totalUnits > 0 ? totalHonorPoints / totalUnits : 0;
+
+    return {
+      gpa: gpa,
+      totalHonorPoints: totalHonorPoints,
+      totalUnits: totalUnits
+    };
+  };
+
+  const termStats = calculateTermStats();
+
   return (
     <Card className="shadow-md min-w-[250px]">
       <CardContent>
@@ -157,6 +181,16 @@ export function TermTable({ term, level }: TermTableProps) {
             />
           </div>
         ))}
+        
+        {/* Summary Row */}
+        <div className="border-t-2 border-gray-300 mt-4 pt-2">
+          <div className="grid grid-cols-[2fr_0.7fr_1fr_1fr] gap-2 text-sm font-semibold">
+            <span className="text-gray-600">TOTAL</span>
+            <span className="text-gray-600">{termStats.totalUnits}</span>
+            <span className="text-gray-600">GPA: {termStats.gpa.toFixed(2)}</span>
+            <span className="text-gray-600">{termStats.totalHonorPoints.toFixed(2)}</span>
+          </div>
+        </div>
       </CardContent>
     </Card>
   );

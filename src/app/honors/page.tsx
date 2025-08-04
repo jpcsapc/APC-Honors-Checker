@@ -46,8 +46,8 @@ export default function HonorsCalcu() {
 
         {/* GPA Display */}
         <div className="flex justify-center mt-8 gap-4">
-            <div className="border px-4 py-2 shadow-sm rounded">Current GPA:</div>
-            <div className="border px-4 py-2 shadow-sm rounded">Eligible for Honors:</div>
+            <div className="border px-4 py-2 shadow-sm rounded">Current GPA: Test</div>
+            <div className="border px-4 py-2 shadow-sm rounded">Eligible for Honors: testing one</div>
         </div>
 
         {/* Tables */}
