@@ -152,17 +152,18 @@ export function TermTable({ term, level, onStatsChange }: TermTableProps) {
         {rows.map((row, i) => (
           <div key={i} className="grid grid-cols-[2fr_0.7fr_1fr_1fr] gap-2 mb-1">
             <div className="relative">
-              <Select
-                options={subjectOptions}
-                value={row.subjectCode ? { value: row.subjectCode, label: row.subjectCode } : null}
-                onChange={(option) => handleSubjectCodeChange(i, option)}
-                
-                // Placeholder is a consistent subject code based on level
-                placeholder={placeholder}
-                isClearable
-                isSearchable
-                className="text-sm"
-              />
+                             <Select
+                 options={subjectOptions}
+                 value={row.subjectCode ? { value: row.subjectCode, label: row.subjectCode } : null}
+                 onChange={(option) => handleSubjectCodeChange(i, option)}
+                 
+                 // Placeholder is a consistent subject code based on level
+                 placeholder={placeholder}
+                 isClearable
+                 isSearchable
+                 className="text-sm"
+                 instanceId={`${term}-${i}`}
+               />
             </div>
             <Input 
               placeholder="0" 
