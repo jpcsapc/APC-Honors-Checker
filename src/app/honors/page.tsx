@@ -47,8 +47,8 @@ export default function HonorsCalcu() {
     
     // Calculate total R grades across all terms
     const totalRGrades = terms.reduce((sum, term) => sum + term.rGrades, 0);
-    const hasTooManyRs = totalRGrades >= 2; // Maximum 2 R grades allowed (2 or more is too many)
-    
+    const hasTooManyRs = totalRGrades > 2; // Maximum 2 R grades allowed (2 or more is too many)
+
     setCurrentGPA(averageGPA.toFixed(2));
 
     if (!hasEnoughUnits){
