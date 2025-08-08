@@ -96,8 +96,8 @@
   --accent-foreground: oklch(1 0 0);
   --destructive: oklch(0.704 0.191 22.216);
   --destructive-foreground: oklch(1 0 0);
-  --border: oklch(0.15 0 0);
-  --input: oklch(0.15 0 0);
+  --border: oklch(0.8 0 0);
+  --input: oklch(0.8 0 0);
   --ring: oklch(1 0 0);
   --chart-1: oklch(0.488 0.243 264.376);
   --chart-2: oklch(0.696 0.17 162.48);
@@ -110,7 +110,7 @@
   --sidebar-primary-foreground: oklch(0 0 0);
   --sidebar-accent: oklch(0.1 0 0);
   --sidebar-accent-foreground: oklch(1 0 0);
-  --sidebar-border: oklch(0.15 0 0);
+  --sidebar-border: oklch(0.8 0 0);
   --sidebar-ring: oklch(1 0 0);
 }
 
@@ -130,6 +130,54 @@
   
   .animate-accordion-up {
     animation: accordion-up 0.2s ease-out;
+  }
+
+  /* Dark mode button outline improvements */
+  .dark .border {
+    border-color: oklch(0.8 0 0) !important;
+  }
+
+  .dark .border-border {
+    border-color: oklch(0.8 0 0) !important;
+  }
+
+  /* Ensure button outlines are visible in dark mode */
+  .dark button[data-variant="outline"] {
+    border-color: oklch(0.8 0 0) !important;
+  }
+
+  .dark .ring {
+    --tw-ring-color: oklch(1 0 0) !important;
+  }
+
+  /* Additional border improvements for dark mode */
+  .dark .border-t {
+    border-top-color: oklch(0.8 0 0) !important;
+  }
+
+  .dark .border-b {
+    border-bottom-color: oklch(0.8 0 0) !important;
+  }
+
+  .dark .border-l {
+    border-left-color: oklch(0.8 0 0) !important;
+  }
+
+  .dark .border-r {
+    border-right-color: oklch(0.8 0 0) !important;
+  }
+
+  /* Ensure all input borders are visible */
+  .dark input {
+    border-color: oklch(0.8 0 0) !important;
+  }
+
+  .dark textarea {
+    border-color: oklch(0.8 0 0) !important;
+  }
+
+  .dark select {
+    border-color: oklch(0.8 0 0) !important;
   }
 }
 

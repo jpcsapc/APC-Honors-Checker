@@ -9,6 +9,7 @@ import {
 } from "@/components/ui/accordion"
 import { ArrowLeft, HelpCircle } from "lucide-react"
 import Link from "next/link"
+import { ThemeToggle } from "@/components/theme-toggle"
 
 export default function FAQPage() {
   const faqSections = [
@@ -83,13 +84,16 @@ export default function FAQPage() {
       {/* Header */}
       <header className="border-b bg-card">
         <div className="container mx-auto px-4 py-4">
-          <div className="flex items-center gap-4">
-            <Link href="/">
-              <Button variant="ghost" size="sm" className="p-2">
-                <ArrowLeft className="h-4 w-4" />
-              </Button>
-            </Link>
-            <h1 className="text-sm text-muted-foreground">Frequently Asked Questions</h1>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <Link href="/">
+                <Button variant="ghost" size="sm" className="p-2">
+                  <ArrowLeft className="h-4 w-4" />
+                </Button>
+              </Link>
+              <h1 className="text-sm text-muted-foreground">Frequently Asked Questions</h1>
+            </div>
+            <ThemeToggle />
           </div>
         </div>
       </header>

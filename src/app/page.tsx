@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Calculator, Award, HelpCircle } from "lucide-react"
 import Link from "next/link"
+import { ThemeToggle } from "@/components/theme-toggle"
 
 export default function FrontPage() {
   const calculatorCards = [
@@ -31,8 +32,9 @@ export default function FrontPage() {
     <div className="min-h-screen bg-background">
       {/* Header */}
       <header className="border-b bg-card">
-        <div className="container mx-auto px-4 py-4">
-          <h1 className="text-sm text-muted-foreground">Main Page</h1>
+        <div className="container mx-auto px-4 py-4 flex items-center justify-between">
+          <h1 className="text-sm text-muted-foreground">APC Honors Checker</h1>
+          <ThemeToggle />
         </div>
       </header>
 
