@@ -57,7 +57,7 @@ export default function HonorsCalcu() {
     }
 
     if (hasTooManyRs) {
-      setEligibleForHonors("No, Two Rs");
+      setEligibleForHonors("No, more than 2 R grades");
       return;
     }
 
