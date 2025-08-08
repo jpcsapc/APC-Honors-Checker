@@ -12,6 +12,7 @@ interface TermStats {
   gpa: number;
   totalHonorPoints: number;
   totalUnits: number;
+  rGrades: number;
 }
 
 export default function HonorsCalcu() {
@@ -44,6 +45,10 @@ export default function HonorsCalcu() {
     const totalUnits = terms.reduce((sum, term) => sum + term.totalUnits, 0);
     const hasEnoughUnits = totalUnits >= 36; // 36 units required for honors
     
+    // Calculate total R grades across all terms
+    const totalRGrades = terms.reduce((sum, term) => sum + term.rGrades, 0);
+    const hasTooManyRs = totalRGrades >= 2; // Maximum 2 R grades allowed (2 or more is too many)
+    
     setCurrentGPA(averageGPA.toFixed(2));
 
     if (!hasEnoughUnits){
@@ -51,9 +56,15 @@ export default function HonorsCalcu() {
       return;
     }
 
-    console.log("Average GPA:", averageGPA);
-    console.log("Total Units:", totalUnits);
-    console.log(hasEnoughUnits ? "Eligible for honors" : "Not eligible for honors");
+    if (hasTooManyRs) {
+      setEligibleForHonors("No, Two Rs");
+      return;
+    }
+
+    // console.log("Average GPA:", averageGPA);
+    // console.log("Total Units:", totalUnits);
+    // console.log("Total R Grades:", totalRGrades);
+    // console.log(hasEnoughUnits ? "Eligible for honors" : "Not eligible for honors");
 
     if (averageGPA >= 3.0 && averageGPA <= 4.00) {
       setEligibleForHonors("Yes");

@@ -25,7 +25,7 @@ interface SubjectOption {
 interface TermTableProps {
   term: string;
   level: 'shs' | 'college';
-  onStatsChange?: (term: string, stats: { gpa: number; totalHonorPoints: number; totalUnits: number }) => void;
+  onStatsChange?: (term: string, stats: { gpa: number; totalHonorPoints: number; totalUnits: number; rGrades: number }) => void;
 }
 
 export function TermTable({ term, level, onStatsChange }: TermTableProps) {
@@ -65,7 +65,8 @@ export function TermTable({ term, level, onStatsChange }: TermTableProps) {
     }
     
     if (field === 'grade' || field === 'unit') {
-      const grade = parseFloat(newRows[index].grade) || 0;
+      const gradeStr = newRows[index].grade;
+      const grade = gradeStr.toUpperCase() === 'R' ? 0 : parseFloat(gradeStr) || 0;
       const unit = newRows[index].unit;
       newRows[index].honorPoints = grade * unit;
     }
@@ -79,11 +80,13 @@ export function TermTable({ term, level, onStatsChange }: TermTableProps) {
     const unit = selectedOption ? subjectData[selectedOption.value as keyof typeof subjectData] : 0;
     
     const newRows = [...rows];
+    const gradeStr = newRows[index].grade;
+    const grade = gradeStr.toUpperCase() === 'R' ? 0 : parseFloat(gradeStr) || 0;
     newRows[index] = {
       ...newRows[index],
       subjectCode,
       unit,
-      honorPoints: (parseFloat(newRows[index].grade) || 0) * unit
+      honorPoints: grade * unit
     };
     
     setRows(newRows);
@@ -136,17 +139,19 @@ export function TermTable({ term, level, onStatsChange }: TermTableProps) {
     const validRows = rows.filter(row => row.subjectCode && row.grade && row.unit > 0);
     
     if (validRows.length === 0) {
-      return { gpa: 0, totalHonorPoints: 0, totalUnits: 0 };
+      return { gpa: 0, totalHonorPoints: 0, totalUnits: 0, rGrades: 0 };
     }
 
     const totalHonorPoints = validRows.reduce((sum, row) => sum + row.honorPoints, 0);
     const totalUnits = validRows.reduce((sum, row) => sum + row.unit, 0);
     const gpa = totalUnits > 0 ? totalHonorPoints / totalUnits : 0;
+    const rGrades = validRows.filter(row => row.grade.toUpperCase() === 'R').length;
 
     return {
       gpa: gpa,
       totalHonorPoints: totalHonorPoints,
-      totalUnits: totalUnits
+      totalUnits: totalUnits,
+      rGrades: rGrades
     };
   };
 
@@ -194,15 +199,12 @@ export function TermTable({ term, level, onStatsChange }: TermTableProps) {
                 readOnly
                 className="bg-gray-100"
               />
-              <Input 
-                placeholder="1.25" 
-                value={row.grade}
-                onChange={(e) => updateRow(i, 'grade', e.target.value)}
-                type="number"
-                step="0.25"
-                min="1.0"
-                max="4.0"
-              />
+                             <Input 
+                 placeholder="1.25 or R" 
+                 value={row.grade}
+                 onChange={(e) => updateRow(i, 'grade', e.target.value)}
+                 type="text"
+               />
               <Input 
                 placeholder="0.00" 
                 value={row.honorPoints.toFixed(2)}
