@@ -20,12 +20,12 @@ export default function HonorsCalcu() {
   const [currentGPA, setCurrentGPA] = React.useState("0.00");
   const [eligibleForHonors, setEligibleForHonors] = React.useState("-");
 
-  const handleStatsChange = (term: string, stats: TermStats) => {
+  const handleStatsChange = React.useCallback((term: string, stats: TermStats) => {
     setTermStats(prev => ({
       ...prev,
       [term]: stats
     }));
-  };
+  }, []);
 
   const calculateHonors = () => {
     const terms = Object.values(termStats);

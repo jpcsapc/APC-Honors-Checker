@@ -1,4 +1,5 @@
 'use client';
+import * as React from 'react';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
 import { useState, useEffect } from 'react';
@@ -48,17 +49,8 @@ export function TermTable({ term, level, onStatsChange }: TermTableProps) {
     label: code
   }));
 
-  // Generate random subject code for placeholder based on current level
-  const [randomPlaceholder, setRandomPlaceholder] = useState(() => {
-    const subjectCodes = Object.keys(getSubjectData());
-    return subjectCodes[Math.floor(Math.random() * subjectCodes.length)];
-  });
-
-  // Update placeholder when level changes
-  useEffect(() => {
-    const subjectCodes = Object.keys(getSubjectData());
-    setRandomPlaceholder(subjectCodes[Math.floor(Math.random() * subjectCodes.length)]);
-  }, [level]);
+  // Simple static placeholder
+  const placeholder = "Subject";
 
   const updateRow = (index: number, field: keyof RowData, value: string | number) => {
     const newRows = [...rows];
@@ -138,7 +130,7 @@ export function TermTable({ term, level, onStatsChange }: TermTableProps) {
     };
   };
 
-  const termStats = calculateTermStats();
+  const termStats = React.useMemo(() => calculateTermStats(), [rows]);
 
   // Notify parent component when stats change
   useEffect(() => {
@@ -165,8 +157,8 @@ export function TermTable({ term, level, onStatsChange }: TermTableProps) {
                 value={row.subjectCode ? { value: row.subjectCode, label: row.subjectCode } : null}
                 onChange={(option) => handleSubjectCodeChange(i, option)}
                 
-                // Place Holder is some random subject code in the subjectcodelist
-                placeholder={randomPlaceholder}
+                // Placeholder is a consistent subject code based on level
+                placeholder={placeholder}
                 isClearable
                 isSearchable
                 className="text-sm"
