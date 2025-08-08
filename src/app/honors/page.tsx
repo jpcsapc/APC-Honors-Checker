@@ -37,17 +37,30 @@ export default function HonorsCalcu() {
     }
 
     // Calculate average GPA across all terms
-    const totalGPA = terms.reduce((sum, term) => sum + term.gpa, 0);
-    const averageGPA = totalGPA / terms.length;
+    const totalGPA = terms.reduce((sum, term) => sum + term.gpa, 0); // Sum of GPAs
+    const averageGPA = totalGPA / terms.length; // Calculate average GPA
+    
+    // Calculate total units across all terms
+    const totalUnits = terms.reduce((sum, term) => sum + term.totalUnits, 0);
+    const hasEnoughUnits = totalUnits >= 36; // 36 units required for honors
     
     setCurrentGPA(averageGPA.toFixed(2));
 
-    // Check if eligible for honors (GPA >= 3.0)
+    if (!hasEnoughUnits){
+      setEligibleForHonors("No, not enough units");
+      return;
+    }
+
+    console.log("Average GPA:", averageGPA);
+    console.log("Total Units:", totalUnits);
+    console.log(hasEnoughUnits ? "Eligible for honors" : "Not eligible for honors");
+
     if (averageGPA >= 3.0 && averageGPA <= 4.00) {
       setEligibleForHonors("Yes");
     } else {
       setEligibleForHonors("No");
     }
+    
   };
   return (
     <div className="min-h-screen bg-background">
