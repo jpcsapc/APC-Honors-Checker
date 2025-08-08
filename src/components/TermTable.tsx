@@ -30,7 +30,7 @@ interface TermTableProps {
 
 export function TermTable({ term, level, onStatsChange }: TermTableProps) {
   const [rows, setRows] = useState<RowData[]>(() => 
-    Array(8).fill(null).map(() => ({
+    Array(4).fill(null).map(() => ({
       subjectCode: '',
       unit: 0,
       grade: '',
@@ -91,13 +91,33 @@ export function TermTable({ term, level, onStatsChange }: TermTableProps) {
 
   // Reset rows when level changes
   useEffect(() => {
-    setRows(Array(8).fill(null).map(() => ({
+    setRows(Array(4).fill(null).map(() => ({
       subjectCode: '',
       unit: 0,
       grade: '',
       honorPoints: 0
     })));
   }, [level]);
+
+  // Add a new row
+  const addRow = () => {
+    if (rows.length < 10) {
+      setRows([...rows, {
+        subjectCode: '',
+        unit: 0,
+        grade: '',
+        honorPoints: 0
+      }]);
+    }
+  };
+
+  // Remove a row at specific index
+  const removeRow = (index: number) => {
+    if (rows.length > 1) {
+      const newRows = rows.filter((_, i) => i !== index);
+      setRows(newRows);
+    }
+  };
 
   // Function to get the display value for unit field
   const getUnitDisplayValue = (row: RowData) => {
@@ -139,9 +159,9 @@ export function TermTable({ term, level, onStatsChange }: TermTableProps) {
     }
   }, [termStats, term, onStatsChange]);
 
-  return (
-    <Card className="shadow-md min-w-[250px]">
-      <CardContent>
+    return (
+    <Card className="shadow-md min-w-[250px] flex flex-col h-[650 px]">
+      <CardContent className="flex flex-col h-full">
         <h2 className="text-lg font-semibold mb-2">{term}</h2>
         <div className="grid grid-cols-[2fr_0.7fr_1fr_1fr] gap-2 text-sm font-medium mb-2">
           <span>Subject Code</span>
@@ -149,53 +169,80 @@ export function TermTable({ term, level, onStatsChange }: TermTableProps) {
           <span>Grade</span>
           <span>Honor Pts</span>
         </div>
-        {rows.map((row, i) => (
-          <div key={i} className="grid grid-cols-[2fr_0.7fr_1fr_1fr] gap-2 mb-1">
-            <div className="relative">
-                             <Select
-                 options={subjectOptions}
-                 value={row.subjectCode ? { value: row.subjectCode, label: row.subjectCode } : null}
-                 onChange={(option) => handleSubjectCodeChange(i, option)}
-                 
-                 // Placeholder is a consistent subject code based on level
-                 placeholder={placeholder}
-                 isClearable
-                 isSearchable
-                 className="text-sm"
-                 instanceId={`${term}-${i}`}
-               />
-            </div>
-            <Input 
-              placeholder="0" 
-              value={getUnitDisplayValue(row)}
-              readOnly
-              className="bg-gray-100"
-            />
-            <Input 
-              placeholder="1.25" 
-              value={row.grade}
-              onChange={(e) => updateRow(i, 'grade', e.target.value)}
-              type="number"
-              step="0.25"
-              min="1.0"
-              max="4.0"
-            />
-            <Input 
-              placeholder="0.00" 
-              value={row.honorPoints.toFixed(2)}
-              readOnly
-              className="bg-gray-100"
-            />
-          </div>
-        ))}
         
-        {/* Summary Row */}
-        <div className="border-t-2 border-gray-300 mt-4 pt-2">
-          <div className="grid grid-cols-[2fr_0.7fr_1fr_1fr] gap-2 text-sm font-semibold">
-            <span className="text-gray-600">TOTAL</span>
-            <span className="text-gray-600">{termStats.totalUnits}</span>
-            <span className="text-gray-600">GPA: {termStats.gpa.toFixed(2)}</span>
-            <span className="text-gray-600">{termStats.totalHonorPoints.toFixed(2)}</span>
+        {/* Content area */}
+        <div className="flex-1">
+          {rows.map((row, i) => (
+            <div key={i} className="grid grid-cols-[2fr_0.7fr_1fr_1fr_auto] gap-2 mb-1 items-center">
+              <div className="relative">
+                <Select
+                  options={subjectOptions}
+                  value={row.subjectCode ? { value: row.subjectCode, label: row.subjectCode } : null}
+                  onChange={(option) => handleSubjectCodeChange(i, option)}
+                  
+                  // Placeholder is a consistent subject code based on level
+                  placeholder={placeholder}
+                  isClearable
+                  isSearchable
+                  className="text-sm"
+                  instanceId={`${term}-${i}`}
+                />
+              </div>
+              <Input 
+                placeholder="0" 
+                value={getUnitDisplayValue(row)}
+                readOnly
+                className="bg-gray-100"
+              />
+              <Input 
+                placeholder="1.25" 
+                value={row.grade}
+                onChange={(e) => updateRow(i, 'grade', e.target.value)}
+                type="number"
+                step="0.25"
+                min="1.0"
+                max="4.0"
+              />
+              <Input 
+                placeholder="0.00" 
+                value={row.honorPoints.toFixed(2)}
+                readOnly
+                className="bg-gray-100"
+              />
+              <button
+                onClick={() => removeRow(i)}
+                disabled={rows.length <= 1}
+                className="text-red-500 hover:text-red-700 disabled:text-gray-400 disabled:cursor-not-allowed p-1"
+                title="Remove row"
+              >
+                ×
+              </button>
+            </div>
+          ))}
+        </div>
+        
+        {/* Fixed bottom section */}
+        <div className="mt-auto pt-4">
+          {/* Add Row Button */}
+          <div className="flex justify-center mb-4">
+            <button
+              onClick={addRow}
+              disabled={rows.length >= 10}
+              className="text-blue-500 hover:text-blue-700 disabled:text-gray-400 disabled:cursor-not-allowed text-sm font-medium px-3 py-1 border border-blue-300 rounded hover:bg-blue-50 disabled:hover:bg-transparent"
+            >
+              + Add Subject {rows.length >= 10 && "(Max 10)"}
+            </button>
+          </div>
+          
+          {/* Summary Row */}
+          <div className="border-t-2 border-gray-300 pt-2">
+            <div className="grid grid-cols-[2fr_0.7fr_1fr_1fr_auto] gap-2 text-sm font-semibold">
+              <span className="text-gray-600">TOTAL</span>
+              <span className="text-gray-600">{termStats.totalUnits}</span>
+              <span className="text-gray-600">GPA: {termStats.gpa.toFixed(2)}</span>
+              <span className="text-gray-600">{termStats.totalHonorPoints.toFixed(2)}</span>
+              <span></span>
+            </div>
           </div>
         </div>
       </CardContent>
