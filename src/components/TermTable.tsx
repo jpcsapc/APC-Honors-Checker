@@ -30,7 +30,7 @@ interface TermTableProps {
 
 export function TermTable({ term, level, onStatsChange }: TermTableProps) {
   const [rows, setRows] = useState<RowData[]>(() => 
-    Array(4).fill(null).map(() => ({
+    Array(8).fill(null).map(() => ({
       subjectCode: '',
       unit: 0,
       grade: '',
@@ -91,7 +91,7 @@ export function TermTable({ term, level, onStatsChange }: TermTableProps) {
 
   // Reset rows when level changes
   useEffect(() => {
-    setRows(Array(4).fill(null).map(() => ({
+    setRows(Array(8).fill(null).map(() => ({
       subjectCode: '',
       unit: 0,
       grade: '',
