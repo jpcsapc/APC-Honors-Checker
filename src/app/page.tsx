@@ -1,8 +1,6 @@
 "use client"
-
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Calculator, Award, HelpCircle } from "lucide-react"
+import { Card, CardContent } from "@/components/ui/card"
+import { Calculator, Award, HelpCircle, ArrowRight } from "lucide-react"
 import Link from "next/link"
 import { ThemeToggle } from "@/components/theme-toggle"
 
@@ -11,78 +9,76 @@ export default function FrontPage() {
     {
       title: "Honors Calculator",
       description: "Calculate your academic standing and determine honors eligibility",
-      icon: <Award className="h-5 w-5" />,
+      icon: <Award className="h-6 w-6" />,
       href: "/honors",
     },
     {
       title: "Latin Honors Calculator",
       description: "Calculate Latin honors and academic distinctions",
-      icon: <Calculator className="h-5 w-5" />,
+      icon: <Calculator className="h-6 w-6" />,
       href: "/latin-honors",
     },
     {
       title: "FAQs",
       description: "Frequently Asked Questions and help documentation",
-      icon: <HelpCircle className="h-5 w-5" />,
+      icon: <HelpCircle className="h-6 w-6" />,
       href: "/faqs",
     },
   ]
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Header */}
-      <header className="border-b bg-card">
-        <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-          <h1 className="text-sm text-muted-foreground">APC Honors Checker</h1>
+      <header className="border-b border-border/40">
+        <div className="container mx-auto px-6 py-6 flex items-center justify-between">
+          <div className="text-sm font-medium tracking-wide text-primary">APC HONORS CHECKER</div>
           <ThemeToggle />
         </div>
       </header>
 
-      {/* Main Content */}
-      <main className="container mx-auto px-4 py-16">
-        {/* Hero Section */}
-        <div className="text-center mb-16">
-          <h1 className="text-4xl font-normal text-foreground mb-4">
-            Asia Pacific College
-            <br />
-            Grades Calculator
-          </h1>
-          <p className="text-muted-foreground text-lg">calculate and track your academic journey</p>
+      <main className="container mx-auto px-6">
+        <div className="text-center py-24 mb-16">
+          <div className="space-y-6">
+            <h1 className="text-5xl md:text-6xl font-light text-foreground tracking-tight leading-tight">
+              <span className="text-primary">Asia Pacific College</span>
+              <br />
+              <span className="text-foreground/70">Grades Calculator</span>
+            </h1>
+            <div className="w-16 h-px bg-primary/30 mx-auto"></div>
+            <p className="text-muted-foreground text-lg font-light tracking-wide">
+              Calculate and track your academic journey
+            </p>
+          </div>
         </div>
 
-        {/* Calculator Cards */}
-        <div className="grid md:grid-cols-3 gap-6 mb-16">
+        <div className="grid md:grid-cols-3 gap-8 mb-24">
           {calculatorCards.map((card, index) => (
-            <Card key={index} className="hover:shadow-md transition-shadow flex flex-col">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-lg">
-                  {card.icon}
-                  {card.title}
-                </CardTitle>
-              </CardHeader>
+            <Link key={index} href={card.href} className="group">
+              <Card className="h-full border-border/40 hover:border-primary/30 transition-all duration-300 hover:shadow-lg hover:shadow-primary/5 bg-card">
+                <CardContent className="p-8 space-y-6">
+                  <div className="flex items-center justify-between">
+                    <div className="p-3 rounded-full bg-muted group-hover:bg-primary/10 transition-colors">
+                      <div className="text-foreground group-hover:text-primary transition-colors">{card.icon}</div>
+                    </div>
+                    <ArrowRight className="h-4 w-4 text-muted-foreground group-hover:text-primary group-hover:translate-x-1 transition-all" />
+                  </div>
 
-              <CardContent className="flex-1 space-y-4">
-                <p className="text-muted-foreground text-sm leading-relaxed">
-                  {card.description}
-                </p>
-              </CardContent>
-
-              <div className="p-6 pt-0">
-                <Link href={card.href}>
-                  <Button variant="outline" className="w-full">
-                    Get Started
-                  </Button>
-                </Link>
-              </div>
-            </Card>
+                  <div className="space-y-3">
+                    <h3 className="text-xl font-medium text-foreground group-hover:text-primary tracking-tight transition-colors">
+                      {card.title}
+                    </h3>
+                    <p className="text-muted-foreground text-sm leading-relaxed">{card.description}</p>
+                  </div>
+                </CardContent>
+              </Card>
+            </Link>
           ))}
         </div>
 
-        {/* Footer */}
-        <footer className="border-t pt-8">
-          <p className="text-center text-xs text-muted-foreground">
-            Created by the Developers of JPCS - APC | Edwin Gumba Jr. (SS221) & Marwin John Gonzales (IT241)
-          </p>
+        <footer className="border-t border-border/40 py-12">
+          <div className="text-center space-y-2">
+            <p className="text-xs text-muted-foreground tracking-wide">CREATED BY THE DEVELOPERS OF JPCS - APC</p>
+            <p className="text-xs text-muted-foreground/70">Edwin Gumba Jr. (SS221) & Marwin John Gonzales (IT241)</p>
+          </div>
         </footer>
       </main>
     </div>
