@@ -3,23 +3,14 @@ import * as React from 'react';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
 import { useState, useEffect } from 'react';
-import Select from 'react-select';
 import collegeSubjectData from '@/lib/collegeSubjects.json';
 import shsSubjectData from '@/lib/shsSubjects.json';
-
-
-// WARNING: CONNECTING TOGGLELEVELSELECTOR COMPONENT TO SYNCH WITH SELECTED GRADE IS VIBE CODED.
 
 interface RowData {
   subjectCode: string;
   unit: number;
   grade: string;
   honorPoints: number;
-}
-
-interface SubjectOption {
-  value: string;
-  label: string;
 }
 
 interface TermTableProps {
@@ -38,57 +29,32 @@ export function TermTable({ term, level, onStatsChange }: TermTableProps) {
     }))
   );
 
-  // Get the appropriate subject data based on level
   const getSubjectData = () => {
     return level === 'college' ? collegeSubjectData : shsSubjectData;
   };
 
-  // Create options for React Select from subject data
-  const subjectOptions: SubjectOption[] = Object.keys(getSubjectData()).map(code => ({
-    value: code,
-    label: code
-  }));
-
-  // Simple static placeholder
-  const placeholder = "Subject";
-
   const updateRow = (index: number, field: keyof RowData, value: string | number) => {
     const newRows = [...rows];
     newRows[index] = { ...newRows[index], [field]: value };
-    
-    // So what this does is that it updates the unit of the subject code based on the subject code
+
+    // Auto-update unit if subject code matches
     if (field === 'subjectCode' && typeof value === 'string') {
       const subjectCode = value.toUpperCase();
       const subjectData = getSubjectData();
       const unit = subjectData[subjectCode as keyof typeof subjectData];
-      newRows[index].unit = unit || 0;
+      if (unit) {
+        newRows[index].unit = unit;
+      }
     }
-    
+
+    // Recalculate honor points
     if (field === 'grade' || field === 'unit') {
       const gradeStr = newRows[index].grade;
       const grade = gradeStr.toUpperCase() === 'R' ? 0 : parseFloat(gradeStr) || 0;
-      const unit = newRows[index].unit;
+      const unit = Number(newRows[index].unit) || 0;
       newRows[index].honorPoints = grade * unit;
     }
-    
-    setRows(newRows);
-  };
 
-  const handleSubjectCodeChange = (index: number, selectedOption: SubjectOption | null) => {
-    const subjectCode = selectedOption ? selectedOption.value : '';
-    const subjectData = getSubjectData();
-    const unit = selectedOption ? subjectData[selectedOption.value as keyof typeof subjectData] : 0;
-    
-    const newRows = [...rows];
-    const gradeStr = newRows[index].grade;
-    const grade = gradeStr.toUpperCase() === 'R' ? 0 : parseFloat(gradeStr) || 0;
-    newRows[index] = {
-      ...newRows[index],
-      subjectCode,
-      unit,
-      honorPoints: grade * unit
-    };
-    
     setRows(newRows);
   };
 
@@ -102,7 +68,6 @@ export function TermTable({ term, level, onStatsChange }: TermTableProps) {
     })));
   }, [level]);
 
-  // Add a new row
   const addRow = () => {
     if (rows.length < 10) {
       setRows([...rows, {
@@ -114,7 +79,6 @@ export function TermTable({ term, level, onStatsChange }: TermTableProps) {
     }
   };
 
-  // Remove a row at specific index
   const removeRow = (index: number) => {
     if (rows.length > 1) {
       const newRows = rows.filter((_, i) => i !== index);
@@ -122,30 +86,26 @@ export function TermTable({ term, level, onStatsChange }: TermTableProps) {
     }
   };
 
-  // Function to get the display value for unit field
-  const getUnitDisplayValue = (row: RowData) => {
-    if (row.unit) return row.unit.toString();
-    if (row.subjectCode) {
-      const subjectData = getSubjectData();
-      if (!subjectData[row.subjectCode as keyof typeof subjectData]) {
-        return "CODE NOT FOUND";
-      }
-    }
-    return "";
-  };
-
-  // Calculate GPA and total honor points for the term
   const calculateTermStats = () => {
-    const validRows = rows.filter(row => row.subjectCode && row.grade && row.unit > 0);
-    
+    // Filter rows that have all required fields filled
+    const validRows = rows.filter(row => 
+      row.subjectCode.trim() !== '' && 
+      row.grade.trim() !== '' && 
+      row.unit > 0
+    );
+
     if (validRows.length === 0) {
       return { gpa: 0, totalHonorPoints: 0, totalUnits: 0, rGrades: 0 };
     }
 
     const totalHonorPoints = validRows.reduce((sum, row) => sum + row.honorPoints, 0);
-    const totalUnits = validRows.reduce((sum, row) => sum + row.unit, 0);
+    const totalUnits = validRows.reduce((sum, row) => sum + Number(row.unit), 0);
     const gpa = totalUnits > 0 ? totalHonorPoints / totalUnits : 0;
     const rGrades = validRows.filter(row => row.grade.toUpperCase() === 'R').length;
+
+    console.log(`Term ${term} - Valid rows:`, validRows.length);
+    console.log(`Term ${term} - Total units:`, totalUnits);
+    console.log(`Term ${term} - Total honor points:`, totalHonorPoints);
 
     return {
       gpa: gpa,
@@ -157,14 +117,13 @@ export function TermTable({ term, level, onStatsChange }: TermTableProps) {
 
   const termStats = React.useMemo(() => calculateTermStats(), [rows]);
 
-  // Notify parent component when stats change
   useEffect(() => {
     if (onStatsChange) {
       onStatsChange(term, termStats);
     }
   }, [termStats, term, onStatsChange]);
 
-    return (
+  return (
     <Card className="shadow-md min-w-[250px] flex flex-col h-[650 px]">
       <CardContent className="flex flex-col h-full">
         <h2 className="text-lg font-semibold mb-2">{term}</h2>
@@ -174,43 +133,48 @@ export function TermTable({ term, level, onStatsChange }: TermTableProps) {
           <span>Grade</span>
           <span>Honor Pts</span>
         </div>
-        
-        {/* Content area */}
+
         <div className="flex-1">
           {rows.map((row, i) => (
             <div key={i} className="grid grid-cols-[2fr_0.7fr_1fr_1fr_auto] gap-2 mb-1 items-center">
-              <div className="relative">
-                <Select
-                  options={subjectOptions}
-                  value={row.subjectCode ? { value: row.subjectCode, label: row.subjectCode } : null}
-                  onChange={(option) => handleSubjectCodeChange(i, option)}
-                  
-                  // Placeholder is a consistent subject code based on level
-                  placeholder={placeholder}
-                  isClearable
-                  isSearchable
-                  className="text-sm"
-                  instanceId={`${term}-${i}`}
-                />
-              </div>
-              <Input 
-                placeholder="0" 
-                value={getUnitDisplayValue(row)}
-                readOnly
-                className="bg-gray-100"
+              {/* Subject Code Input */}
+              <Input
+                placeholder="Subject Code"
+                value={row.subjectCode}
+                onChange={(e) => updateRow(i, 'subjectCode', e.target.value)}
+                type="text"
               />
-                             <Input 
-                 placeholder="1.25 or R" 
-                 value={row.grade}
-                 onChange={(e) => updateRow(i, 'grade', e.target.value)}
+
+                             {/* Editable Unit Input */}
+               <Input
+                 placeholder="0"
+                 value={row.unit || ''}
+                 onChange={(e) => {
+                   const value = e.target.value;
+                   if (value === '' || /^\d+(\.\d+)?$/.test(value)) {
+                     updateRow(i, 'unit', parseFloat(value) || 0);
+                   }
+                 }}
                  type="text"
                />
-              <Input 
-                placeholder="0.00" 
+
+              {/* Grade Input */}
+              <Input
+                placeholder="1.25 or R"
+                value={row.grade}
+                onChange={(e) => updateRow(i, 'grade', e.target.value)}
+                type="text"
+              />
+
+              {/* Honor Points (readonly) */}
+              <Input
+                placeholder="0.00"
                 value={row.honorPoints.toFixed(2)}
                 readOnly
                 className="bg-gray-100"
               />
+
+              {/* Remove Row Button */}
               <button
                 onClick={() => removeRow(i)}
                 disabled={rows.length <= 1}
@@ -222,10 +186,9 @@ export function TermTable({ term, level, onStatsChange }: TermTableProps) {
             </div>
           ))}
         </div>
-        
-        {/* Fixed bottom section */}
+
+        {/* Add Row + Totals */}
         <div className="mt-auto pt-4">
-          {/* Add Row Button */}
           <div className="flex justify-center mb-4">
             <button
               onClick={addRow}
@@ -235,8 +198,7 @@ export function TermTable({ term, level, onStatsChange }: TermTableProps) {
               + Add Subject {rows.length >= 10 && "(Max 10)"}
             </button>
           </div>
-          
-          {/* Summary Row */}
+
           <div className="border-t-2 border-gray-300 pt-2">
             <div className="grid grid-cols-[2fr_0.7fr_1fr_1fr_auto] gap-2 text-sm font-semibold">
               <span className="text-gray-600">TOTAL</span>
