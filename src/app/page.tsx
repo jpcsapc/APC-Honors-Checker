@@ -36,7 +36,7 @@ export default function FrontPage() {
       </header>
 
       <main className="container mx-auto px-6">
-        <div className="text-center py-24 mb-16">
+        <div className="text-center py-24">
           <div className="space-y-6">
             <h1 className="text-5xl md:text-6xl font-light text-foreground tracking-tight leading-tight">
               <span className="text-primary">Asia Pacific College</span>
@@ -50,7 +50,7 @@ export default function FrontPage() {
           </div>
         </div>
 
-        <div className="grid md:grid-cols-3 gap-8 mb-24">
+        <div className="grid md:grid-cols-3 gap-8 mb-10">
           {calculatorCards.map((card, index) => (
             <Link key={index} href={card.href} className="group">
               <Card className="h-full border-border/40 hover:border-primary/30 transition-all duration-300 hover:shadow-lg hover:shadow-primary/5 bg-card">
@@ -73,6 +73,18 @@ export default function FrontPage() {
             </Link>
           ))}
         </div>
+
+      <div className="flex justify-center mb-10">
+          <a
+            href="https://forms.office.com/r/0vGQMsjQxC"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-block px-4 py-2 text-sm font-medium border border-gray-400 text-gray-600 rounded-md hover:bg-blue-50 transition"
+          >
+            Feedback Form
+          </a>
+        </div>
+
 
         <footer className="border-t border-border/40 py-12">
           <div className="text-center space-y-2">
