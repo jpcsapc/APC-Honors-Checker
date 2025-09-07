@@ -1,0 +1,303 @@
+"use client"
+import * as React from 'react';
+import { Button } from "@/components/ui/button"
+import { ArrowLeft, Calculator } from "lucide-react"
+import { TermTable } from '../../components/TermTable';
+import Link from "next/link"
+
+interface TermStats {
+  gpa: number;
+  totalHonorPoints: number;
+  totalUnits: number;
+  rGrades: number;
+}
+
+interface YearStats {
+  gpa: number;
+  totalHonorPoints: number;
+  totalUnits: number;
+  rGrades: number;
+}
+
+export default function LatinHonorsCalculator() {
+  const [termStats, setTermStats] = React.useState<Record<string, TermStats>>({});
+  const [yearStats, setYearStats] = React.useState<Record<string, YearStats>>({});
+  const [overallGPA, setOverallGPA] = React.useState("0.00");
+  const [latinHonor, setLatinHonor] = React.useState("-");
+
+  const handleStatsChange = React.useCallback((term: string, stats: TermStats) => {
+    setTermStats(prev => ({
+      ...prev,
+      [term]: stats
+    }));
+  }, []);
+
+  // Calculate year statistics from term statistics
+  React.useEffect(() => {
+    const newYearStats: Record<string, YearStats> = {};
+    
+    // Group terms by year
+    const yearGroups: Record<string, TermStats[]> = {};
+    Object.entries(termStats).forEach(([term, stats]) => {
+      const year = term.split(' ')[0]; // Extract year from term name (e.g., "Year 1 Term 1" -> "Year 1")
+      if (!yearGroups[year]) {
+        yearGroups[year] = [];
+      }
+      yearGroups[year].push(stats);
+    });
+
+    // Calculate year statistics
+    Object.entries(yearGroups).forEach(([year, terms]) => {
+      if (terms.length > 0) {
+        const totalGPA = terms.reduce((sum, term) => sum + term.gpa, 0);
+        const averageGPA = totalGPA / terms.length;
+        const totalHonorPoints = terms.reduce((sum, term) => sum + term.totalHonorPoints, 0);
+        const totalUnits = terms.reduce((sum, term) => sum + term.totalUnits, 0);
+        const totalRGrades = terms.reduce((sum, term) => sum + term.rGrades, 0);
+
+        newYearStats[year] = {
+          gpa: averageGPA,
+          totalHonorPoints,
+          totalUnits,
+          rGrades: totalRGrades
+        };
+      }
+    });
+
+    setYearStats(newYearStats);
+  }, [termStats]);
+
+  const calculateLatinHonors = () => {
+    const years = Object.values(yearStats);
+    
+    if (years.length === 0) {
+      setOverallGPA("0.00");
+      setLatinHonor("-");
+      return;
+    }
+
+    // Calculate overall GPA across all years
+    const totalGPA = years.reduce((sum, year) => sum + year.gpa, 0);
+    const averageGPA = totalGPA / years.length;
+    
+    // Calculate total units across all years
+    const totalUnits = years.reduce((sum, year) => sum + year.totalUnits, 0);
+    const hasEnoughUnits = totalUnits >= 144; // 144 units required for Latin honors (4 years * 36 units)
+    
+    // Calculate total R grades across all years
+    const totalRGrades = years.reduce((sum, year) => sum + year.rGrades, 0);
+    const hasTooManyRs = totalRGrades > 8; // Maximum 8 R grades allowed for Latin honors (2 per year * 4 years)
+
+    setOverallGPA(averageGPA.toFixed(2));
+
+    if (!hasEnoughUnits) {
+      setLatinHonor("No, not enough units");
+      return;
+    }
+
+    if (hasTooManyRs) {
+      setLatinHonor("No, more than 8 R grades");
+      return;
+    }
+
+    // Determine Latin honor based on GPA
+    if (averageGPA >= 3.85) {
+      setLatinHonor("Summa Cum Laude");
+    } else if (averageGPA >= 3.70) {
+      setLatinHonor("Magna Cum Laude");
+    } else if (averageGPA >= 3.50) {
+      setLatinHonor("Cum Laude");
+    } else {
+      setLatinHonor("No Latin Honor");
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-background">
+      {/* Header */}
+      <header className="border-b bg-card">
+        <div className="container mx-auto px-4 py-4">
+          <div className="flex items-center gap-4">
+            <Link href="/">
+              <Button variant="ghost" size="sm" className="p-2">
+                <ArrowLeft className="h-4 w-4" />
+              </Button>
+            </Link>
+            <h1 className="text-sm text-muted-foreground">Latin Honors Calculator</h1>
+          </div>
+        </div>
+      </header>
+
+      {/* Main Content */}
+      <main className="container mx-auto px-4 py-16">
+        {/* Hero Section */}
+        <div className="text-center mb-10">
+          <div className="flex justify-center mb-4">
+            <Calculator className="h-12 w-12 text-muted-foreground" />
+          </div>
+          <h1 className="text-4xl font-normal text-foreground mb-4">
+            Latin Honors Calculator
+          </h1>
+          <p className="text-muted-foreground text-lg">
+            Calculate your 4-year academic performance for Latin honors
+          </p>
+        </div>
+
+
+        {/* Overall Statistics Display */}
+        <div className="flex justify-center mt-8 gap-4">
+          <div className="border px-4 py-2 shadow-sm rounded">Overall GPA: {overallGPA}</div>
+          <div className="border px-4 py-2 shadow-sm rounded">Latin Honor: {latinHonor}</div>
+        </div>
+
+        {/* Year 1 */}
+        <div className="mt-12">
+          <h2 className="text-2xl font-semibold mb-6 text-center">Year 1</h2>
+          <div className="grid md:grid-cols-3 gap-4 justify-center">
+            <TermTable 
+              term="Year 1 Term 1" 
+              level="college" 
+              onStatsChange={handleStatsChange}
+            />
+            <TermTable 
+              term="Year 1 Term 2" 
+              level="college" 
+              onStatsChange={handleStatsChange}
+            />
+            <TermTable 
+              term="Year 1 Term 3" 
+              level="college" 
+              onStatsChange={handleStatsChange}
+            />
+          </div>
+          {/* Year 1 Summary */}
+          {yearStats["Year 1"] && (
+            <div className="flex justify-center mt-4 gap-4">
+              <div className="border px-4 py-2 shadow-sm rounded bg-blue-50">
+                Year 1 GPA: {yearStats["Year 1"].gpa.toFixed(2)}
+              </div>
+              <div className="border px-4 py-2 shadow-sm rounded bg-blue-50">
+                Year 1 Units: {yearStats["Year 1"].totalUnits}
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Year 2 */}
+        <div className="mt-12">
+          <h2 className="text-2xl font-semibold mb-6 text-center">Year 2</h2>
+          <div className="grid md:grid-cols-3 gap-4 justify-center">
+            <TermTable 
+              term="Year 2 Term 1" 
+              level="college" 
+              onStatsChange={handleStatsChange}
+            />
+            <TermTable 
+              term="Year 2 Term 2" 
+              level="college" 
+              onStatsChange={handleStatsChange}
+            />
+            <TermTable 
+              term="Year 2 Term 3" 
+              level="college" 
+              onStatsChange={handleStatsChange}
+            />
+          </div>
+          {/* Year 2 Summary */}
+          {yearStats["Year 2"] && (
+            <div className="flex justify-center mt-4 gap-4">
+              <div className="border px-4 py-2 shadow-sm rounded bg-green-50">
+                Year 2 GPA: {yearStats["Year 2"].gpa.toFixed(2)}
+              </div>
+              <div className="border px-4 py-2 shadow-sm rounded bg-green-50">
+                Year 2 Units: {yearStats["Year 2"].totalUnits}
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Year 3 */}
+        <div className="mt-12">
+          <h2 className="text-2xl font-semibold mb-6 text-center">Year 3</h2>
+          <div className="grid md:grid-cols-3 gap-4 justify-center">
+            <TermTable 
+              term="Year 3 Term 1" 
+              level="college" 
+              onStatsChange={handleStatsChange}
+            />
+            <TermTable 
+              term="Year 3 Term 2" 
+              level="college" 
+              onStatsChange={handleStatsChange}
+            />
+            <TermTable 
+              term="Year 3 Term 3" 
+              level="college" 
+              onStatsChange={handleStatsChange}
+            />
+          </div>
+          {/* Year 3 Summary */}
+          {yearStats["Year 3"] && (
+            <div className="flex justify-center mt-4 gap-4">
+              <div className="border px-4 py-2 shadow-sm rounded bg-yellow-50">
+                Year 3 GPA: {yearStats["Year 3"].gpa.toFixed(2)}
+              </div>
+              <div className="border px-4 py-2 shadow-sm rounded bg-yellow-50">
+                Year 3 Units: {yearStats["Year 3"].totalUnits}
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Year 4 */}
+        <div className="mt-12">
+          <h2 className="text-2xl font-semibold mb-6 text-center">Year 4</h2>
+          <div className="grid md:grid-cols-3 gap-4 justify-center">
+            <TermTable 
+              term="Year 4 Term 1" 
+              level="college" 
+              onStatsChange={handleStatsChange}
+            />
+            <TermTable 
+              term="Year 4 Term 2" 
+              level="college" 
+              onStatsChange={handleStatsChange}
+            />
+            <TermTable 
+              term="Year 4 Term 3" 
+              level="college" 
+              onStatsChange={handleStatsChange}
+            />
+          </div>
+          {/* Year 4 Summary */}
+          {yearStats["Year 4"] && (
+            <div className="flex justify-center mt-4 gap-4">
+              <div className="border px-4 py-2 shadow-sm rounded bg-purple-50">
+                Year 4 GPA: {yearStats["Year 4"].gpa.toFixed(2)}
+              </div>
+              <div className="border px-4 py-2 shadow-sm rounded bg-purple-50">
+                Year 4 Units: {yearStats["Year 4"].totalUnits}
+              </div>
+            </div>
+          )}
+        </div>
+
+        <div className="flex justify-center mt-8 gap-4">
+          <Button 
+            onClick={calculateLatinHonors}
+            className="w-1/3 h-15"
+          >
+            Calculate Latin Honors
+          </Button>
+        </div>
+    
+        {/* Footer */}
+        <footer className="border-t pt-8 mt-16">
+          <p className="text-center text-xs text-muted-foreground">
+            Created by the Developers of JPCS - APC | Edwin Gumba Jr. (SS221) & Marwin John Gonzales (IT241)
+          </p>
+        </footer>
+      </main>
+    </div>
+  );
+}
