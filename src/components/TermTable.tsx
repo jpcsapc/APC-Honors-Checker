@@ -86,7 +86,7 @@ export function TermTable({ term, level, onStatsChange }: TermTableProps) {
     }
   };
 
-  const calculateTermStats = () => {
+  const termStats = React.useMemo(() => {
     // Filter rows that have all required fields filled
     const validRows = rows.filter(row => 
       row.subjectCode.trim() !== '' && 
@@ -113,9 +113,7 @@ export function TermTable({ term, level, onStatsChange }: TermTableProps) {
       totalUnits: totalUnits,
       rGrades: rGrades
     };
-  };
-
-  const termStats = React.useMemo(() => calculateTermStats(), [rows]);
+  }, [rows, term]);
 
   useEffect(() => {
     if (onStatsChange) {

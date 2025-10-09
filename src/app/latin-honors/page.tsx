@@ -67,9 +67,12 @@ export default function LatinHonorsCalculator() {
     setYearStats(newYearStats);
   }, [termStats]);
 
-  const calculateLatinHonors = () => {
+  // Recalculate overall results whenever yearStats changes so outputs are live
+  
+
+  const calculateLatinHonors = React.useCallback(() => {
     const years = Object.values(yearStats);
-    
+
     if (years.length === 0) {
       setOverallGPA("0.00");
       setLatinHonor("-");
@@ -79,11 +82,11 @@ export default function LatinHonorsCalculator() {
     // Calculate overall GPA across all years
     const totalGPA = years.reduce((sum, year) => sum + year.gpa, 0);
     const averageGPA = totalGPA / years.length;
-    
+
     // Calculate total units across all years
     const totalUnits = years.reduce((sum, year) => sum + year.totalUnits, 0);
     const hasEnoughUnits = totalUnits >= 144; // 144 units required for Latin honors (4 years * 36 units)
-    
+
     // Calculate total R grades across all years
     const totalRGrades = years.reduce((sum, year) => sum + year.rGrades, 0);
     const hasTooManyRs = totalRGrades > 8; // Maximum 8 R grades allowed for Latin honors (2 per year * 4 years)
@@ -110,7 +113,12 @@ export default function LatinHonorsCalculator() {
     } else {
       setLatinHonor("No Latin Honor");
     }
-  };
+  }, [yearStats]);
+
+  // Recalculate overall results whenever yearStats changes so outputs are live
+  React.useEffect(() => {
+    calculateLatinHonors();
+  }, [calculateLatinHonors]);
 
   return (
     <div className="min-h-screen bg-background">
@@ -282,14 +290,7 @@ export default function LatinHonorsCalculator() {
           )}
         </div>
 
-        <div className="flex justify-center mt-8 gap-4">
-          <Button 
-            onClick={calculateLatinHonors}
-            className="w-1/3 h-15"
-          >
-            Calculate Latin Honors
-          </Button>
-        </div>
+        {/* Results are calculated live as you edit terms; no manual button required. */}
     
         {/* Footer */}
         <footer className="border-t pt-8 mt-16">
