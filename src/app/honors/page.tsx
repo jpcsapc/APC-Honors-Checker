@@ -28,9 +28,9 @@ export default function HonorsCalcu() {
     }));
   }, []);
 
-  const calculateHonors = () => {
+  const calculateHonors = React.useCallback(() => {
     const terms = Object.values(termStats);
-    
+
     if (terms.length === 0) {
       setCurrentGPA("0.00");
       setEligibleForHonors("-");
@@ -40,11 +40,11 @@ export default function HonorsCalcu() {
     // Calculate average GPA across all terms
     const totalGPA = terms.reduce((sum, term) => sum + term.gpa, 0); // Sum of GPAs
     const averageGPA = totalGPA / terms.length; // Calculate average GPA
-    
+
     // Calculate total units across all terms
     const totalUnits = terms.reduce((sum, term) => sum + term.totalUnits, 0);
     const hasEnoughUnits = totalUnits >= 36; // 36 units required for honors
-    
+
     // Calculate total R grades across all terms
     const totalRGrades = terms.reduce((sum, term) => sum + term.rGrades, 0);
     const hasTooManyRs = totalRGrades > 2; // Maximum 2 R grades allowed (2 or more is too many)
@@ -61,18 +61,17 @@ export default function HonorsCalcu() {
       return;
     }
 
-    // console.log("Average GPA:", averageGPA);
-    // console.log("Total Units:", totalUnits);
-    // console.log("Total R Grades:", totalRGrades);
-    // console.log(hasEnoughUnits ? "Eligible for honors" : "Not eligible for honors");
-
-    if (averageGPA >= 3.0 && averageGPA <= 4.00) {
+    if (averageGPA >= 3.0 && averageGPA <= 4.0) {
       setEligibleForHonors("Yes");
     } else {
       setEligibleForHonors("No");
     }
-    
-  };
+  }, [termStats]);
+
+  // Run calculation automatically when termStats change
+  React.useEffect(() => {
+    calculateHonors();
+  }, [calculateHonors]);
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
@@ -132,14 +131,7 @@ export default function HonorsCalcu() {
             />
         </div>
 
-        <div className="flex justify-center mt-8 gap-4">
-          <Button 
-            onClick={calculateHonors}
-            className="w-1/3 h-15"
-          >
-            Calculate Honors
-          </Button>
-        </div>
+        {/* Results update live as you edit terms; manual calculate button removed. */}
     
         {/* Footer */}
         <footer className="border-t pt-8 mt-16">
