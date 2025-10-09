@@ -6,6 +6,9 @@ import { useState, useEffect } from 'react';
 import collegeSubjectData from '@/lib/collegeSubjects.json';
 import shsSubjectData from '@/lib/shsSubjects.json';
 
+// Global set of NAT/SER codes (stable reference for hooks)
+const NAT_SER_CODES_GLOBAL = new Set(['NATSER1', 'NATSER2']);
+
 interface RowData {
   subjectCode: string;
   unit: number;
@@ -35,24 +38,31 @@ export function TermTable({ term, level, onStatsChange }: TermTableProps) {
 
   const updateRow = (index: number, field: keyof RowData, value: string | number) => {
     const newRows = [...rows];
-    newRows[index] = { ...newRows[index], [field]: value };
+    newRows[index] = { ...newRows[index], [field]: value } as RowData;
 
     // Auto-update unit if subject code matches
     if (field === 'subjectCode' && typeof value === 'string') {
       const subjectCode = value.toUpperCase();
-      const subjectData = getSubjectData();
-      const unit = subjectData[subjectCode as keyof typeof subjectData];
+  const subjectData = getSubjectData();
+  const unit = (subjectData as Record<string, number>)[subjectCode];
+      // Do not force-clear NATSER fields — they should remain editable but excluded from calculations
       if (unit) {
         newRows[index].unit = unit;
       }
     }
 
-    // Recalculate honor points
-    if (field === 'grade' || field === 'unit') {
-      const gradeStr = newRows[index].grade;
-      const grade = gradeStr.toUpperCase() === 'R' ? 0 : parseFloat(gradeStr) || 0;
-      const unit = Number(newRows[index].unit) || 0;
-      newRows[index].honorPoints = grade * unit;
+    // Recalculate honor points for this row
+    if (field === 'grade' || field === 'unit' || field === 'subjectCode') {
+      const subj = (newRows[index].subjectCode || '').toUpperCase();
+      // If this is a NAT/SER reference row, keep honorPoints at 0 so it won't affect calculations
+      if (NAT_SER_CODES_GLOBAL.has(subj)) {
+        newRows[index].honorPoints = 0;
+      } else {
+        const gradeStr = newRows[index].grade;
+        const grade = gradeStr.toUpperCase() === 'R' ? 0 : parseFloat(gradeStr) || 0;
+        const unit = Number(newRows[index].unit) || 0;
+        newRows[index].honorPoints = grade * unit;
+      }
     }
 
     setRows(newRows);
@@ -75,7 +85,7 @@ export function TermTable({ term, level, onStatsChange }: TermTableProps) {
         unit: 0,
         grade: '',
         honorPoints: 0
-      }]);
+      }] as RowData[]);
     }
   };
 
@@ -88,11 +98,12 @@ export function TermTable({ term, level, onStatsChange }: TermTableProps) {
 
   const termStats = React.useMemo(() => {
     // Filter rows that have all required fields filled
-    const validRows = rows.filter(row => 
-      row.subjectCode.trim() !== '' && 
-      row.grade.trim() !== '' && 
-      row.unit > 0
-    );
+    const validRows = rows.filter(row => {
+      const code = (row.subjectCode || '').toUpperCase();
+      // Exclude NATSER1 / NATSER2 from all calculations
+      if (NAT_SER_CODES_GLOBAL.has(code)) return false;
+      return row.subjectCode.trim() !== '' && row.grade.trim() !== '' && row.unit > 0;
+    });
 
     if (validRows.length === 0) {
       return { gpa: 0, totalHonorPoints: 0, totalUnits: 0, rGrades: 0 };
@@ -103,17 +114,13 @@ export function TermTable({ term, level, onStatsChange }: TermTableProps) {
     const gpa = totalUnits > 0 ? totalHonorPoints / totalUnits : 0;
     const rGrades = validRows.filter(row => row.grade.toUpperCase() === 'R').length;
 
-    console.log(`Term ${term} - Valid rows:`, validRows.length);
-    console.log(`Term ${term} - Total units:`, totalUnits);
-    console.log(`Term ${term} - Total honor points:`, totalHonorPoints);
-
     return {
       gpa: gpa,
       totalHonorPoints: totalHonorPoints,
       totalUnits: totalUnits,
       rGrades: rGrades
     };
-  }, [rows, term]);
+  }, [rows]);
 
   useEffect(() => {
     if (onStatsChange) {
@@ -143,18 +150,20 @@ export function TermTable({ term, level, onStatsChange }: TermTableProps) {
                 type="text"
               />
 
-                             {/* Editable Unit Input */}
-               <Input
-                 placeholder="0"
-                 value={row.unit || ''}
-                 onChange={(e) => {
-                   const value = e.target.value;
-                   if (value === '' || /^\d+(\.\d+)?$/.test(value)) {
-                     updateRow(i, 'unit', parseFloat(value) || 0);
-                   }
-                 }}
-                 type="text"
-               />
+              {/* Editable Unit Input */}
+              <Input
+                placeholder="0"
+                value={row.unit || ''}
+                onChange={(e) => {
+                  const value = e.target.value;
+                  if (value === '' || /^\d+(\.\d+)?$/.test(value)) {
+                    updateRow(i, 'unit', parseFloat(value) || 0);
+                  }
+                }}
+                type="text"
+                // Keep editable but visually muted for NATSER rows
+                className={NAT_SER_CODES_GLOBAL.has((row.subjectCode || '').toUpperCase()) ? 'bg-gray-50 text-gray-500' : ''}
+              />
 
               {/* Grade Input */}
               <Input
@@ -162,15 +171,23 @@ export function TermTable({ term, level, onStatsChange }: TermTableProps) {
                 value={row.grade}
                 onChange={(e) => updateRow(i, 'grade', e.target.value)}
                 type="text"
+                // Keep editable but visually muted for NATSER rows
+                className={NAT_SER_CODES_GLOBAL.has((row.subjectCode || '').toUpperCase()) ? 'bg-gray-50 text-gray-500' : ''}
               />
 
               {/* Honor Points (readonly) */}
-              <Input
-                placeholder="0.00"
-                value={row.honorPoints.toFixed(2)}
-                readOnly
-                className="bg-gray-100"
-              />
+              <div>
+                {NAT_SER_CODES_GLOBAL.has((row.subjectCode || '').toUpperCase()) ? (
+                  <div className="px-2 py-1 text-sm bg-gray-50 text-gray-500 rounded">N/A</div>
+                ) : (
+                  <Input
+                    placeholder="0.00"
+                    value={row.honorPoints.toFixed(2)}
+                    readOnly
+                    className="bg-gray-100"
+                  />
+                )}
+              </div>
 
               {/* Remove Row Button */}
               <button
