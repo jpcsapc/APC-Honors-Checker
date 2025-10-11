@@ -179,6 +179,28 @@
   .dark select {
     border-color: oklch(0.8 0 0) !important;
   }
+
+  /* Improve discoverability for interactive elements */
+  button,
+  [role="button"],
+  a[data-slot="button"],
+  [data-slot="button"] {
+    cursor: pointer;
+    transition: transform 120ms ease, background-color 120ms ease, color 120ms ease;
+  }
+
+  /* Subtle hover/active feedback for interactive controls */
+  button:hover:not(:disabled),
+  [role="button"]:hover,
+  [data-slot="button"]:hover {
+    transform: translateY(-1px);
+  }
+
+  button:active:not(:disabled),
+  [role="button"]:active,
+  [data-slot="button"]:active {
+    transform: translateY(0);
+  }
 }
 
 @keyframes accordion-down {
