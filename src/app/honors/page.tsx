@@ -2,7 +2,7 @@
 import * as React from 'react';
 import { Button } from "@/components/ui/button"
 import { ArrowLeft, Calculator } from "lucide-react"
-import { ToggleLevelSelector } from '../../components/ToggleLevelSelector';
+// ToggleLevelSelector removed — level selector no longer used (course selection is inline)
 import { TermTable } from '../../components/TermTable';
 
 
@@ -16,7 +16,7 @@ interface TermStats {
 }
 
 export default function HonorsCalcu() {
-  const [level, setLevel] = React.useState('college');
+  const [level] = React.useState('college');
   const [termStats, setTermStats] = React.useState<Record<string, TermStats>>({});
   const [currentGPA, setCurrentGPA] = React.useState("0.00");
   const [eligibleForHonors, setEligibleForHonors] = React.useState("-");
@@ -103,8 +103,7 @@ export default function HonorsCalcu() {
           </p>
         </div>
 
-        {/* Toggle Level Selector */}
-        <ToggleLevelSelector value={level} onChange={setLevel} />
+  {/* Level selector removed — subject selection is inline in the tables */}
 
         {/* GPA Display */}
         <div className="flex justify-center mt-8 gap-4">
