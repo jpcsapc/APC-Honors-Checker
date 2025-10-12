@@ -3,8 +3,6 @@ import * as React from 'react';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
 import { useState, useEffect } from 'react';
-import collegeSubjectData from '@/lib/collegeSubjects.json';
-import shsSubjectData from '@/lib/shsSubjects.json';
 
 // Global set of NAT/SER codes (stable reference for hooks)
 const NAT_SER_CODES_GLOBAL = new Set(['NATSER1', 'NATSER2']);
@@ -18,11 +16,10 @@ interface RowData {
 
 interface TermTableProps {
   term: string;
-  level: 'shs' | 'college';
   onStatsChange?: (term: string, stats: { gpa: number; totalHonorPoints: number; totalUnits: number; rGrades: number }) => void;
 }
 
-export function TermTable({ term, level, onStatsChange }: TermTableProps) {
+export function TermTable({ term, onStatsChange }: TermTableProps) {
   const [rows, setRows] = useState<RowData[]>(() => 
     Array(4).fill(null).map(() => ({
       subjectCode: '',
@@ -32,24 +29,9 @@ export function TermTable({ term, level, onStatsChange }: TermTableProps) {
     }))
   );
 
-  const getSubjectData = () => {
-    return level === 'college' ? collegeSubjectData : shsSubjectData;
-  };
-
   const updateRow = (index: number, field: keyof RowData, value: string | number) => {
     const newRows = [...rows];
     newRows[index] = { ...newRows[index], [field]: value } as RowData;
-
-    // Auto-update unit if subject code matches
-    if (field === 'subjectCode' && typeof value === 'string') {
-      const subjectCode = value.toUpperCase();
-  const subjectData = getSubjectData();
-  const unit = (subjectData as Record<string, number>)[subjectCode];
-      // Do not force-clear NATSER fields — they should remain editable but excluded from calculations
-      if (unit) {
-        newRows[index].unit = unit;
-      }
-    }
 
     // Recalculate honor points for this row
     if (field === 'grade' || field === 'unit' || field === 'subjectCode') {
@@ -67,16 +49,6 @@ export function TermTable({ term, level, onStatsChange }: TermTableProps) {
 
     setRows(newRows);
   };
-
-  // Reset rows when level changes
-  useEffect(() => {
-    setRows(Array(4).fill(null).map(() => ({
-      subjectCode: '',
-      unit: 0,
-      grade: '',
-      honorPoints: 0
-    })));
-  }, [level]);
 
   const addRow = () => {
     if (rows.length < 10) {

@@ -169,17 +169,14 @@ export default function LatinHonorsCalculator() {
           <div className="grid md:grid-cols-3 gap-4 justify-center">
             <TermTable 
               term="Year 1 Term 1" 
-              level="college" 
               onStatsChange={handleStatsChange}
             />
             <TermTable 
               term="Year 1 Term 2" 
-              level="college" 
               onStatsChange={handleStatsChange}
             />
             <TermTable 
               term="Year 1 Term 3" 
-              level="college" 
               onStatsChange={handleStatsChange}
             />
           </div>
@@ -202,17 +199,14 @@ export default function LatinHonorsCalculator() {
           <div className="grid md:grid-cols-3 gap-4 justify-center">
             <TermTable 
               term="Year 2 Term 1" 
-              level="college" 
               onStatsChange={handleStatsChange}
             />
             <TermTable 
               term="Year 2 Term 2" 
-              level="college" 
               onStatsChange={handleStatsChange}
             />
             <TermTable 
               term="Year 2 Term 3" 
-              level="college" 
               onStatsChange={handleStatsChange}
             />
           </div>
@@ -235,17 +229,14 @@ export default function LatinHonorsCalculator() {
           <div className="grid md:grid-cols-3 gap-4 justify-center">
             <TermTable 
               term="Year 3 Term 1" 
-              level="college" 
               onStatsChange={handleStatsChange}
             />
             <TermTable 
               term="Year 3 Term 2" 
-              level="college" 
               onStatsChange={handleStatsChange}
             />
             <TermTable 
               term="Year 3 Term 3" 
-              level="college" 
               onStatsChange={handleStatsChange}
             />
           </div>
@@ -268,17 +259,14 @@ export default function LatinHonorsCalculator() {
           <div className="grid md:grid-cols-3 gap-4 justify-center">
             <TermTable 
               term="Year 4 Term 1" 
-              level="college" 
               onStatsChange={handleStatsChange}
             />
             <TermTable 
               term="Year 4 Term 2" 
-              level="college" 
               onStatsChange={handleStatsChange}
             />
             <TermTable 
               term="Year 4 Term 3" 
-              level="college" 
               onStatsChange={handleStatsChange}
             />
           </div>

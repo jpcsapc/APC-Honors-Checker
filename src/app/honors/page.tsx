@@ -17,7 +17,6 @@ interface TermStats {
 }
 
 export default function HonorsCalcu() {
-  const [level] = React.useState('college');
   const [termStats, setTermStats] = React.useState<Record<string, TermStats>>({});
   const [currentGPA, setCurrentGPA] = React.useState("0.00");
   const [eligibleForHonors, setEligibleForHonors] = React.useState("-");
@@ -119,17 +118,14 @@ export default function HonorsCalcu() {
          <div className="grid md:grid-cols-3 gap-4 mt-8 justify-center">
             <TermTable 
               term="Term 1" 
-              level={level as 'shs' | 'college'} 
               onStatsChange={handleStatsChange}
             />
             <TermTable 
               term="Term 2" 
-              level={level as 'shs' | 'college'} 
               onStatsChange={handleStatsChange}
             />
             <TermTable 
               term="Term 3" 
-              level={level as 'shs' | 'college'} 
               onStatsChange={handleStatsChange}
             />
         </div>
