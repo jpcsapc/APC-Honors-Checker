@@ -7,6 +7,7 @@ import { TermTable } from '../../components/TermTable';
 
 
 import Link from "next/link"
+import { ThemeToggle } from "@/components/theme-toggle"
 
 interface TermStats {
   gpa: number;
@@ -78,12 +79,15 @@ export default function HonorsCalcu() {
       <header className="border-b bg-card">
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
-            <Link href="/">
-              <Button variant="ghost" size="sm" className="p-2">
-                <ArrowLeft className="h-4 w-4" />
-              </Button>
-            </Link>
-            <h1 className="text-sm text-muted-foreground">Honors Calculator</h1>
+            <div className="flex items-center gap-4">
+              <Link href="/">
+                <Button variant="ghost" size="sm" className="p-2">
+                  <ArrowLeft className="h-4 w-4" />
+                </Button>
+              </Link>
+              <h1 className="text-sm text-muted-foreground">Honors Calculator</h1>
+            </div>
+            <ThemeToggle />
           </div>
         </div>
       </header>
