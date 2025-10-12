@@ -28,6 +28,10 @@ export default function FAQPage() {
         {
           question: "What happens if I fail a course?",
           answer: "Failing a course typically results in 0 quality points, which significantly impacts your GPA. You may need to retake the course to improve your academic standing and meet graduation requirements."
+        },
+        {
+          question: "Will my NATSER courses (NATSER1 and NATSER2) be included in my GPA calculation?",
+          answer: "NATSER courses are not included in GPA calculations, as they are considered non-academic courses. However, it's best to consult your adviser or check the APC student handbook for more details."
         }
       ]
     },
