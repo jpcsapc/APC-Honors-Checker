@@ -130,8 +130,7 @@ export default function FAQPage() {
 
               {/* Section Accordion */}
               <Accordion
-                type="single"
-                collapsible
+                type="multiple"
                 className="w-full"
               >
                 {section.items.map((item, itemIndex) => (
