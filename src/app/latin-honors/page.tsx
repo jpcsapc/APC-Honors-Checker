@@ -6,6 +6,13 @@ import { TermTable } from '../../components/TermTable';
 import { ThemeToggle } from "@/components/theme-toggle";
 import Link from "next/link"
 
+interface RowData {
+  subjectCode: string;
+  unit: number;
+  grade: string;
+  honorPoints: number;
+}
+
 interface TermStats {
   gpa: number;
   totalHonorPoints: number;
@@ -21,15 +28,33 @@ interface YearStats {
 }
 
 export default function LatinHonorsCalculator() {
-  const [termStats, setTermStats] = React.useState<Record<string, TermStats>>({});
+  const [termsData, setTermsData] = React.useState<Record<string, RowData[]>>({});
   const [yearStats, setYearStats] = React.useState<Record<string, YearStats>>({});
   const [overallGPA, setOverallGPA] = React.useState("0.00");
   const [latinHonor, setLatinHonor] = React.useState("-");
 
-  const handleStatsChange = React.useCallback((term: string, stats: TermStats) => {
-    setTermStats(prev => ({
+  React.useEffect(() => {
+    try {
+      const savedData = localStorage.getItem("latinHonorsTermsData");
+      if (savedData) {
+        const parsedData = JSON.parse(savedData);
+        if (typeof parsedData === 'object' && !Array.isArray(parsedData) && parsedData !== null) {
+          setTermsData(parsedData);
+        }
+      }
+    } catch (error) {
+      console.error("Failed to parse latinHonorsTermsData from localStorage", error);
+    }
+  }, []);
+
+  React.useEffect(() => {
+    localStorage.setItem("latinHonorsTermsData", JSON.stringify(termsData));
+  }, [termsData]);
+
+  const handleTermChange = React.useCallback((term: string, rows: RowData[]) => {
+    setTermsData(prev => ({
       ...prev,
-      [term]: stats
+      [term]: rows
     }));
   }, []);
 
@@ -38,26 +63,35 @@ export default function LatinHonorsCalculator() {
     const newYearStats: Record<string, YearStats> = {};
     
     // Group terms by year
-    const yearGroups: Record<string, TermStats[]> = {};
-    Object.entries(termStats).forEach(([term, stats]) => {
-      const year = term.split(' ')[0]; // Extract year from term name (e.g., "Year 1 Term 1" -> "Year 1")
-      if (!yearGroups[year]) {
-        yearGroups[year] = [];
+    const yearGroups: Record<string, RowData[][]> = {};
+    Object.entries(termsData).forEach(([term, rows]) => {
+      if (Array.isArray(rows)) {
+        const year = term.split(' ')[0]; // Extract year from term name (e.g., "Year 1 Term 1" -> "Year 1")
+        if (!yearGroups[year]) {
+          yearGroups[year] = [];
+        }
+        yearGroups[year].push(rows);
       }
-      yearGroups[year].push(stats);
     });
 
     // Calculate year statistics
-    Object.entries(yearGroups).forEach(([year, terms]) => {
-      if (terms.length > 0) {
-        const totalGPA = terms.reduce((sum, term) => sum + term.gpa, 0);
-        const averageGPA = totalGPA / terms.length;
-        const totalHonorPoints = terms.reduce((sum, term) => sum + term.totalHonorPoints, 0);
-        const totalUnits = terms.reduce((sum, term) => sum + term.totalUnits, 0);
-        const totalRGrades = terms.reduce((sum, term) => sum + term.rGrades, 0);
+    Object.entries(yearGroups).forEach(([year, termRows]) => {
+      const allRows = termRows.flat();
+      const validRows = allRows.filter(row => {
+        if (!row) return false;
+        const isNatSer = (row.subjectCode || '').toUpperCase().startsWith('NATSER');
+        if (isNatSer) return false;
+        return row.subjectCode.trim() !== '' && row.grade.trim() !== '' && row.unit > 0;
+      });
+
+      if (validRows.length > 0) {
+        const totalHonorPoints = validRows.reduce((sum, row) => sum + row.honorPoints, 0);
+        const totalUnits = validRows.reduce((sum, row) => sum + Number(row.unit), 0);
+        const gpa = totalUnits > 0 ? totalHonorPoints / totalUnits : 0;
+        const totalRGrades = validRows.filter(row => row.grade.toUpperCase() === 'R').length;
 
         newYearStats[year] = {
-          gpa: averageGPA,
+          gpa: gpa,
           totalHonorPoints,
           totalUnits,
           rGrades: totalRGrades
@@ -66,7 +100,7 @@ export default function LatinHonorsCalculator() {
     });
 
     setYearStats(newYearStats);
-  }, [termStats]);
+  }, [termsData]);
 
   // Recalculate overall results whenever yearStats changes so outputs are live
   
@@ -169,15 +203,18 @@ export default function LatinHonorsCalculator() {
           <div className="grid md:grid-cols-3 gap-4 justify-center">
             <TermTable 
               term="Year 1 Term 1" 
-              onStatsChange={handleStatsChange}
+              initialRows={termsData["Year 1 Term 1"]}
+              onStatsChange={handleTermChange}
             />
             <TermTable 
               term="Year 1 Term 2" 
-              onStatsChange={handleStatsChange}
+              initialRows={termsData["Year 1 Term 2"]}
+              onStatsChange={handleTermChange}
             />
             <TermTable 
               term="Year 1 Term 3" 
-              onStatsChange={handleStatsChange}
+              initialRows={termsData["Year 1 Term 3"]}
+              onStatsChange={handleTermChange}
             />
           </div>
           {/* Year 1 Summary */}
@@ -199,15 +236,18 @@ export default function LatinHonorsCalculator() {
           <div className="grid md:grid-cols-3 gap-4 justify-center">
             <TermTable 
               term="Year 2 Term 1" 
-              onStatsChange={handleStatsChange}
+              initialRows={termsData["Year 2 Term 1"]}
+              onStatsChange={handleTermChange}
             />
             <TermTable 
               term="Year 2 Term 2" 
-              onStatsChange={handleStatsChange}
+              initialRows={termsData["Year 2 Term 2"]}
+              onStatsChange={handleTermChange}
             />
             <TermTable 
               term="Year 2 Term 3" 
-              onStatsChange={handleStatsChange}
+              initialRows={termsData["Year 2 Term 3"]}
+              onStatsChange={handleTermChange}
             />
           </div>
           {/* Year 2 Summary */}
@@ -229,15 +269,18 @@ export default function LatinHonorsCalculator() {
           <div className="grid md:grid-cols-3 gap-4 justify-center">
             <TermTable 
               term="Year 3 Term 1" 
-              onStatsChange={handleStatsChange}
+              initialRows={termsData["Year 3 Term 1"]}
+              onStatsChange={handleTermChange}
             />
             <TermTable 
               term="Year 3 Term 2" 
-              onStatsChange={handleStatsChange}
+              initialRows={termsData["Year 3 Term 2"]}
+              onStatsChange={handleTermChange}
             />
             <TermTable 
               term="Year 3 Term 3" 
-              onStatsChange={handleStatsChange}
+              initialRows={termsData["Year 3 Term 3"]}
+              onStatsChange={handleTermChange}
             />
           </div>
           {/* Year 3 Summary */}
@@ -259,15 +302,18 @@ export default function LatinHonorsCalculator() {
           <div className="grid md:grid-cols-3 gap-4 justify-center">
             <TermTable 
               term="Year 4 Term 1" 
-              onStatsChange={handleStatsChange}
+              initialRows={termsData["Year 4 Term 1"]}
+              onStatsChange={handleTermChange}
             />
             <TermTable 
               term="Year 4 Term 2" 
-              onStatsChange={handleStatsChange}
+              initialRows={termsData["Year 4 Term 2"]}
+              onStatsChange={handleTermChange}
             />
             <TermTable 
               term="Year 4 Term 3" 
-              onStatsChange={handleStatsChange}
+              initialRows={termsData["Year 4 Term 3"]}
+              onStatsChange={handleTermChange}
             />
           </div>
           {/* Year 4 Summary */}

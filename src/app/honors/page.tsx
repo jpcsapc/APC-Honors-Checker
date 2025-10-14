@@ -9,6 +9,13 @@ import { TermTable } from '../../components/TermTable';
 import Link from "next/link"
 import { ThemeToggle } from "@/components/theme-toggle"
 
+interface RowData {
+  subjectCode: string;
+  unit: number;
+  grade: string;
+  honorPoints: number;
+}
+
 interface TermStats {
   gpa: number;
   totalHonorPoints: number;
@@ -17,41 +24,79 @@ interface TermStats {
 }
 
 export default function HonorsCalcu() {
-  const [termStats, setTermStats] = React.useState<Record<string, TermStats>>({});
+  const [termsData, setTermsData] = React.useState<Record<string, RowData[]>>({});
   const [currentGPA, setCurrentGPA] = React.useState("0.00");
   const [eligibleForHonors, setEligibleForHonors] = React.useState("-");
 
-  const handleStatsChange = React.useCallback((term: string, stats: TermStats) => {
-    setTermStats(prev => ({
+  React.useEffect(() => {
+    try {
+      const savedData = localStorage.getItem("termsData");
+      if (savedData) {
+        const parsedData = JSON.parse(savedData);
+        if (typeof parsedData === 'object' && !Array.isArray(parsedData) && parsedData !== null) {
+          setTermsData(parsedData);
+        }
+      }
+    } catch (error) {
+      console.error("Failed to parse termsData from localStorage", error);
+    }
+  }, []);
+
+  React.useEffect(() => {
+    localStorage.setItem("termsData", JSON.stringify(termsData));
+  }, [termsData]);
+
+  const handleTermChange = React.useCallback((term: string, rows: RowData[]) => {
+    setTermsData(prev => ({
       ...prev,
-      [term]: stats
+      [term]: rows
     }));
   }, []);
 
   const calculateHonors = React.useCallback(() => {
-    const terms = Object.values(termStats);
+    const termKeys = Object.keys(termsData);
 
-    if (terms.length === 0) {
+    if (termKeys.length === 0) {
       setCurrentGPA("0.00");
       setEligibleForHonors("-");
       return;
     }
 
-    // Calculate average GPA across all terms
-    const totalGPA = terms.reduce((sum, term) => sum + term.gpa, 0); // Sum of GPAs
-    const averageGPA = totalGPA / terms.length; // Calculate average GPA
+    const allTermStats = termKeys.map(term => {
+      const rows = termsData[term];
+      if (!Array.isArray(rows)) {
+        return { gpa: 0, totalHonorPoints: 0, totalUnits: 0, rGrades: 0 };
+      }
+      const validRows = rows.filter(row => {
+        const isNatSer = (row.subjectCode || '').toUpperCase().startsWith('NATSER');
+        if (isNatSer) return false;
+        return row.subjectCode.trim() !== '' && row.grade.trim() !== '' && row.unit > 0;
+      });
 
-    // Calculate total units across all terms
-    const totalUnits = terms.reduce((sum, term) => sum + term.totalUnits, 0);
-    const hasEnoughUnits = totalUnits >= 36; // 36 units required for honors
+      if (validRows.length === 0) {
+        return { gpa: 0, totalHonorPoints: 0, totalUnits: 0, rGrades: 0 };
+      }
 
-    // Calculate total R grades across all terms
-    const totalRGrades = terms.reduce((sum, term) => sum + term.rGrades, 0);
-    const hasTooManyRs = totalRGrades > 2; // Maximum 2 R grades allowed (2 or more is too many)
+      const totalHonorPoints = validRows.reduce((sum, row) => sum + row.honorPoints, 0);
+      const totalUnits = validRows.reduce((sum, row) => sum + Number(row.unit), 0);
+      const gpa = totalUnits > 0 ? totalHonorPoints / totalUnits : 0;
+      const rGrades = validRows.filter(row => row.grade.toUpperCase() === 'R').length;
+
+      return { gpa, totalHonorPoints, totalUnits, rGrades };
+    });
+
+    const totalGPA = allTermStats.reduce((sum, term) => sum + term.gpa, 0);
+    const averageGPA = totalGPA / allTermStats.length;
+
+    const totalUnits = allTermStats.reduce((sum, term) => sum + term.totalUnits, 0);
+    const hasEnoughUnits = totalUnits >= 36;
+
+    const totalRGrades = allTermStats.reduce((sum, term) => sum + term.rGrades, 0);
+    const hasTooManyRs = totalRGrades > 2;
 
     setCurrentGPA(averageGPA.toFixed(2));
 
-    if (!hasEnoughUnits){
+    if (!hasEnoughUnits) {
       setEligibleForHonors("No, not enough units");
       return;
     }
@@ -66,7 +111,7 @@ export default function HonorsCalcu() {
     } else {
       setEligibleForHonors("No");
     }
-  }, [termStats]);
+  }, [termsData]);
 
   // Run calculation automatically when termStats change
   React.useEffect(() => {
@@ -118,15 +163,18 @@ export default function HonorsCalcu() {
          <div className="grid md:grid-cols-3 gap-4 mt-8 justify-center">
             <TermTable 
               term="Term 1" 
-              onStatsChange={handleStatsChange}
+              initialRows={termsData["Term 1"]}
+              onStatsChange={handleTermChange}
             />
             <TermTable 
               term="Term 2" 
-              onStatsChange={handleStatsChange}
+              initialRows={termsData["Term 2"]}
+              onStatsChange={handleTermChange}
             />
             <TermTable 
               term="Term 3" 
-              onStatsChange={handleStatsChange}
+              initialRows={termsData["Term 3"]}
+              onStatsChange={handleTermChange}
             />
         </div>
 
