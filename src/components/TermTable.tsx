@@ -107,7 +107,7 @@ export function TermTable({ term, onStatsChange }: TermTableProps) {
           <span>Subject Code</span>
           <span>Unit</span>
           <span>Grade</span>
-          <span>Honor Pts</span>
+          <span className="relative left-[-12px]">Honor Pts</span>
         </div>
 
         <div className="flex-1">
