@@ -14,18 +14,28 @@ interface RowData {
 
 interface TermTableProps {
   term: string;
-  onStatsChange?: (term: string, stats: { gpa: number; totalHonorPoints: number; totalUnits: number; rGrades: number }) => void;
+  onStatsChange?: (term: string, rows: RowData[]) => void;
+  initialRows?: RowData[];
 }
 
-export function TermTable({ term, onStatsChange }: TermTableProps) {
-  const [rows, setRows] = useState<RowData[]>(() =>
-    Array(4).fill(null).map(() => ({
+export function TermTable({ term, onStatsChange, initialRows }: TermTableProps) {
+  const [rows, setRows] = useState<RowData[]>(() => {
+    if (initialRows) {
+      return initialRows;
+    }
+    return Array(4).fill(null).map(() => ({
       subjectCode: '',
       unit: 0,
       grade: '',
       honorPoints: 0
-    }))
-  );
+    }));
+  });
+
+  useEffect(() => {
+    if (initialRows) {
+      setRows(initialRows);
+    }
+  }, [initialRows]);
 
   // Helper to check for NAT/SER subjects, ignoring case and allowing partials
   const isNatSer = useCallback((code: string) => (code || '').toUpperCase().startsWith('NATSER'), []);
@@ -69,35 +79,11 @@ export function TermTable({ term, onStatsChange }: TermTableProps) {
     }
   };
 
-  const termStats = React.useMemo(() => {
-    const validRows = rows.filter(row => {
-      // Exclude NAT/SER from GPA calculations
-      if (isNatSer(row.subjectCode)) return false;
-      return row.subjectCode.trim() !== '' && row.grade.trim() !== '' && row.unit > 0;
-    });
-
-    if (validRows.length === 0) {
-      return { gpa: 0, totalHonorPoints: 0, totalUnits: 0, rGrades: 0 };
-    }
-
-    const totalHonorPoints = validRows.reduce((sum, row) => sum + row.honorPoints, 0);
-    const totalUnits = validRows.reduce((sum, row) => sum + Number(row.unit), 0);
-    const gpa = totalUnits > 0 ? totalHonorPoints / totalUnits : 0;
-    const rGrades = validRows.filter(row => row.grade.toUpperCase() === 'R').length;
-
-    return {
-      gpa: gpa,
-      totalHonorPoints: totalHonorPoints,
-      totalUnits: totalUnits,
-      rGrades: rGrades
-    };
-  }, [rows, isNatSer]);
-
   useEffect(() => {
     if (onStatsChange) {
-      onStatsChange(term, termStats);
+      onStatsChange(term, rows);
     }
-  }, [termStats, term, onStatsChange]);
+  }, [rows, term, onStatsChange]);
 
   return (
     <Card className="shadow-md min-w-[250px] flex flex-col h-[650 px]">
@@ -199,10 +185,10 @@ export function TermTable({ term, onStatsChange }: TermTableProps) {
 
           <div className="border-t-2 border-gray-300 pt-2">
             <div className="grid grid-cols-[2fr_0.7fr_1fr_1fr_auto] gap-2 text-sm font-semibold">
-              <span className="text-gray-600">TOTAL</span>
-              <span className="text-gray-600">{termStats.totalUnits}</span>
-              <span className="text-gray-600">GPA: {termStats.gpa.toFixed(2)}</span>
-              <span className="text-gray-600">{termStats.totalHonorPoints.toFixed(2)}</span>
+              <span className="text-gray-600"></span>
+              <span className="text-gray-600"></span>
+              <span className="text-gray-600"></span>
+              <span className="text-gray-600"></span>
               <span></span>
             </div>
           </div>
