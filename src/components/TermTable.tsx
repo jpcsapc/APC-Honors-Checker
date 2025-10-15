@@ -16,9 +16,10 @@ interface TermTableProps {
   term: string;
   onStatsChange?: (term: string, rows: RowData[]) => void;
   initialRows?: RowData[];
+  onEdge?: (direction: "up" | "down" | "left" | "right", fromTerm: string, fromRow: number, fromCol: number) => void;
 }
 
-export function TermTable({ term, onStatsChange, initialRows }: TermTableProps) {
+export function TermTable({ term, onStatsChange, initialRows, onEdge }: TermTableProps) {
   const [rows, setRows] = useState<RowData[]>(() => {
     if (initialRows) {
       return initialRows;
@@ -85,9 +86,84 @@ export function TermTable({ term, onStatsChange, initialRows }: TermTableProps) 
     }
   }, [rows, term, onStatsChange]);
 
+  // Handle arrow key navigation
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>, rowIndex: number, colIndex: number) => {
+    // Only handle arrow keys
+    if (!['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key)) {
+      return;
+    }
+
+    e.preventDefault();
+
+    let newRowIndex = rowIndex;
+    let newColIndex = colIndex;
+
+    switch (e.key) {
+      case 'ArrowUp':
+        if (rowIndex > 0) {
+          newRowIndex = rowIndex - 1;
+          const cellId = `cell-${term}-${newRowIndex}-${colIndex}`;
+          const targetInput = document.getElementById(cellId) as HTMLInputElement;
+          if (targetInput) {
+            targetInput.focus();
+            targetInput.select();
+          }
+        } else if (onEdge) {
+          // At top edge, try to go to table above
+          onEdge('up', term, rowIndex, colIndex);
+        }
+        return;
+
+      case 'ArrowDown':
+        if (rowIndex < rows.length - 1) {
+          newRowIndex = rowIndex + 1;
+          const cellId = `cell-${term}-${newRowIndex}-${colIndex}`;
+          const targetInput = document.getElementById(cellId) as HTMLInputElement;
+          if (targetInput) {
+            targetInput.focus();
+            targetInput.select();
+          }
+        } else if (onEdge) {
+          // At bottom edge, try to go to table below
+          onEdge('down', term, rowIndex, colIndex);
+        }
+        return;
+
+      case 'ArrowLeft':
+        if (colIndex > 0) {
+          newColIndex = colIndex - 1;
+          const cellId = `cell-${term}-${rowIndex}-${newColIndex}`;
+          const targetInput = document.getElementById(cellId) as HTMLInputElement;
+          if (targetInput) {
+            targetInput.focus();
+            targetInput.select();
+          }
+        } else if (onEdge) {
+          // At left edge, try to go to table on the left
+          onEdge('left', term, rowIndex, colIndex);
+        }
+        return;
+
+      case 'ArrowRight':
+        if (colIndex < 2) { // Max is column 2 (Grade column)
+          newColIndex = colIndex + 1;
+          const cellId = `cell-${term}-${rowIndex}-${newColIndex}`;
+          const targetInput = document.getElementById(cellId) as HTMLInputElement;
+          if (targetInput) {
+            targetInput.focus();
+            targetInput.select();
+          }
+        } else if (onEdge) {
+          // At right edge, try to go to table on the right
+          onEdge('right', term, rowIndex, colIndex);
+        }
+        return;
+    }
+  };
+
   return (
-    <Card className="shadow-md min-w-[250px] flex flex-col h-[650 px]">
-      <CardContent className="flex flex-col h-full">
+    <Card className="shadow-md min-w-[250px] flex flex-col">
+      <CardContent className="flex flex-col">
         <h2 className="text-lg font-semibold mb-2">{term}</h2>
         <div className="grid grid-cols-[2fr_0.7fr_1fr_1fr] gap-2 text-sm font-medium mb-2">
           <span>Subject Code</span>
@@ -96,10 +172,10 @@ export function TermTable({ term, onStatsChange, initialRows }: TermTableProps) 
           <span className="relative left-[-12px]">Honor Pts</span>
         </div>
 
-        <div className="flex-1">
+        <div>
           {rows.map((row, i) => {
             const isNatSerRow = isNatSer(row.subjectCode);
-            const natSerClassName = 'bg-gray-100 text-gray-500';
+            const natSerClassName = 'bg-gray-100 text-gray-500 dark:bg-gray-800 dark:text-gray-400';
 
             return (
               <div key={i} className={cn(
@@ -108,15 +184,18 @@ export function TermTable({ term, onStatsChange, initialRows }: TermTableProps) 
               )}>
                 {/* Subject Code Input */}
                 <Input
+                  id={`cell-${term}-${i}-0`}
                   placeholder="Subject Code"
                   value={row.subjectCode}
                   onChange={(e) => updateRow(i, 'subjectCode', e.target.value)}
+                  onKeyDown={(e) => handleKeyDown(e, i, 0)}
                   type="text"
                   className={cn(isNatSerRow && natSerClassName)}
                 />
 
                 {/* Editable Unit Input */}
                 <Input
+                  id={`cell-${term}-${i}-1`}
                   placeholder="0"
                   value={row.unit || ''}
                   onChange={(e) => {
@@ -125,15 +204,18 @@ export function TermTable({ term, onStatsChange, initialRows }: TermTableProps) 
                       updateRow(i, 'unit', parseFloat(value) || 0);
                     }
                   }}
+                  onKeyDown={(e) => handleKeyDown(e, i, 1)}
                   type="text"
                   className={cn(isNatSerRow && natSerClassName)}
                 />
 
                 {/* Grade Input */}
                 <Input
+                  id={`cell-${term}-${i}-2`}
                   placeholder="1.25 or R"
                   value={row.grade}
                   onChange={(e) => updateRow(i, 'grade', e.target.value)}
+                  onKeyDown={(e) => handleKeyDown(e, i, 2)}
                   type="text"
                   className={cn(isNatSerRow && natSerClassName)}
                 />
@@ -146,13 +228,15 @@ export function TermTable({ term, onStatsChange, initialRows }: TermTableProps) 
                       readOnly
                       disabled
                       className={cn(natSerClassName)}
+                      tabIndex={-1}
                     />
                   ) : (
                     <Input
                       placeholder="0.00"
                       value={row.honorPoints.toFixed(2)}
                       readOnly
-                      className="bg-gray-100"
+                      className="bg-gray-100 dark:bg-gray-800"
+                      tabIndex={-1}
                     />
                   )}
                 </div>
@@ -163,6 +247,7 @@ export function TermTable({ term, onStatsChange, initialRows }: TermTableProps) 
                   disabled={rows.length <= 1}
                   className="text-red-500 hover:text-red-700 disabled:text-gray-400 disabled:cursor-not-allowed p-1"
                   title="Remove row"
+                  tabIndex={-1}
                 >
                   ×
                 </button>
@@ -172,18 +257,18 @@ export function TermTable({ term, onStatsChange, initialRows }: TermTableProps) 
         </div>
 
         {/* Add Row + Totals */}
-        <div className="mt-auto pt-4">
+        <div className="mt-4 pt-4">
           <div className="flex justify-center mb-4">
             <button
               onClick={addRow}
               disabled={rows.length >= 10}
-              className="text-blue-500 hover:text-blue-700 disabled:text-gray-400 disabled:cursor-not-allowed text-sm font-medium px-3 py-1 border border-blue-300 rounded hover:bg-blue-50 disabled:hover:bg-transparent"
+              className="text-blue-500 hover:text-blue-700 disabled:text-gray-400 disabled:cursor-not-allowed text-sm font-medium px-3 py-1 border border-blue-300 rounded hover:bg-blue-50 disabled:hover:bg-transparent dark:border-blue-600 dark:hover:bg-blue-950"
             >
               + Add Subject {rows.length >= 10 && "(Max 10)"}
             </button>
           </div>
 
-          <div className="border-t-2 border-gray-300 pt-2">
+          <div className="border-t-2 border-gray-300 pt-2 dark:border-gray-700">
             <div className="grid grid-cols-[2fr_0.7fr_1fr_1fr_auto] gap-2 text-sm font-semibold">
               <span className="text-gray-600"></span>
               <span className="text-gray-600"></span>
