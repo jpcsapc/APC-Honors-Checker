@@ -13,13 +13,6 @@ interface RowData {
   honorPoints: number;
 }
 
-interface TermStats {
-  gpa: number;
-  totalHonorPoints: number;
-  totalUnits: number;
-  rGrades: number;
-}
-
 interface YearStats {
   gpa: number;
   totalHonorPoints: number;

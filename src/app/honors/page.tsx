@@ -16,13 +16,6 @@ interface RowData {
   honorPoints: number;
 }
 
-interface TermStats {
-  gpa: number;
-  totalHonorPoints: number;
-  totalUnits: number;
-  rGrades: number;
-}
-
 export default function HonorsCalcu() {
   const [termsData, setTermsData] = React.useState<Record<string, RowData[]>>({});
   const [currentGPA, setCurrentGPA] = React.useState("0.00");
