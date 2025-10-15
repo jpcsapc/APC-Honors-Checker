@@ -1,13 +1,10 @@
 "use client"
 import * as React from 'react';
-import { Button } from "@/components/ui/button"
-import { ArrowLeft, Calculator } from "lucide-react"
-// ToggleLevelSelector removed — level selector no longer used (course selection is inline)
+import { Button } from "@/components/ui/button";
+import { ArrowLeft, Calculator } from "lucide-react";
 import { TermTable } from '../../components/TermTable';
+import Link from "next/link";
 
-
-import Link from "next/link"
-import { ThemeToggle } from "@/components/theme-toggle"
 
 interface RowData {
   subjectCode: string;
@@ -183,7 +180,6 @@ export default function HonorsCalcu() {
               </Link>
               <h1 className="text-sm text-muted-foreground">Honors Calculator</h1>
             </div>
-            <ThemeToggle />
           </div>
         </div>
       </header>
