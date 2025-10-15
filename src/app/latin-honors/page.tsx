@@ -33,6 +33,9 @@ export default function LatinHonorsCalculator() {
   const [overallGPA, setOverallGPA] = React.useState("0.00");
   const [latinHonor, setLatinHonor] = React.useState("-");
 
+  const termsDataRef = React.useRef(termsData);
+  termsDataRef.current = termsData;
+
   React.useEffect(() => {
     try {
       const savedData = localStorage.getItem("latinHonorsTermsData");
@@ -101,6 +104,68 @@ export default function LatinHonorsCalculator() {
 
     setYearStats(newYearStats);
   }, [termsData]);
+
+  const tableLayout = [
+    ["Year 1 Term 1", "Year 1 Term 2", "Year 1 Term 3"],
+    ["Year 2 Term 1", "Year 2 Term 2", "Year 2 Term 3"],
+    ["Year 3 Term 1", "Year 3 Term 2", "Year 3 Term 3"],
+    ["Year 4 Term 1", "Year 4 Term 2", "Year 4 Term 3"],
+  ];
+
+  const handleEdge = (
+    direction: "up" | "down" | "left" | "right",
+    fromTerm: string,
+    fromRow: number,
+    fromCol: number
+  ) => {
+    const termsData = termsDataRef.current;
+    const termRowIndex = tableLayout.findIndex(row => row.includes(fromTerm));
+    const termColIndex = tableLayout[termRowIndex].indexOf(fromTerm);
+
+    let nextTermName = "";
+    let nextCellRow = fromRow;
+    let nextCellCol = fromCol;
+
+    if (direction === "left" && fromCol === 0) {
+      if (termColIndex > 0) {
+        nextTermName = tableLayout[termRowIndex][termColIndex - 1];
+        nextCellCol = 2; // Last editable column
+      }
+    } else if (direction === "right" && fromCol === 2) {
+      if (termColIndex < tableLayout[termRowIndex].length - 1) {
+        nextTermName = tableLayout[termRowIndex][termColIndex + 1];
+        nextCellCol = 0; // First column
+      }
+    } else if (direction === "up" && fromRow === 0) {
+      if (termRowIndex > 0) {
+        nextTermName = tableLayout[termRowIndex - 1][termColIndex];
+        const targetRows = termsData[nextTermName] || [];
+        nextCellRow = Math.max(0, targetRows.length - 1);
+      }
+    } else if (direction === "down" && fromRow === (termsData[fromTerm]?.length || 0) - 1) {
+      if (termRowIndex < tableLayout.length - 1) {
+        nextTermName = tableLayout[termRowIndex + 1][termColIndex];
+        nextCellRow = 0;
+      }
+    }
+
+    if (nextTermName) {
+      const nextTermRows = termsData[nextTermName] || [];
+      if (nextTermRows.length > 0 && nextCellRow >= nextTermRows.length) {
+        nextCellRow = nextTermRows.length - 1;
+      }
+      if (nextCellRow < 0 || nextTermRows.length === 0) {
+        nextCellRow = 0;
+      }
+
+      const nextCellId = `cell-${nextTermName}-${nextCellRow}-${nextCellCol}`;
+      const targetInput = document.getElementById(nextCellId) as HTMLInputElement;
+      if (targetInput) {
+        targetInput.focus();
+        targetInput.select();
+      }
+    }
+  };
 
   // Recalculate overall results whenever yearStats changes so outputs are live
   
@@ -205,16 +270,19 @@ export default function LatinHonorsCalculator() {
               term="Year 1 Term 1" 
               initialRows={termsData["Year 1 Term 1"]}
               onStatsChange={handleTermChange}
+              onEdge={handleEdge}
             />
             <TermTable 
               term="Year 1 Term 2" 
               initialRows={termsData["Year 1 Term 2"]}
               onStatsChange={handleTermChange}
+              onEdge={handleEdge}
             />
             <TermTable 
               term="Year 1 Term 3" 
               initialRows={termsData["Year 1 Term 3"]}
               onStatsChange={handleTermChange}
+              onEdge={handleEdge}
             />
           </div>
           {/* Year 1 Summary */}
@@ -238,16 +306,19 @@ export default function LatinHonorsCalculator() {
               term="Year 2 Term 1" 
               initialRows={termsData["Year 2 Term 1"]}
               onStatsChange={handleTermChange}
+              onEdge={handleEdge}
             />
             <TermTable 
               term="Year 2 Term 2" 
               initialRows={termsData["Year 2 Term 2"]}
               onStatsChange={handleTermChange}
+              onEdge={handleEdge}
             />
             <TermTable 
               term="Year 2 Term 3" 
               initialRows={termsData["Year 2 Term 3"]}
               onStatsChange={handleTermChange}
+              onEdge={handleEdge}
             />
           </div>
           {/* Year 2 Summary */}
@@ -271,16 +342,19 @@ export default function LatinHonorsCalculator() {
               term="Year 3 Term 1" 
               initialRows={termsData["Year 3 Term 1"]}
               onStatsChange={handleTermChange}
+              onEdge={handleEdge}
             />
             <TermTable 
               term="Year 3 Term 2" 
               initialRows={termsData["Year 3 Term 2"]}
               onStatsChange={handleTermChange}
+              onEdge={handleEdge}
             />
             <TermTable 
               term="Year 3 Term 3" 
               initialRows={termsData["Year 3 Term 3"]}
               onStatsChange={handleTermChange}
+              onEdge={handleEdge}
             />
           </div>
           {/* Year 3 Summary */}
@@ -304,16 +378,19 @@ export default function LatinHonorsCalculator() {
               term="Year 4 Term 1" 
               initialRows={termsData["Year 4 Term 1"]}
               onStatsChange={handleTermChange}
+              onEdge={handleEdge}
             />
             <TermTable 
               term="Year 4 Term 2" 
               initialRows={termsData["Year 4 Term 2"]}
               onStatsChange={handleTermChange}
+              onEdge={handleEdge}
             />
             <TermTable 
               term="Year 4 Term 3" 
               initialRows={termsData["Year 4 Term 3"]}
               onStatsChange={handleTermChange}
+              onEdge={handleEdge}
             />
           </div>
           {/* Year 4 Summary */}

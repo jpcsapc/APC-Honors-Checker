@@ -28,6 +28,9 @@ export default function HonorsCalcu() {
   const [currentGPA, setCurrentGPA] = React.useState("0.00");
   const [eligibleForHonors, setEligibleForHonors] = React.useState("-");
 
+  const termsDataRef = React.useRef(termsData);
+  termsDataRef.current = termsData;
+
   React.useEffect(() => {
     try {
       const savedData = localStorage.getItem("termsData");
@@ -53,9 +56,65 @@ export default function HonorsCalcu() {
     }));
   }, []);
 
+  const termLayout = [["Term 1", "Term 2", "Term 3"]];
+
+  const handleEdge = (
+    direction: "up" | "down" | "left" | "right",
+    fromTerm: string,
+    fromRow: number,
+    fromCol: number
+  ) => {
+    const termsData = termsDataRef.current;
+    const termRowIndex = termLayout.findIndex(row => row.includes(fromTerm));
+    const termColIndex = termLayout[termRowIndex].indexOf(fromTerm);
+
+    let nextTermName = "";
+    let nextCellRow = fromRow;
+    let nextCellCol = fromCol;
+
+    if (direction === "left" && fromCol === 0) {
+      if (termColIndex > 0) {
+        nextTermName = termLayout[termRowIndex][termColIndex - 1];
+        nextCellCol = 2; // Last editable column
+      }
+    } else if (direction === "right" && fromCol === 2) {
+      if (termColIndex < termLayout[termRowIndex].length - 1) {
+        nextTermName = termLayout[termRowIndex][termColIndex + 1];
+        nextCellCol = 0; // First column
+      }
+    } else if (direction === "up" && fromRow === 0) {
+      if (termRowIndex > 0) {
+        nextTermName = termLayout[termRowIndex - 1][termColIndex];
+        const targetRows = termsData[nextTermName] || [];
+        nextCellRow = Math.max(0, targetRows.length - 1);
+      }
+    } else if (direction === "down" && fromRow === (termsData[fromTerm]?.length || 0) - 1) {
+      if (termRowIndex < termLayout.length - 1) {
+        nextTermName = termLayout[termRowIndex + 1][termColIndex];
+        nextCellRow = 0;
+      }
+    }
+
+    if (nextTermName) {
+      const nextTermRows = termsData[nextTermName] || [];
+      if (nextTermRows.length > 0 && nextCellRow >= nextTermRows.length) {
+        nextCellRow = nextTermRows.length - 1;
+      }
+      if (nextCellRow < 0 || nextTermRows.length === 0) {
+        nextCellRow = 0;
+      }
+
+      const nextCellId = `cell-${nextTermName}-${nextCellRow}-${nextCellCol}`;
+      const targetInput = document.getElementById(nextCellId) as HTMLInputElement;
+      if (targetInput) {
+        targetInput.focus();
+        targetInput.select();
+      }
+    }
+  };
+
   const calculateHonors = React.useCallback(() => {
     const termKeys = Object.keys(termsData);
-
     if (termKeys.length === 0) {
       setCurrentGPA("0.00");
       setEligibleForHonors("-");
@@ -165,16 +224,19 @@ export default function HonorsCalcu() {
               term="Term 1" 
               initialRows={termsData["Term 1"]}
               onStatsChange={handleTermChange}
+              onEdge={handleEdge}
             />
             <TermTable 
               term="Term 2" 
               initialRows={termsData["Term 2"]}
               onStatsChange={handleTermChange}
+              onEdge={handleEdge}
             />
             <TermTable 
               term="Term 3" 
               initialRows={termsData["Term 3"]}
               onStatsChange={handleTermChange}
+              onEdge={handleEdge}
             />
         </div>
 
