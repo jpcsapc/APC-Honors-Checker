@@ -9,7 +9,6 @@ import {
 } from "@/components/ui/accordion"
 import { ArrowLeft, HelpCircle } from "lucide-react"
 import Link from "next/link"
-import { ThemeToggle } from "@/components/theme-toggle"
 
 export default function FAQPage() {
   const faqSections = [
@@ -97,7 +96,6 @@ export default function FAQPage() {
               </Link>
               <h1 className="text-sm text-muted-foreground">Frequently Asked Questions</h1>
             </div>
-            <ThemeToggle />
           </div>
         </div>
       </header>
