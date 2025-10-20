@@ -19,5 +19,3 @@ export function ThemeToggle() {
     </Button>
   )
 }
-
-// comment
