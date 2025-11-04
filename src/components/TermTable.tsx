@@ -273,7 +273,7 @@ export function TermTable({ term, onStatsChange, initialRows, onEdge }: TermTabl
                       value="N/A"
                       readOnly
                       disabled
-                      className={cn(natSerClassName)}
+                      className={cn(natSerClassName, "pointer-events-none")}
                       tabIndex={-1}
                     />
                   ) : (
@@ -281,7 +281,8 @@ export function TermTable({ term, onStatsChange, initialRows, onEdge }: TermTabl
                       placeholder="0.00"
                       value={row.honorPoints.toFixed(2)}
                       readOnly
-                      className="bg-gray-100 dark:bg-gray-800"
+                      disabled
+                      className="bg-gray-100 dark:bg-gray-800 pointer-events-none cursor-not-allowed"
                       tabIndex={-1}
                     />
                   )}
