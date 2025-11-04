@@ -241,7 +241,9 @@ export default function LatinHonorsCalculator() {
             Latin Honors Calculator
           </h1>
           <p className="text-muted-foreground text-lg">
-            Calculate your 4-year academic performance for Latin honors
+            Calculate your 4-year academic performance for Latin honors <br />
+            You can just use the arrow keys on your keyboard for easier navigation ^^ <br />
+            (Click on an input box first then you can use the arrow keys!)
           </p>
         </div>
 

@@ -205,7 +205,11 @@ export default function HonorsCalcu() {
             <Calculator className="h-12 w-12 text-muted-foreground" />
           </div>
           <h1 className="text-4xl font-normal text-foreground mb-4">Honors Calculator</h1>
-          <p className="text-muted-foreground text-lg">Enter subjects and grades for each term per academic year</p>
+          <p className="text-muted-foreground text-lg">
+            Enter subjects and grades for each term per academic year <br />
+            You can just use the arrow keys on your keyboard for easier navigation ^^ <br />
+            (Click on an input box first then you can use the arrow keys!)
+          </p>
         </div>
   <hr className="mb-10 border-border/100" />
 
