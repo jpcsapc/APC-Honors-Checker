@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { ArrowLeft, Calculator } from "lucide-react";
 import { TermTable } from '../../components/TermTable';
 import Link from "next/link";
+import { ThemeToggle } from "@/components/theme-toggle";
 
 interface RowData {
   subjectCode: string;
@@ -226,6 +227,7 @@ export default function LatinHonorsCalculator() {
             </Link>
             <h1 className="text-sm text-muted-foreground">Latin Honors Calculator</h1>
             </div>
+            <ThemeToggle />
           </div>
         </div>
       </header>
@@ -241,7 +243,9 @@ export default function LatinHonorsCalculator() {
             Latin Honors Calculator
           </h1>
           <p className="text-muted-foreground text-lg">
-            Calculate your 4-year academic performance for Latin honors
+            Calculate your 4-year academic performance for Latin honors <br />
+            You can just use the arrow keys on your keyboard for easier navigation ^^ <br />
+            (Click on an input box first then you can use the arrow keys!)
           </p>
         </div>
 
