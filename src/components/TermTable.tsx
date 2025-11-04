@@ -269,13 +269,27 @@ export function TermTable({ term, onStatsChange, initialRows, onEdge }: TermTabl
           </div>
 
           <div className="border-t-2 border-gray-300 pt-2 dark:border-gray-700">
-            <div className="grid grid-cols-[2fr_0.7fr_1fr_1fr_auto] gap-2 text-sm font-semibold">
-              <span className="text-gray-600"></span>
-              <span className="text-gray-600"></span>
-              <span className="text-gray-600"></span>
-              <span className="text-gray-600"></span>
-              <span></span>
-            </div>
+            {(() => {
+              // Calculate totals, excluding NAT/SER subjects
+              const validRows = rows.filter(row => {
+                const hasData = row.subjectCode.trim() !== '' && row.grade.trim() !== '' && row.unit > 0;
+                return hasData && !isNatSer(row.subjectCode);
+              });
+              
+              const creditTotal = validRows.reduce((sum, row) => sum + Number(row.unit), 0);
+              const honorPointsTotal = validRows.reduce((sum, row) => sum + row.honorPoints, 0);
+              const gpa = creditTotal > 0 ? (honorPointsTotal / creditTotal).toFixed(2) : '0.00';
+
+              return (
+                <div className="grid grid-cols-[2fr_0.7fr_1fr_1fr_auto] gap-2 text-sm font-semibold">
+                  <span className="text-gray-600 dark:text-gray-300">TOTAL</span>
+                  <span className="text-gray-900 dark:text-gray-100">{creditTotal}</span>
+                  <span className="text-gray-600 dark:text-gray-300">GPA: {gpa}</span>
+                  <span className="text-gray-900 dark:text-gray-100">{honorPointsTotal.toFixed(2)}</span>
+                  <span></span>
+                </div>
+              );
+            })()}
           </div>
         </div>
       </CardContent>
