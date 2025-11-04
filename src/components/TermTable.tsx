@@ -32,9 +32,15 @@ export function TermTable({ term, onStatsChange, initialRows, onEdge }: TermTabl
     }));
   });
 
+  // Track if this component is actively being edited to prevent initialRows updates
+  const isEditingRef = useRef(false);
+  const lastInitialRowsRef = useRef(initialRows);
+
   useEffect(() => {
-    if (initialRows) {
+    // Only update from initialRows if we're not actively editing AND the data actually changed
+    if (initialRows && !isEditingRef.current && initialRows !== lastInitialRowsRef.current) {
       setRows(initialRows);
+      lastInitialRowsRef.current = initialRows;
     }
   }, [initialRows]);
 
@@ -52,10 +58,10 @@ export function TermTable({ term, onStatsChange, initialRows, onEdge }: TermTabl
         clearTimeout(debounceTimerRef.current);
       }
       
-      // Set new timer - notify parent after 150ms of no changes
+      // Set new timer - notify parent after 300ms of no changes (increased from 150ms)
       debounceTimerRef.current = setTimeout(() => {
         onStatsChange(term, rows);
-      }, 150);
+      }, 300);
     }
 
     // Cleanup
@@ -81,6 +87,7 @@ export function TermTable({ term, onStatsChange, initialRows, onEdge }: TermTabl
   }, [rows, isNatSer]);
 
   const updateRow = useCallback((index: number, field: keyof RowData, value: string | number) => {
+    isEditingRef.current = true; // Mark as editing
     setRows(prevRows => {
       const newRows = [...prevRows];
       newRows[index] = { ...newRows[index], [field]: value } as RowData;
@@ -101,6 +108,11 @@ export function TermTable({ term, onStatsChange, initialRows, onEdge }: TermTabl
 
       return newRows;
     });
+    
+    // Reset editing flag after a delay
+    setTimeout(() => {
+      isEditingRef.current = false;
+    }, 500);
   }, [isNatSer]);
 
   const addRow = useCallback(() => {
