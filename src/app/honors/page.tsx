@@ -5,6 +5,9 @@ import { ArrowLeft, Calculator } from "lucide-react";
 import { TermTable } from '../../components/TermTable';
 import Link from "next/link";
 
+// Memoized TermTable to prevent unnecessary re-renders
+const MemoizedTermTable = React.memo(TermTable);
+
 interface RowData {
   subjectCode: string;
   unit: number;
@@ -21,7 +24,6 @@ interface YearStats {
 
 export default function HonorsCalcu() {
   const [termsData, setTermsData] = React.useState<Record<string, RowData[]>>({});
-  const [yearStats, setYearStats] = React.useState<Record<string, YearStats>>({});
 
   const termsDataRef = React.useRef(termsData);
   termsDataRef.current = termsData;
@@ -41,9 +43,21 @@ export default function HonorsCalcu() {
     }
   }, []);
 
-  // Persist on change
+  // Persist on change - debounced to avoid excessive localStorage writes
+  const persistTimerRef = React.useRef<NodeJS.Timeout | null>(null);
   React.useEffect(() => {
-    localStorage.setItem("honorsTermsData", JSON.stringify(termsData));
+    if (persistTimerRef.current) {
+      clearTimeout(persistTimerRef.current);
+    }
+    persistTimerRef.current = setTimeout(() => {
+      localStorage.setItem("honorsTermsData", JSON.stringify(termsData));
+    }, 300);
+
+    return () => {
+      if (persistTimerRef.current) {
+        clearTimeout(persistTimerRef.current);
+      }
+    };
   }, [termsData]);
 
   const handleTermChange = React.useCallback((term: string, rows: RowData[]) => {
@@ -53,13 +67,13 @@ export default function HonorsCalcu() {
     }));
   }, []);
 
-  // 4x3 layout for Year 1–4
-  const tableLayout = [
+  // 4x3 layout for Year 1–4 - memoized to prevent recreation
+  const tableLayout = React.useMemo(() => [
     ["Year 1 Term 1", "Year 1 Term 2", "Year 1 Term 3"],
     ["Year 2 Term 1", "Year 2 Term 2", "Year 2 Term 3"],
     ["Year 3 Term 1", "Year 3 Term 2", "Year 3 Term 3"],
     ["Year 4 Term 1", "Year 4 Term 2", "Year 4 Term 3"],
-  ];
+  ], []);
 
   // Arrow-key navigation between tables
   const handleEdge = (
@@ -118,7 +132,8 @@ export default function HonorsCalcu() {
   };
 
   // Recompute per-year GPA and eligibility whenever termsData changes
-  React.useEffect(() => {
+  // Memoize to avoid recalculating if termsData object reference didn't change
+  const yearStats = React.useMemo(() => {
     const groupedByYear: Record<string, RowData[][]> = {};
     Object.entries(termsData).forEach(([term, rows]) => {
       if (!Array.isArray(rows)) return;
@@ -160,7 +175,7 @@ export default function HonorsCalcu() {
       nextYearStats[year] = { gpa, totalUnits, rGrades, eligible };
     });
 
-    setYearStats(nextYearStats);
+    return nextYearStats;
   }, [termsData]);
 
   return (
@@ -202,19 +217,19 @@ export default function HonorsCalcu() {
               <section className="mt-12">
                 <h2 className="text-2xl font-semibold mb-6 text-center">{yearKey}</h2>
                 <div className="grid md:grid-cols-3 gap-4 justify-center">
-                  <TermTable
+                  <MemoizedTermTable
                     term={`${yearKey} Term 1`}
                     initialRows={termsData[`${yearKey} Term 1`]}
                     onStatsChange={handleTermChange}
                     onEdge={handleEdge}
                   />
-                  <TermTable
+                  <MemoizedTermTable
                     term={`${yearKey} Term 2`}
                     initialRows={termsData[`${yearKey} Term 2`]}
                     onStatsChange={handleTermChange}
                     onEdge={handleEdge}
                   />
-                  <TermTable
+                  <MemoizedTermTable
                     term={`${yearKey} Term 3`}
                     initialRows={termsData[`${yearKey} Term 3`]}
                     onStatsChange={handleTermChange}
