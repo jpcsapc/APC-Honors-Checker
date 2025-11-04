@@ -47,7 +47,7 @@ export default function FrontPage() {
             <br />
             Grades Calculator
           </h1>
-          <p className="text-muted-foreground text-lg">calculate and track your academic journey</p>
+          <p className="text-muted-foreground text-lg">Calculate and Track Your Academic Journey</p>
         </div>
 
         {/* Calculator Cards */}
