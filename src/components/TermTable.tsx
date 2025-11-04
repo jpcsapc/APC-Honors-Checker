@@ -3,7 +3,7 @@ import * as React from 'react';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
 import { cn } from "@/lib/utils"
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 
 interface RowData {
   subjectCode: string;
@@ -41,50 +41,84 @@ export function TermTable({ term, onStatsChange, initialRows, onEdge }: TermTabl
   // Helper to check for NAT/SER subjects, ignoring case and allowing partials
   const isNatSer = useCallback((code: string) => (code || '').toUpperCase().startsWith('NATSER'), []);
 
-  const updateRow = (index: number, field: keyof RowData, value: string | number) => {
-    const newRows = [...rows];
-    newRows[index] = { ...newRows[index], [field]: value } as RowData;
+  // Debounce timer ref to prevent excessive parent updates
+  const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
 
-    // Recalculate honor points for this row
-    if (field === 'grade' || field === 'unit' || field === 'subjectCode') {
-      const subj = newRows[index].subjectCode;
-      // If this is a NAT/SER row, honor points are not applicable
-      if (isNatSer(subj)) {
-        newRows[index].honorPoints = 0;
-      } else {
-        const gradeStr = newRows[index].grade;
-        const grade = gradeStr.toUpperCase() === 'R' ? 0 : parseFloat(gradeStr) || 0;
-        const unit = Number(newRows[index].unit) || 0;
-        newRows[index].honorPoints = grade * unit;
+  // Debounced stats change notification (only notify parent after typing stops)
+  useEffect(() => {
+    if (onStatsChange) {
+      // Clear existing timer
+      if (debounceTimerRef.current) {
+        clearTimeout(debounceTimerRef.current);
       }
+      
+      // Set new timer - notify parent after 150ms of no changes
+      debounceTimerRef.current = setTimeout(() => {
+        onStatsChange(term, rows);
+      }, 150);
     }
 
-    setRows(newRows);
-  };
+    // Cleanup
+    return () => {
+      if (debounceTimerRef.current) {
+        clearTimeout(debounceTimerRef.current);
+      }
+    };
+  }, [rows, term, onStatsChange]);
 
-  const addRow = () => {
+  // Memoize totals calculation to avoid recalculating on every render
+  const totals = useMemo(() => {
+    const validRows = rows.filter(row => {
+      const hasData = row.subjectCode.trim() !== '' && row.grade.trim() !== '' && row.unit > 0;
+      return hasData && !isNatSer(row.subjectCode);
+    });
+    
+    const creditTotal = validRows.reduce((sum, row) => sum + Number(row.unit), 0);
+    const honorPointsTotal = validRows.reduce((sum, row) => sum + row.honorPoints, 0);
+    const gpa = creditTotal > 0 ? (honorPointsTotal / creditTotal).toFixed(2) : '0.00';
+
+    return { creditTotal, honorPointsTotal, gpa };
+  }, [rows, isNatSer]);
+
+  const updateRow = useCallback((index: number, field: keyof RowData, value: string | number) => {
+    setRows(prevRows => {
+      const newRows = [...prevRows];
+      newRows[index] = { ...newRows[index], [field]: value } as RowData;
+
+      // Recalculate honor points for this row
+      if (field === 'grade' || field === 'unit' || field === 'subjectCode') {
+        const subj = newRows[index].subjectCode;
+        // If this is a NAT/SER row, honor points are not applicable
+        if (isNatSer(subj)) {
+          newRows[index].honorPoints = 0;
+        } else {
+          const gradeStr = newRows[index].grade;
+          const grade = gradeStr.toUpperCase() === 'R' ? 0 : parseFloat(gradeStr) || 0;
+          const unit = Number(newRows[index].unit) || 0;
+          newRows[index].honorPoints = grade * unit;
+        }
+      }
+
+      return newRows;
+    });
+  }, [isNatSer]);
+
+  const addRow = useCallback(() => {
     if (rows.length < 10) {
-      setRows([...rows, {
+      setRows(prev => [...prev, {
         subjectCode: '',
         unit: 0,
         grade: '',
         honorPoints: 0
       }] as RowData[]);
     }
-  };
+  }, [rows.length]);
 
-  const removeRow = (index: number) => {
+  const removeRow = useCallback((index: number) => {
     if (rows.length > 1) {
-      const newRows = rows.filter((_, i) => i !== index);
-      setRows(newRows);
+      setRows(prev => prev.filter((_, i) => i !== index));
     }
-  };
-
-  useEffect(() => {
-    if (onStatsChange) {
-      onStatsChange(term, rows);
-    }
-  }, [rows, term, onStatsChange]);
+  }, [rows.length]);
 
   // Handle arrow key navigation
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>, rowIndex: number, colIndex: number) => {
@@ -269,27 +303,13 @@ export function TermTable({ term, onStatsChange, initialRows, onEdge }: TermTabl
           </div>
 
           <div className="border-t-2 border-gray-300 pt-2 dark:border-gray-700">
-            {(() => {
-              // Calculate totals, excluding NAT/SER subjects
-              const validRows = rows.filter(row => {
-                const hasData = row.subjectCode.trim() !== '' && row.grade.trim() !== '' && row.unit > 0;
-                return hasData && !isNatSer(row.subjectCode);
-              });
-              
-              const creditTotal = validRows.reduce((sum, row) => sum + Number(row.unit), 0);
-              const honorPointsTotal = validRows.reduce((sum, row) => sum + row.honorPoints, 0);
-              const gpa = creditTotal > 0 ? (honorPointsTotal / creditTotal).toFixed(2) : '0.00';
-
-              return (
-                <div className="grid grid-cols-[2fr_0.7fr_1fr_1fr_auto] gap-2 text-sm font-semibold">
-                  <span className="text-gray-600 dark:text-gray-300">TOTAL</span>
-                  <span className="text-gray-900 dark:text-gray-100">{creditTotal}</span>
-                  <span className="text-gray-600 dark:text-gray-300">GPA: {gpa}</span>
-                  <span className="text-gray-900 dark:text-gray-100">{honorPointsTotal.toFixed(2)}</span>
-                  <span></span>
-                </div>
-              );
-            })()}
+            <div className="grid grid-cols-[2fr_0.7fr_1fr_1fr_auto] gap-2 text-sm font-semibold">
+              <span className="text-gray-600 dark:text-gray-300">TOTAL</span>
+              <span className="text-gray-900 dark:text-gray-100">{totals.creditTotal}</span>
+              <span className="text-gray-600 dark:text-gray-300">GPA: {totals.gpa}</span>
+              <span className="text-gray-900 dark:text-gray-100">{totals.honorPointsTotal.toFixed(2)}</span>
+              <span></span>
+            </div>
           </div>
         </div>
       </CardContent>
