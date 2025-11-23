@@ -2,7 +2,7 @@
 
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Calculator, Award, HelpCircle } from "lucide-react"
+import { Calculator, Award, HelpCircle, MessageSquare } from "lucide-react"
 import Link from "next/link"
 import { ThemeToggle } from "@/components/theme-toggle"
 
@@ -25,6 +25,12 @@ export default function FrontPage() {
       description: "Frequently Asked Questions and help documentation",
       icon: <HelpCircle className="h-5 w-5" />,
       href: "/faqs",
+    },
+    {
+      title: "Submit Feedback",
+      description: "Share your experience, report bugs, or suggest new features",
+      icon: <MessageSquare className="h-5 w-5" />,
+      href: "/feedback",
     },
   ]
 
@@ -51,7 +57,7 @@ export default function FrontPage() {
         </div>
 
         {/* Calculator Cards */}
-        <div className="grid md:grid-cols-3 gap-6 mb-16">
+        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 mb-16">
           {calculatorCards.map((card, index) => (
             <Card key={index} className="hover:shadow-md transition-shadow flex flex-col">
               <CardHeader>
