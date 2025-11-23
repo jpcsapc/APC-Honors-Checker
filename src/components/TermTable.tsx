@@ -375,7 +375,7 @@ export function TermTable({ term, onStatsChange, initialRows, onEdge }: TermTabl
             <button
               onClick={addRow}
               disabled={rows.length >= 10}
-              className="text-blue-500 hover:text-blue-700 disabled:text-gray-400 disabled:cursor-not-allowed text-sm font-medium px-3 py-1 border border-blue-300 rounded hover:bg-blue-50 disabled:hover:bg-transparent dark:border-blue-600 dark:hover:bg-blue-950"
+              className="text-foreground hover:text-foreground disabled:text-gray-400 disabled:cursor-not-allowed text-sm font-medium px-3 py-1 border border-border rounded hover:bg-muted disabled:hover:bg-transparent transition-colors"
             >
               + Add Subject {rows.length >= 10 && "(Max 10)"}
             </button>
