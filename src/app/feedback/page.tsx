@@ -383,20 +383,20 @@ export default function FeedbackPage() {
             <CardContent className="pt-6">
               <h3 className="font-semibold mb-3">What happens after submission?</h3>
               <ul className="space-y-2 text-sm text-muted-foreground">
-                <li className="flex items-start gap-2">
-                  <span className="text-foreground mt-0.5">•</span>
+                <li className="flex items-center gap-2">
+                  <span className="text-foreground flex-shrink-0">•</span>
                   <span>Your feedback is automatically converted into a GitHub Issue in our development repository</span>
                 </li>
-                <li className="flex items-start gap-2">
-                  <span className="text-foreground mt-0.5">•</span>
+                <li className="flex items-center gap-2">
+                  <span className="text-foreground flex-shrink-0">•</span>
                   <span>You&apos;ll receive an issue number for reference and tracking purposes</span>
                 </li>
-                <li className="flex items-start gap-2">
-                  <span className="text-foreground mt-0.5">•</span>
+                <li className="flex items-center gap-2">
+                  <span className="text-foreground flex-shrink-0">•</span>
                   <span>Our development team reviews all submissions and prioritizes based on impact and feasibility</span>
                 </li>
-                <li className="flex items-start gap-2">
-                  <span className="text-foreground mt-0.5">•</span>
+                <li className="flex items-center gap-2">
+                  <span className="text-foreground flex-shrink-0">•</span>
                   <span>If you provided contact information, we may reach out for clarification or updates</span>
                 </li>
               </ul>
