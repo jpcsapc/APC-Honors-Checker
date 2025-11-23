@@ -8,7 +8,7 @@ import { Select } from "@/components/ui/select"
 import { Label } from "@/components/ui/label"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { ArrowLeft, MessageSquare, CheckCircle2, AlertCircle, Loader2 } from "lucide-react"
+import { ArrowLeft, MessageSquare, CheckCircle2, AlertCircle, Loader2, Clock } from "lucide-react"
 import Link from "next/link"
 import { ThemeToggle } from "@/components/theme-toggle"
 
@@ -35,7 +35,7 @@ interface FormErrors {
   consent?: string
 }
 
-type SubmissionStatus = 'idle' | 'submitting' | 'success' | 'error'
+type SubmissionStatus = 'idle' | 'submitting' | 'success' | 'error' | 'cooldown'
 
 export default function FeedbackPage() {
   const [formData, setFormData] = useState<FormData>({
@@ -51,6 +51,9 @@ export default function FeedbackPage() {
   const [errorMessage, setErrorMessage] = useState<string>('')
   const [issueNumber, setIssueNumber] = useState<number | null>(null)
   const [formErrors, setFormErrors] = useState<FormErrors>({})
+  const [cooldownUntil, setCooldownUntil] = useState<number | null>(null)
+  const [cooldownMinutes, setCooldownMinutes] = useState<number>(0)
+  const [honeypot, setHoneypot] = useState('')
 
   // Capture user context on component mount
   useEffect(() => {
@@ -87,7 +90,37 @@ export default function FeedbackPage() {
       currentUrl: window.location.href,
       timestamp: new Date().toISOString(),
     })
+
+    // Check for existing cooldown
+    const storedCooldown = localStorage.getItem('feedbackCooldown')
+    if (storedCooldown) {
+      const cooldownTime = parseInt(storedCooldown)
+      if (Date.now() < cooldownTime) {
+        setCooldownUntil(cooldownTime)
+        setStatus('cooldown')
+      } else {
+        localStorage.removeItem('feedbackCooldown')
+      }
+    }
   }, [])
+
+  // Cooldown timer
+  useEffect(() => {
+    if (cooldownUntil && Date.now() < cooldownUntil) {
+      const interval = setInterval(() => {
+        const remaining = Math.ceil((cooldownUntil - Date.now()) / 1000 / 60)
+        setCooldownMinutes(remaining)
+        
+        if (remaining <= 0) {
+          setCooldownUntil(null)
+          setStatus('idle')
+          localStorage.removeItem('feedbackCooldown')
+        }
+      }, 1000)
+
+      return () => clearInterval(interval)
+    }
+  }, [cooldownUntil])
 
   const validateForm = (): boolean => {
     const errors: FormErrors = {}
@@ -101,10 +134,43 @@ export default function FeedbackPage() {
     if (!formData.subject.trim()) {
       errors.subject = 'Subject is required'
       isValid = false
+    } else if (formData.subject.trim().length < 10) {
+      errors.subject = 'Subject must be at least 10 characters'
+      isValid = false
+    } else if (formData.subject.trim().length > 100) {
+      errors.subject = 'Subject must not exceed 100 characters'
+      isValid = false
     }
 
     if (!formData.message.trim()) {
       errors.message = 'Detailed message is required'
+      isValid = false
+    } else if (formData.message.trim().length < 20) {
+      errors.message = 'Message must be at least 20 characters'
+      isValid = false
+    } else if (formData.message.trim().length > 5000) {
+      errors.message = 'Message must not exceed 5000 characters'
+      isValid = false
+    }
+
+    // Check for repeated characters (spam detection)
+    const repeatedCharsRegex = /(.)\1{10,}/
+    if (repeatedCharsRegex.test(formData.message)) {
+      errors.message = 'Message contains invalid repeated characters'
+      isValid = false
+    }
+
+    // Check for excessive special characters
+    const specialCharsCount = (formData.message.match(/[^a-zA-Z0-9\s.,!?;:'"()\-]/g) || []).length
+    if (specialCharsCount > formData.message.length * 0.3) {
+      errors.message = 'Message contains too many special characters'
+      isValid = false
+    }
+
+    // Check for meaningful content (not just spaces and punctuation)
+    const meaningfulContent = formData.message.replace(/[^a-zA-Z0-9]/g, '')
+    if (meaningfulContent.length < 15) {
+      errors.message = 'Message must contain meaningful content'
       isValid = false
     }
 
@@ -120,6 +186,22 @@ export default function FeedbackPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     
+    // Honeypot check (bot detection)
+    if (honeypot !== '') {
+      // Bot detected - show success but don't actually submit
+      setStatus('success')
+      setIssueNumber(9999)
+      return
+    }
+
+    // Check cooldown
+    if (cooldownUntil && Date.now() < cooldownUntil) {
+      const remainingMinutes = Math.ceil((cooldownUntil - Date.now()) / 1000 / 60)
+      setErrorMessage(`Please wait ${remainingMinutes} minute${remainingMinutes > 1 ? 's' : ''} before submitting again.`)
+      setStatus('error')
+      return
+    }
+
     if (!validateForm()) {
       return
     }
@@ -142,11 +224,29 @@ export default function FeedbackPage() {
       const data = await response.json()
 
       if (!response.ok) {
+        if (response.status === 429) {
+          // Rate limit from server
+          setErrorMessage(data.error || 'Too many submissions. Please try again later.')
+          setStatus('error')
+          
+          // Set client-side cooldown if server provides one
+          if (data.resetIn) {
+            const cooldown = Date.now() + (data.resetIn * 60 * 1000)
+            setCooldownUntil(cooldown)
+            localStorage.setItem('feedbackCooldown', cooldown.toString())
+          }
+          return
+        }
         throw new Error(data.error || 'Failed to submit feedback')
       }
 
       setStatus('success')
       setIssueNumber(data.issueNumber)
+      
+      // Set cooldown (15 minutes)
+      const cooldown = Date.now() + (15 * 60 * 1000)
+      setCooldownUntil(cooldown)
+      localStorage.setItem('feedbackCooldown', cooldown.toString())
       
       // Reset form
       setFormData({
@@ -219,17 +319,49 @@ export default function FeedbackPage() {
                   <p className="text-muted-foreground mb-4">
                     Your feedback has been successfully submitted.
                   </p>
-                  {issueNumber && (
+                  {issueNumber && issueNumber !== 9999 && (
                     <p className="text-sm text-muted-foreground mb-6">
                       Issue #{issueNumber} has been created in our tracking system.
                     </p>
                   )}
-                  <Button onClick={() => setStatus('idle')} variant="outline">
-                    Submit Another Feedback
-                  </Button>
+                  <p className="text-xs text-muted-foreground mb-6">
+                    You can submit another feedback in 15 minutes.
+                  </p>
+                  <Link href="/">
+                    <Button variant="outline">
+                      Return to Home
+                    </Button>
+                  </Link>
+                </div>
+              ) : status === 'cooldown' ? (
+                <div className="text-center py-8">
+                  <Clock className="h-16 w-16 text-amber-600 dark:text-amber-400 mx-auto mb-4" />
+                  <h2 className="text-2xl font-semibold mb-2">Please Wait</h2>
+                  <p className="text-muted-foreground mb-4">
+                    You can submit another feedback in {cooldownMinutes} minute{cooldownMinutes !== 1 ? 's' : ''}.
+                  </p>
+                  <p className="text-sm text-muted-foreground mb-6">
+                    This helps us prevent spam and ensures quality feedback.
+                  </p>
+                  <Link href="/">
+                    <Button variant="outline">
+                      Return to Home
+                    </Button>
+                  </Link>
                 </div>
               ) : (
                 <form onSubmit={handleSubmit} className="space-y-6">
+                  {/* Honeypot Field (Hidden from users, visible to bots) */}
+                  <div style={{ position: 'absolute', left: '-9999px', opacity: 0, pointerEvents: 'none' }} aria-hidden="true">
+                    <Input
+                      type="text"
+                      name="website"
+                      tabIndex={-1}
+                      autoComplete="off"
+                      value={honeypot}
+                      onChange={(e) => setHoneypot(e.target.value)}
+                    />
+                  </div>
                   {/* Feedback Type */}
                   <div className="space-y-2">
                     <Label htmlFor="feedbackType">
@@ -258,12 +390,16 @@ export default function FeedbackPage() {
                     </Label>
                     <Input
                       id="subject"
-                      placeholder="Brief summary of your feedback"
+                      placeholder="Brief summary of your feedback (10-100 characters)"
                       value={formData.subject}
                       onChange={(e) => handleInputChange('subject', e.target.value)}
                       disabled={status === 'submitting'}
                       maxLength={100}
+                      autoComplete="off"
                     />
+                    <p className="text-xs text-muted-foreground">
+                      {formData.subject.length}/100 characters
+                    </p>
                     {formErrors.subject && (
                       <p className="text-sm text-red-500">{formErrors.subject}</p>
                     )}
@@ -276,16 +412,20 @@ export default function FeedbackPage() {
                     </Label>
                     <Textarea
                       id="message"
-                      placeholder="Please provide as much detail as possible. You can use markdown formatting."
+                      placeholder="Please provide as much detail as possible (minimum 20 characters). You can use markdown formatting."
                       value={formData.message}
                       onChange={(e) => handleInputChange('message', e.target.value)}
                       disabled={status === 'submitting'}
                       rows={8}
                       className="resize-y"
+                      maxLength={5000}
+                      autoComplete="off"
+                      spellCheck="true"
                     />
-                    <p className="text-xs text-muted-foreground">
-                      Supports Markdown formatting (e.g., **bold**, *italic*, `code`)
-                    </p>
+                    <div className="flex justify-between text-xs text-muted-foreground">
+                      <span>Supports Markdown formatting (e.g., **bold**, *italic*, `code`)</span>
+                      <span>{formData.message.length}/5000</span>
+                    </div>
                     {formErrors.message && (
                       <p className="text-sm text-red-500">{formErrors.message}</p>
                     )}
@@ -379,29 +519,32 @@ export default function FeedbackPage() {
           </Card>
 
           {/* Information Box */}
-          <Card className="mt-6">
-            <CardContent className="pt-6">
-              <h3 className="font-semibold mb-3">What happens after submission?</h3>
-              <ul className="space-y-2 text-sm text-muted-foreground">
-                <li className="flex items-center gap-2">
-                  <span className="text-foreground flex-shrink-0">•</span>
-                  <span>Your feedback is automatically converted into a GitHub Issue in our development repository</span>
-                </li>
-                <li className="flex items-center gap-2">
-                  <span className="text-foreground flex-shrink-0">•</span>
-                  <span>You&apos;ll receive an issue number for reference and tracking purposes</span>
-                </li>
-                <li className="flex items-center gap-2">
-                  <span className="text-foreground flex-shrink-0">•</span>
-                  <span>Our development team reviews all submissions and prioritizes based on impact and feasibility</span>
-                </li>
-                <li className="flex items-center gap-2">
-                  <span className="text-foreground flex-shrink-0">•</span>
-                  <span>If you provided contact information, we may reach out for clarification or updates</span>
-                </li>
-              </ul>
-            </CardContent>
-          </Card>
+          {status !== 'success' && status !== 'cooldown' && (
+            <Card className="mt-6">
+              <CardContent className="pt-6">
+                <h3 className="font-semibold mb-3">What happens after submission?</h3>
+                <ul className="space-y-2 text-sm text-muted-foreground">
+                  <li className="flex items-center gap-2">
+                    <span className="text-foreground flex-shrink-0">•</span>
+                    <span>Your feedback is automatically converted into a GitHub Issue in our development repository</span>
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <span className="text-foreground flex-shrink-0">•</span>
+                    <span>Our development team reviews all submissions and prioritizes based on impact and feasibility</span>
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <span className="text-foreground flex-shrink-0">•</span>
+                    <span>If you provided contact information, we may reach out for clarification or updates</span>
+                  </li>
+                </ul>
+                <div className="mt-4 pt-4 border-t">
+                  <p className="text-xs text-muted-foreground">
+                    <strong>Note:</strong> To prevent spam, you can submit feedback once every 15 minutes.
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+          )}
         </div>
 
         {/* Footer */}
