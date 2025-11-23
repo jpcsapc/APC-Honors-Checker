@@ -329,6 +329,7 @@ export function TermTable({ term, onStatsChange, initialRows, onEdge }: TermTabl
                   }}
                   onKeyDown={(e) => handleKeyDown(e, i, 2)}
                   type="text"
+                  autoComplete="off"
                   className={cn(isNatSerRow && natSerClassName)}
                 />
 
