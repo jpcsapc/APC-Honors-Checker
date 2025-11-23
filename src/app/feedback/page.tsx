@@ -171,15 +171,6 @@ export default function FeedbackPage() {
     }
   }
 
-  const getFeedbackTypeLabel = (type: string): string => {
-    const labels: Record<string, string> = {
-      bug: 'bug',
-      feature: 'enhancement',
-      general: 'question',
-    }
-    return labels[type] || 'question'
-  }
-
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
@@ -398,7 +389,7 @@ export default function FeedbackPage() {
                 </li>
                 <li className="flex items-start gap-2">
                   <span className="text-foreground mt-0.5">•</span>
-                  <span>You'll receive an issue number for reference and tracking purposes</span>
+                  <span>You&apos;ll receive an issue number for reference and tracking purposes</span>
                 </li>
                 <li className="flex items-start gap-2">
                   <span className="text-foreground mt-0.5">•</span>
