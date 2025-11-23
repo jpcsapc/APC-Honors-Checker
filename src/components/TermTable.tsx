@@ -369,19 +369,10 @@ export function TermTable({ term, onStatsChange, initialRows, onEdge }: TermTabl
           })}
         </div>
 
-        {/* Add Row + Totals */}
+        {/* Totals + Add Row */}
         <div className="mt-4 pt-4">
-          <div className="flex justify-center mb-4">
-            <button
-              onClick={addRow}
-              disabled={rows.length >= 10}
-              className="text-foreground hover:text-foreground disabled:text-gray-400 disabled:cursor-not-allowed text-sm font-medium px-3 py-1 border border-border rounded hover:bg-muted disabled:hover:bg-transparent transition-colors"
-            >
-              + Add Subject {rows.length >= 10 && "(Max 10)"}
-            </button>
-          </div>
-
-          <div className="border-t-2 border-gray-300 pt-2 dark:border-gray-700">
+          {/* Totals Row */}
+          <div className="border-t-2 border-gray-300 pt-2 pb-4 dark:border-gray-700">
             <div className="grid grid-cols-[2fr_0.7fr_1fr_1fr_auto] gap-2 text-sm font-semibold">
               <span className="text-gray-600 dark:text-gray-300">TOTAL</span>
               <span className="text-gray-900 dark:text-gray-100">{totals.creditTotal}</span>
@@ -389,6 +380,17 @@ export function TermTable({ term, onStatsChange, initialRows, onEdge }: TermTabl
               <span className="text-gray-900 dark:text-gray-100">{totals.honorPointsTotal.toFixed(2)}</span>
               <span></span>
             </div>
+          </div>
+
+          {/* Add Subject Button */}
+          <div className="flex justify-center">
+            <button
+              onClick={addRow}
+              disabled={rows.length >= 10}
+              className="text-foreground hover:text-foreground disabled:text-gray-400 disabled:cursor-not-allowed text-sm font-medium px-3 py-1 border border-border rounded hover:bg-muted disabled:hover:bg-transparent transition-colors"
+            >
+              + Add Subject {rows.length >= 10 && "(Max 10)"}
+            </button>
           </div>
         </div>
       </CardContent>
