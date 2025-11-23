@@ -370,9 +370,9 @@ export function TermTable({ term, onStatsChange, initialRows, onEdge }: TermTabl
         </div>
 
         {/* Totals + Add Row */}
-        <div className="mt-4 pt-4">
+        <div className="mt-2 pt-2">
           {/* Totals Row */}
-          <div className="border-t-2 border-gray-300 pt-2 pb-4 dark:border-gray-700">
+          <div className="border-t-2 border-gray-300 pt-2 pb-6 dark:border-gray-700">
             <div className="grid grid-cols-[2fr_0.7fr_1fr_1fr_auto] gap-2 text-sm font-semibold">
               <span className="text-gray-600 dark:text-gray-300">TOTAL</span>
               <span className="text-gray-900 dark:text-gray-100">{totals.creditTotal}</span>
