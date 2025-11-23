@@ -395,6 +395,7 @@ export default function FeedbackPage() {
                       onChange={(e) => handleInputChange('subject', e.target.value)}
                       disabled={status === 'submitting'}
                       maxLength={100}
+                      autoComplete="off"
                     />
                     <p className="text-xs text-muted-foreground">
                       {formData.subject.length}/100 characters
@@ -418,6 +419,8 @@ export default function FeedbackPage() {
                       rows={8}
                       className="resize-y"
                       maxLength={5000}
+                      autoComplete="off"
+                      spellCheck="true"
                     />
                     <div className="flex justify-between text-xs text-muted-foreground">
                       <span>Supports Markdown formatting (e.g., **bold**, *italic*, `code`)</span>
