@@ -245,9 +245,15 @@ export default function HonorsCalcu() {
 
                 {/* Year Summary */}
                 {yearStats[yearKey] && (
-                  <div className="flex justify-center mt-4 gap-4">
-                    <div className="border px-4 py-2 shadow-sm rounded">Current GPA: {yearStats[yearKey].gpa.toFixed(2)}</div>
-                    <div className="border px-4 py-2 shadow-sm rounded">Eligible for Honors: {yearStats[yearKey].eligible}</div>
+                  <div className="flex justify-center mt-6 gap-4">
+                    <div className="rounded-lg border bg-card px-6 py-4 shadow-sm">
+                      <p className="text-sm text-muted-foreground mb-1">Current GPA</p>
+                      <p className="text-2xl font-bold text-foreground">{yearStats[yearKey].gpa.toFixed(2)}</p>
+                    </div>
+                    <div className="rounded-lg border bg-card px-6 py-4 shadow-sm">
+                      <p className="text-sm text-muted-foreground mb-1">Eligible for Honors</p>
+                      <p className="text-2xl font-bold text-foreground">{yearStats[yearKey].eligible}</p>
+                    </div>
                   </div>
                 )}
               </section>
