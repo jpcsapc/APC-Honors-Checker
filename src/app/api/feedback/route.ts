@@ -108,7 +108,19 @@ ${body.contactInfo ? `### Contact Information\n${body.contactInfo}\n` : ''}
 
     if (!githubResponse.ok) {
       const errorData = await githubResponse.json()
-      console.error('GitHub API error:', errorData)
+      console.error('GitHub API error:', {
+        status: githubResponse.status,
+        statusText: githubResponse.statusText,
+        error: errorData
+      })
+      
+      // Provide more helpful error message for common issues
+      if (githubResponse.status === 403) {
+        return NextResponse.json(
+          { error: 'GitHub token lacks necessary permissions. Please check token scopes and organization settings.' },
+          { status: 500 }
+        )
+      }
       
       // Don't expose detailed GitHub errors to client
       return NextResponse.json(
