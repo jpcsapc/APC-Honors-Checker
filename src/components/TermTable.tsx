@@ -86,6 +86,65 @@ export function TermTable({ term, onStatsChange, initialRows, onEdge }: TermTabl
     return { creditTotal, honorPointsTotal, gpa };
   }, [rows, isNatSer]);
 
+  // Grade validator: only allows 0-4.0, R/r, or NG
+  const isValidGrade = useCallback((value: string): boolean => {
+    if (value === '') return true; // Allow empty for clearing
+    
+    // Allow R or r (fail/removal)
+    if (value.toUpperCase() === 'R') return true;
+    
+    // Allow NG (No Grade) - case insensitive
+    const upperValue = value.toUpperCase();
+    if (upperValue === 'N' || upperValue === 'NG') return true;
+    
+    // Allow numeric values with specific decimal rules
+    const numericRegex = /^\d*\.?\d*$/;
+    if (!numericRegex.test(value)) return false;
+    
+    // If it's a valid number, check range and decimal constraints
+    const numValue = parseFloat(value);
+    if (!isNaN(numValue)) {
+      // Must be between 0 and 4.0
+      if (numValue < 0 || numValue > 4.0) return false;
+      
+      // If value is 4 or greater, only allow exactly 4.0 or 4 (no decimals like 4.1, 4.5, etc.)
+      if (numValue >= 4) {
+        return numValue === 4.0;
+      }
+      
+      // For values below 4, check decimal places
+      const decimalPart = value.split('.')[1];
+      if (decimalPart !== undefined) {
+        // Special case: allow 0.0 (but not other .0 decimals like 1.0, 2.0, 3.0)
+        if (numValue === 0.0 && (decimalPart === '0' || decimalPart === '00')) {
+          return true;
+        }
+        
+        // Decimal must be between .1 and .99 (at least 1 digit, max 2 digits)
+        const decimalValue = parseInt(decimalPart, 10);
+        if (decimalValue === 0 || decimalValue < 1) {
+          return false; // Reject .0, .00 for grades other than 0
+        }
+        // Allow .1 to .99 (up to 2 decimal places)
+        return decimalPart.length <= 2;
+      }
+      
+      return true; // Allow whole numbers like 0, 1, 2, 3
+    }
+    
+    // Allow partial inputs like "1.", "3." for typing
+    if (value.endsWith('.')) {
+      const wholePart = parseFloat(value);
+      if (!isNaN(wholePart) && wholePart >= 0 && wholePart < 4) {
+        return true;
+      }
+      // For "4.", reject since 4 cannot have decimals
+      if (wholePart === 4) return false;
+    }
+    
+    return true;
+  }, []);
+
   const updateRow = useCallback((index: number, field: keyof RowData, value: string | number) => {
     isEditingRef.current = true; // Mark as editing
     setRows(prevRows => {
@@ -100,7 +159,9 @@ export function TermTable({ term, onStatsChange, initialRows, onEdge }: TermTabl
           newRows[index].honorPoints = 0;
         } else {
           const gradeStr = newRows[index].grade;
-          const grade = gradeStr.toUpperCase() === 'R' ? 0 : parseFloat(gradeStr) || 0;
+          const gradeUpper = gradeStr.toUpperCase();
+          // R (fail) and NG (no grade) both count as 0
+          const grade = (gradeUpper === 'R' || gradeUpper === 'NG') ? 0 : parseFloat(gradeStr) || 0;
           const unit = Number(newRows[index].unit) || 0;
           newRows[index].honorPoints = grade * unit;
         }
@@ -258,11 +319,17 @@ export function TermTable({ term, onStatsChange, initialRows, onEdge }: TermTabl
                 {/* Grade Input */}
                 <Input
                   id={`cell-${term}-${i}-2`}
-                  placeholder="1.25 or R"
+                  placeholder="1.25, R, or NG"
                   value={row.grade}
-                  onChange={(e) => updateRow(i, 'grade', e.target.value)}
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    if (isValidGrade(value)) {
+                      updateRow(i, 'grade', value);
+                    }
+                  }}
                   onKeyDown={(e) => handleKeyDown(e, i, 2)}
                   type="text"
+                  autoComplete="off"
                   className={cn(isNatSerRow && natSerClassName)}
                 />
 
@@ -273,7 +340,7 @@ export function TermTable({ term, onStatsChange, initialRows, onEdge }: TermTabl
                       value="N/A"
                       readOnly
                       disabled
-                      className={cn(natSerClassName)}
+                      className={cn(natSerClassName, "pointer-events-none")}
                       tabIndex={-1}
                     />
                   ) : (
@@ -281,7 +348,8 @@ export function TermTable({ term, onStatsChange, initialRows, onEdge }: TermTabl
                       placeholder="0.00"
                       value={row.honorPoints.toFixed(2)}
                       readOnly
-                      className="bg-gray-100 dark:bg-gray-800"
+                      disabled
+                      className="bg-gray-100 dark:bg-gray-800 pointer-events-none cursor-not-allowed"
                       tabIndex={-1}
                     />
                   )}
@@ -302,19 +370,10 @@ export function TermTable({ term, onStatsChange, initialRows, onEdge }: TermTabl
           })}
         </div>
 
-        {/* Add Row + Totals */}
-        <div className="mt-4 pt-4">
-          <div className="flex justify-center mb-4">
-            <button
-              onClick={addRow}
-              disabled={rows.length >= 10}
-              className="text-blue-500 hover:text-blue-700 disabled:text-gray-400 disabled:cursor-not-allowed text-sm font-medium px-3 py-1 border border-blue-300 rounded hover:bg-blue-50 disabled:hover:bg-transparent dark:border-blue-600 dark:hover:bg-blue-950"
-            >
-              + Add Subject {rows.length >= 10 && "(Max 10)"}
-            </button>
-          </div>
-
-          <div className="border-t-2 border-gray-300 pt-2 dark:border-gray-700">
+        {/* Totals + Add Row */}
+        <div className="mt-2 pt-2">
+          {/* Totals Row */}
+          <div className="border-t-2 border-gray-300 pt-2 pb-6 dark:border-gray-700">
             <div className="grid grid-cols-[2fr_0.7fr_1fr_1fr_auto] gap-2 text-sm font-semibold">
               <span className="text-gray-600 dark:text-gray-300">TOTAL</span>
               <span className="text-gray-900 dark:text-gray-100">{totals.creditTotal}</span>
@@ -322,6 +381,17 @@ export function TermTable({ term, onStatsChange, initialRows, onEdge }: TermTabl
               <span className="text-gray-900 dark:text-gray-100">{totals.honorPointsTotal.toFixed(2)}</span>
               <span></span>
             </div>
+          </div>
+
+          {/* Add Subject Button */}
+          <div className="flex justify-center">
+            <button
+              onClick={addRow}
+              disabled={rows.length >= 10}
+              className="text-foreground hover:text-foreground disabled:text-gray-400 disabled:cursor-not-allowed text-sm font-medium px-3 py-1 border border-border rounded hover:bg-muted disabled:hover:bg-transparent transition-colors"
+            >
+              + Add Subject {rows.length >= 10 && "(Max 10)"}
+            </button>
           </div>
         </div>
       </CardContent>
