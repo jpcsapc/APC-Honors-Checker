@@ -2,7 +2,7 @@
 
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Calculator, Award, HelpCircle, MessageSquare } from "lucide-react"
+import { Calculator, Award, HelpCircle, MessageSquare, ArrowRightLeft } from "lucide-react"
 import Link from "next/link"
 import { ThemeToggle } from "@/components/theme-toggle"
 
@@ -19,6 +19,12 @@ export default function FrontPage() {
       description: "Calculate Latin honors and academic distinctions",
       icon: <Calculator className="h-5 w-5" />,
       href: "/latin-honors",
+    },
+    {
+      title: "Grade Converter",
+      description: "Convert between APC, UP, and Percentage grading systems",
+      icon: <ArrowRightLeft className="h-5 w-5" />,
+      href: "/grade-converter",
     },
     {
       title: "FAQs",
@@ -57,7 +63,7 @@ export default function FrontPage() {
         </div>
 
         {/* Calculator Cards */}
-        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 mb-16">
+        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 mb-16">
           {calculatorCards.map((card, index) => (
             <Card key={index} className="hover:shadow-md transition-shadow flex flex-col">
               <CardHeader>
