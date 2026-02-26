@@ -16,7 +16,6 @@ interface UserContext {
   browser: string
   os: string
   screenResolution: string
-  currentUrl: string
   timestamp: string
 }
 
@@ -87,7 +86,6 @@ export default function FeedbackPage() {
       browser: getBrowserInfo(),
       os: getOSInfo(),
       screenResolution: `${window.screen.width}x${window.screen.height}`,
-      currentUrl: window.location.href,
       timestamp: new Date().toISOString(),
     })
 
