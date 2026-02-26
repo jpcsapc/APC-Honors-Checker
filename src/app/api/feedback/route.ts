@@ -10,7 +10,6 @@ interface FeedbackRequest {
     browser: string
     os: string
     screenResolution: string
-    currentUrl: string
     timestamp: string
   }
 }
@@ -154,7 +153,6 @@ ${sanitizedMessage}
 - **Browser:** ${body.userContext.browser}
 - **OS:** ${body.userContext.os}
 - **Screen Resolution:** ${body.userContext.screenResolution}
-- **Page URL:** ${body.userContext.currentUrl}
 - **Timestamp:** ${body.userContext.timestamp}
 
 ${body.contactInfo ? `### Contact Information\n${body.contactInfo}\n` : ''}
