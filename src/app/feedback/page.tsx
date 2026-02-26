@@ -132,9 +132,6 @@ export default function FeedbackPage() {
     if (!formData.subject.trim()) {
       errors.subject = 'Subject is required'
       isValid = false
-    } else if (formData.subject.trim().length < 10) {
-      errors.subject = 'Subject must be at least 10 characters'
-      isValid = false
     } else if (formData.subject.trim().length > 100) {
       errors.subject = 'Subject must not exceed 100 characters'
       isValid = false
@@ -142,9 +139,6 @@ export default function FeedbackPage() {
 
     if (!formData.message.trim()) {
       errors.message = 'Detailed message is required'
-      isValid = false
-    } else if (formData.message.trim().length < 20) {
-      errors.message = 'Message must be at least 20 characters'
       isValid = false
     } else if (formData.message.trim().length > 5000) {
       errors.message = 'Message must not exceed 5000 characters'
@@ -162,13 +156,6 @@ export default function FeedbackPage() {
     const specialCharsCount = (formData.message.match(/[^a-zA-Z0-9\s.,!?;:'"()\-]/g) || []).length
     if (specialCharsCount > formData.message.length * 0.3) {
       errors.message = 'Message contains too many special characters'
-      isValid = false
-    }
-
-    // Check for meaningful content (not just spaces and punctuation)
-    const meaningfulContent = formData.message.replace(/[^a-zA-Z0-9]/g, '')
-    if (meaningfulContent.length < 15) {
-      errors.message = 'Message must contain meaningful content'
       isValid = false
     }
 
@@ -388,7 +375,7 @@ export default function FeedbackPage() {
                     </Label>
                     <Input
                       id="subject"
-                      placeholder="Brief summary of your feedback (10-100 characters)"
+                      placeholder="Brief summary of your feedback"
                       value={formData.subject}
                       onChange={(e) => handleInputChange('subject', e.target.value)}
                       disabled={status === 'submitting'}
@@ -410,7 +397,7 @@ export default function FeedbackPage() {
                     </Label>
                     <Textarea
                       id="message"
-                      placeholder="Please provide as much detail as possible (minimum 20 characters). You can use markdown formatting."
+                      placeholder="Please provide as much detail as possible. You can use markdown formatting."
                       value={formData.message}
                       onChange={(e) => handleInputChange('message', e.target.value)}
                       disabled={status === 'submitting'}
