@@ -35,8 +35,8 @@ setInterval(() => {
 
 function checkRateLimit(ip: string): { allowed: boolean; resetIn?: number } {
   const now = Date.now()
-  const windowMs = 60 * 60 * 1000 // 1 hour window
-  const maxSubmissions = 5 // Max 5 submissions per hour per IP
+  const windowMs = 3 * 60 * 1000 // 3 minute window
+  const maxSubmissions = 1 // Max 1 submission per 3 minutes per IP
 
   const tracker = submissionTracker.get(ip)
 
