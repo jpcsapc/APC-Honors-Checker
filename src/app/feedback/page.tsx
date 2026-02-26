@@ -241,8 +241,8 @@ export default function FeedbackPage() {
       setStatus('success')
       setIssueNumber(data.issueNumber)
       
-      // Set cooldown (15 minutes)
-      const cooldown = Date.now() + (15 * 60 * 1000)
+      // Set cooldown (3 minutes)
+      const cooldown = Date.now() + (3 * 60 * 1000)
       setCooldownUntil(cooldown)
       localStorage.setItem('feedbackCooldown', cooldown.toString())
       
@@ -323,7 +323,7 @@ export default function FeedbackPage() {
                     </p>
                   )}
                   <p className="text-xs text-muted-foreground mb-6">
-                    You can submit another feedback in 15 minutes.
+                    You can submit another feedback in 3 minutes.
                   </p>
                   <Link href="/">
                     <Button variant="outline">
@@ -537,7 +537,7 @@ export default function FeedbackPage() {
                 </ul>
                 <div className="mt-4 pt-4 border-t">
                   <p className="text-xs text-muted-foreground">
-                    <strong>Note:</strong> To prevent spam, you can submit feedback once every 15 minutes.
+                    <strong>Note:</strong> To prevent spam, you can submit feedback once every 3 minutes.
                   </p>
                 </div>
               </CardContent>
