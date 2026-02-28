@@ -5,8 +5,8 @@
 # Release Notes
 
 <!--
-  If this PR is user-facing, add the `release-note` label and follow the
-  format below exactly.
+  If this PR is user-facing, follow the format below exactly.
+  The automation detects the presence of this section — no labels needed.
 
   - Use `# Release Notes` (H1) as the section trigger — the automation
     looks for this exact heading.
@@ -27,4 +27,4 @@
 -->
 
 ## Feature title here
-Short description of what changed and why it matters to the user. 
+Short description of what changed and why it matters to the user.
