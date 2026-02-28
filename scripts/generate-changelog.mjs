@@ -44,23 +44,50 @@ function writeEmpty(reason) {
 }
 
 /**
- * Extracts text from a "## Release Notes" section in the PR body.
- * Returns an array of non-empty lines (one per bullet).
- * Returns [] if the section is missing or empty.
+ * Parses the `# Release Notes` section from a PR body.
+ *
+ * Expected format:
+ *   # Release Notes
+ *   ## Feature Title
+ *   Description text for the feature.
+ *   ## Another Feature
+ *   Description for the second feature.
+ *
+ * Each `##` heading becomes a feature title; the lines below it become
+ * the description (joined into a single string).
+ * Returns [] if the section is missing or contains no valid features.
  */
 function parseReleaseNotesSection(body) {
   if (!body) return [];
 
-  // Match everything after "## Release Notes" until the next "##" heading or EOF
-  const match = body.match(
-    /##\s*Release\s*Notes\s*\n([\s\S]*?)(?=\n##\s|\n---|\s*$)/i
+  // Find the `# Release Notes` H1 section; stop at the next H1 or EOF
+  const sectionMatch = body.match(
+    /^#\s+Release\s+Notes\s*\n([\s\S]*?)(?=\n^#\s|\s*$)/im
   );
-  if (!match) return [];
+  if (!sectionMatch) return [];
 
-  return match[1]
-    .split("\n")
-    .map((line) => line.replace(/^[\s\-*]+/, "").trim()) // strip list markers
-    .filter((line) => line.length > 0);
+  const section = sectionMatch[1];
+
+  // Split into blocks at each ## heading
+  const blocks = section.split(/(?=^##\s)/m).filter((b) => b.trim());
+
+  const features = [];
+  for (const block of blocks) {
+    const lines = block.split("\n");
+    const titleMatch = lines[0].match(/^##\s+(.+)/);
+    if (!titleMatch) continue;
+
+    const title = titleMatch[1].trim();
+    const description = lines
+      .slice(1)
+      .map((l) => l.trim())
+      .filter((l) => l.length > 0)
+      .join(" ");
+
+    if (title) features.push({ title, description });
+  }
+
+  return features;
 }
 
 // ── Main ────────────────────────────────────────────────────────────────────
@@ -117,13 +144,22 @@ async function main() {
       return;
     }
 
-    // Build changelog entries
-    const entries = merged.map((pr) => ({
-      id: pr.number,
-      date: pr.merged_at.slice(0, 10), // YYYY-MM-DD
-      title: pr.title,
-      changes: parseReleaseNotesSection(pr.body),
-    }));
+    // Build changelog entries — skip PRs with no parseable release notes
+    const entries = merged
+      .map((pr) => ({
+        id: pr.number,
+        date: pr.merged_at.slice(0, 10), // YYYY-MM-DD
+        title: pr.title,
+        features: parseReleaseNotesSection(pr.body),
+      }))
+      .filter((entry) => entry.features.length > 0);
+
+    if (entries.length === 0) {
+      writeEmpty(
+        "Labeled PRs found but none had a parseable '# Release Notes' section"
+      );
+      return;
+    }
 
     // Sort by id ascending (oldest first) so the toast can reverse for display
     entries.sort((a, b) => a.id - b.id);
