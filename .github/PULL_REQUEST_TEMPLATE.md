@@ -2,27 +2,29 @@
 
 <!-- Briefly describe what this PR does. -->
 
-## Release Notes
+# Release Notes
 
 <!--
-  If this PR includes user-facing changes, add the `release-note` label
-  and describe the changes below. Each line becomes a bullet point in
-  the in-app update notification toast.
+  If this PR is user-facing, add the `release-note` label and follow the
+  format below exactly.
 
-  Delete this section if the PR is internal-only (e.g. refactors, CI, deps).
+  - Use `# Release Notes` (H1) as the section trigger — the automation
+    looks for this exact heading.
+  - Each `## Feature Title` (H2) becomes a notification heading in the toast.
+  - The plain text below each H2 becomes the description shown to users.
+  - Delete this entire section for internal-only PRs (refactors, CI, deps).
 
   EXAMPLE:
   ─────────────────────────────────────────────────────────────────────
-  ## Release Notes
+  # Release Notes
 
-  - Honor eligibility status is now shown instantly without reloading.
-  - Fixed an issue where INC grades were not counted correctly.
-  - Grade Converter now supports the APC 5-point scale.
+  ## Honor eligibility now updates instantly
+  Students no longer need to reload the page to see their updated honor status.
+
+  ## Grade Converter supports the APC 5-point scale
+  You can now convert grades using the new APC 5-point grading system.
   ─────────────────────────────────────────────────────────────────────
-  Each bullet becomes one line in the toast notification popup.
-  The PR title is shown as the heading above these bullets.
-  Leave this section out (or delete it) for chores, refactors, or hotfixes
-  that users don't need to know about.
 -->
 
-- 
+## Feature title here
+Short description of what changed and why it matters to the user. 

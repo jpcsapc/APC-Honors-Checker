@@ -1,14 +1,22 @@
 import generatedChangelog from "./changelog-generated.json";
 
+/** A single user-facing feature or fix inside a release entry. */
+export interface ReleaseFeature {
+  /** Human-readable title from the `## Heading` in the PR body. */
+  title: string;
+  /** Description text below the heading (lines joined into one string). */
+  description: string;
+}
+
 export interface ChangelogEntry {
   /** Unique ID — PR number when auto-generated, manual int otherwise. */
   id: number;
   /** ISO date string (YYYY-MM-DD). */
   date: string;
-  /** PR title or short headline. */
+  /** Raw PR title — kept for reference, not displayed in the toast. */
   title: string;
-  /** Optional detailed bullet points from the PR body's "## Release Notes" section. */
-  changes: string[];
+  /** User-facing features parsed from the PR body's `# Release Notes` section. */
+  features: ReleaseFeature[];
 }
 
 /**
@@ -27,9 +35,13 @@ const MANUAL_ENTRIES: ChangelogEntry[] = [
   // {
   //   id: 1,
   //   date: "2026-03-01",
-  //   title: "Latin Honors merged into Honors Calculator",
-  //   changes: [
-  //     "Latin Honors results are now shown directly on the Honors Calculator — no more switching between pages.",
+  //   title: "feat: latin honors merged",
+  //   features: [
+  //     {
+  //       title: "Latin Honors merged into Honors Calculator",
+  //       description:
+  //         "Latin Honors results are now shown directly on the Honors Calculator — no more switching between pages.",
+  //     },
   //   ],
   // },
 ];

@@ -55,8 +55,12 @@ export function UpdateToast() {
 
   if (!visible) return null;
 
-  // Sort most-recent first for display
-  const sorted = [...unread].sort((a, b) => b.id - a.id);
+  // Sort most-recent first; skip entries that have no displayable features
+  const visibleEntries = [...unread]
+    .sort((a, b) => b.id - a.id)
+    .filter((e) => (e.features?.length ?? 0) > 0);
+
+  if (visibleEntries.length === 0) return null;
 
   return (
     <div
@@ -80,22 +84,20 @@ export function UpdateToast() {
         </button>
       </div>
 
-      {/* Grouped change list */}
+      {/* Feature list */}
       <div className="update-toast__entries">
-        {sorted.map((entry) => (
+        {visibleEntries.map((entry) => (
           <div key={entry.id} className="update-toast__entry">
-            {entry.title && (
-              <p className="update-toast__entry-title">{entry.title}</p>
-            )}
-            {entry.changes.length > 0 && (
-              <ul className="update-toast__list">
-                {entry.changes.map((change, i) => (
-                  <li key={i} className="update-toast__item">
-                    {change}
-                  </li>
-                ))}
-              </ul>
-            )}
+            {entry.features.map((feature, i) => (
+              <div key={i} className="update-toast__feature">
+                {feature.title && (
+                  <p className="update-toast__feature-title">{feature.title}</p>
+                )}
+                {feature.description && (
+                  <p className="update-toast__feature-desc">{feature.description}</p>
+                )}
+              </div>
+            ))}
           </div>
         ))}
       </div>
