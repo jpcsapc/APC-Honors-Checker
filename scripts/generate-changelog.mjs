@@ -54,40 +54,45 @@ function writeEmpty(reason) {
  *   Description for the second feature.
  *
  * Each `##` heading becomes a feature title; the lines below it become
- * the description (joined into a single string).
+ * the description (lines joined into a single string).
  * Returns [] if the section is missing or contains no valid features.
  */
 function parseReleaseNotesSection(body) {
   if (!body) return [];
 
-  // Find the `# Release Notes` H1 section; stop at the next H1 or EOF
-  const sectionMatch = body.match(
-    /^#\s+Release\s+Notes\s*\n([\s\S]*?)(?=\n^#\s|\s*$)/im
-  );
-  if (!sectionMatch) return [];
+  const lines = body.split("\n");
 
-  const section = sectionMatch[1];
+  // Find the line index of the `# Release Notes` H1
+  const h1Index = lines.findIndex((l) => /^#\s+Release\s+Notes\s*$/i.test(l.trim()));
+  if (h1Index === -1) return [];
 
-  // Split into blocks at each ## heading
-  const blocks = section.split(/(?=^##\s)/m).filter((b) => b.trim());
-
-  const features = [];
-  for (const block of blocks) {
-    const lines = block.split("\n");
-    const titleMatch = lines[0].match(/^##\s+(.+)/);
-    if (!titleMatch) continue;
-
-    const title = titleMatch[1].trim();
-    const description = lines
-      .slice(1)
-      .map((l) => l.trim())
-      .filter((l) => l.length > 0)
-      .join(" ");
-
-    if (title) features.push({ title, description });
+  // Collect lines that belong to the section (stop at the next H1)
+  const sectionLines = [];
+  for (let i = h1Index + 1; i < lines.length; i++) {
+    if (/^#\s+\S/.test(lines[i])) break; // next H1 — end of section
+    sectionLines.push(lines[i]);
   }
 
-  return features;
+  // Split section into blocks, one per ## heading
+  const features = [];
+  let current = null;
+
+  for (const line of sectionLines) {
+    const h2Match = line.match(/^##\s+(.+)/);
+    if (h2Match) {
+      if (current) features.push(current);
+      current = { title: h2Match[1].trim(), descLines: [] };
+    } else if (current) {
+      const trimmed = line.trim();
+      if (trimmed) current.descLines.push(trimmed);
+    }
+  }
+  if (current) features.push(current);
+
+  return features.map(({ title, descLines }) => ({
+    title,
+    description: descLines.join(" "),
+  }));
 }
 
 // ── Main ────────────────────────────────────────────────────────────────────
