@@ -344,6 +344,26 @@
   color: var(--accent-foreground);
 }
 
+.update-toast__entries {
+  display: flex;
+  flex-direction: column;
+  gap: 0.625rem;
+}
+
+.update-toast__entry {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.update-toast__entry-title {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  line-height: 1.4;
+  color: var(--foreground);
+  margin: 0;
+}
+
 .update-toast__list {
   list-style: none;
   padding: 0;

@@ -5,6 +5,7 @@ import { X, Megaphone } from "lucide-react";
 import {
   CHANGELOG_STORAGE_KEY,
   LATEST_CHANGELOG_ID,
+  MAX_INITIAL_DISPLAY,
   getUnreadEntries,
   type ChangelogEntry,
 } from "@/lib/changelog";
@@ -18,8 +19,17 @@ export function UpdateToast() {
   React.useEffect(() => {
     try {
       const raw = localStorage.getItem(CHANGELOG_STORAGE_KEY);
-      const lastSeen = raw !== null ? parseInt(raw, 10) : -1;
-      const entries = getUnreadEntries(lastSeen);
+      const isNewVisitor = raw === null;
+      const lastSeen = isNewVisitor ? -1 : parseInt(raw, 10);
+      let entries = getUnreadEntries(lastSeen);
+
+      // For brand-new visitors, cap the number of entries shown
+      if (isNewVisitor && entries.length > MAX_INITIAL_DISPLAY) {
+        entries = entries
+          .sort((a, b) => b.id - a.id)
+          .slice(0, MAX_INITIAL_DISPLAY);
+      }
+
       if (entries.length > 0) {
         setUnread(entries);
         // Small delay so the slide-in animates after hydration
@@ -45,10 +55,8 @@ export function UpdateToast() {
 
   if (!visible) return null;
 
-  // Collect every unique change bullet across all unread entries, most-recent first
-  const bullets = [...unread]
-    .sort((a, b) => b.id - a.id)
-    .flatMap((e) => e.changes);
+  // Sort most-recent first for display
+  const sorted = [...unread].sort((a, b) => b.id - a.id);
 
   return (
     <div
@@ -72,14 +80,25 @@ export function UpdateToast() {
         </button>
       </div>
 
-      {/* Change list */}
-      <ul className="update-toast__list">
-        {bullets.map((change, i) => (
-          <li key={i} className="update-toast__item">
-            {change}
-          </li>
+      {/* Grouped change list */}
+      <div className="update-toast__entries">
+        {sorted.map((entry) => (
+          <div key={entry.id} className="update-toast__entry">
+            {entry.title && (
+              <p className="update-toast__entry-title">{entry.title}</p>
+            )}
+            {entry.changes.length > 0 && (
+              <ul className="update-toast__list">
+                {entry.changes.map((change, i) => (
+                  <li key={i} className="update-toast__item">
+                    {change}
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
         ))}
-      </ul>
+      </div>
 
       {/* Footer CTA */}
       <button onClick={dismiss} className="update-toast__cta">
