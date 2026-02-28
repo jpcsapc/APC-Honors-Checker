@@ -3,12 +3,29 @@
 import { Moon, Sun } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { useTheme } from "next-themes"
+import { flushSync } from "react-dom"
 
 export function ThemeToggle() {
   const { theme, setTheme } = useTheme()
 
-  const toggleTheme = () => {
-    setTheme(theme === "dark" ? "light" : "dark")
+  const toggleTheme = (e: React.MouseEvent) => {
+    const x = e.clientX
+    const y = e.clientY
+    const nextTheme = theme === "dark" ? "light" : "dark"
+
+    if (!document.startViewTransition) {
+      setTheme(nextTheme)
+      return
+    }
+
+    document.documentElement.style.setProperty("--ripple-x", `${x}px`)
+    document.documentElement.style.setProperty("--ripple-y", `${y}px`)
+
+    document.startViewTransition(() => {
+      flushSync(() => {
+        setTheme(nextTheme)
+      })
+    })
   }
 
   return (
