@@ -50,7 +50,7 @@ export default function FrontPage() {
         </div>
       </header>
 
-      {/* Main Content */}
+      {/* Main Content */} 
       <main className="container mx-auto px-4 py-16">
         {/* Hero Section */}
         <div className="text-center mb-16">

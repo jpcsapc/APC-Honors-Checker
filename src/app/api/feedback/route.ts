@@ -10,7 +10,6 @@ interface FeedbackRequest {
     browser: string
     os: string
     screenResolution: string
-    currentUrl: string
     timestamp: string
   }
 }
@@ -36,8 +35,8 @@ setInterval(() => {
 
 function checkRateLimit(ip: string): { allowed: boolean; resetIn?: number } {
   const now = Date.now()
-  const windowMs = 60 * 60 * 1000 // 1 hour window
-  const maxSubmissions = 5 // Max 5 submissions per hour per IP
+  const windowMs = 3 * 60 * 1000 // 3 minute window
+  const maxSubmissions = 1 // Max 1 submission per 3 minutes per IP
 
   const tracker = submissionTracker.get(ip)
 
@@ -101,16 +100,16 @@ export async function POST(request: NextRequest) {
     }
 
     // Additional server-side content validation
-    if (body.subject.trim().length < 10 || body.subject.trim().length > 100) {
+    if (body.subject.trim().length > 100) {
       return NextResponse.json(
-        { error: 'Subject must be between 10 and 100 characters' },
+        { error: 'Subject must not exceed 100 characters' },
         { status: 400 }
       )
     }
 
-    if (body.message.trim().length < 20 || body.message.trim().length > 5000) {
+    if (body.message.trim().length > 5000) {
       return NextResponse.json(
-        { error: 'Message must be between 20 and 5000 characters' },
+        { error: 'Message must not exceed 5000 characters' },
         { status: 400 }
       )
     }
@@ -120,14 +119,6 @@ export async function POST(request: NextRequest) {
     if (repeatedCharsRegex.test(body.message)) {
       return NextResponse.json(
         { error: 'Invalid content detected' },
-        { status: 400 }
-      )
-    }
-
-    const meaningfulContent = body.message.replace(/[^a-zA-Z0-9]/g, '')
-    if (meaningfulContent.length < 15) {
-      return NextResponse.json(
-        { error: 'Message must contain meaningful content' },
         { status: 400 }
       )
     }
@@ -154,7 +145,6 @@ ${sanitizedMessage}
 - **Browser:** ${body.userContext.browser}
 - **OS:** ${body.userContext.os}
 - **Screen Resolution:** ${body.userContext.screenResolution}
-- **Page URL:** ${body.userContext.currentUrl}
 - **Timestamp:** ${body.userContext.timestamp}
 
 ${body.contactInfo ? `### Contact Information\n${body.contactInfo}\n` : ''}
