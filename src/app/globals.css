@@ -45,6 +45,8 @@
 
 :root {
   --radius: 0.5rem;
+  --ripple-x: 50vw;
+  --ripple-y: 50vh;
   --background: oklch(1 0 0);
   --foreground: oklch(0 0 0);
   --card: oklch(1 0 0);
@@ -201,6 +203,31 @@
   [data-slot="button"]:active {
     transform: translateY(0);
   }
+}
+
+/* ── View Transition: circular ripple from click point ── */
+@keyframes theme-ripple {
+  from {
+    clip-path: circle(0px at var(--ripple-x) var(--ripple-y));
+  }
+  to {
+    clip-path: circle(150vw at var(--ripple-x) var(--ripple-y));
+  }
+}
+
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation: none;
+  mix-blend-mode: normal;
+}
+
+::view-transition-old(root) {
+  z-index: 0;
+}
+
+::view-transition-new(root) {
+  z-index: 1;
+  animation: theme-ripple 1.0s ease-out forwards;
 }
 
 @keyframes accordion-down {
