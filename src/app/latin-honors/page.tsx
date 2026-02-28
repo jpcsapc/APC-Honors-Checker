@@ -234,6 +234,17 @@ export default function LatinHonorsCalculator() {
 
       {/* Main Content */}
       <main className="container mx-auto px-4 py-16">
+        {/* Deprecation notice */}
+        <div className="mb-8 rounded-lg border border-yellow-400 bg-yellow-50 dark:bg-yellow-950/20 dark:border-yellow-600 px-6 py-4 text-center">
+          <p className="text-sm text-yellow-800 dark:text-yellow-300">
+            Latin Honors results are now shown directly on the{" "}
+            <Link href="/honors" className="font-semibold underline underline-offset-2">
+              Honors Calculator
+            </Link>
+            {" "}— no more switching between pages.
+          </p>
+        </div>
+
         {/* Hero Section */}
         <div className="text-center mb-10">
           <div className="flex justify-center mb-4">
