@@ -1,9 +1,12 @@
 /**
  * generate-changelog.mjs
  *
- * Build-time script that fetches recently merged PRs with the "release-note"
- * label from GitHub and writes them as a JSON changelog consumed by the
- * UpdateToast component.
+ * Build-time script that fetches recently merged PRs from GitHub and writes
+ * them as a JSON changelog consumed by the UpdateToast component.
+ *
+ * A PR is included if and only if its body contains a populated
+ * `# Release Notes` section with at least one `## Feature` entry.
+ * No GitHub labels are required.
  *
  * Environment variables:
  *   GITHUB_TOKEN           – GitHub PAT with repo read access (required)
@@ -25,8 +28,6 @@ import { fileURLToPath } from "node:url";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const OUTPUT_PATH = resolve(__dirname, "../src/lib/changelog-generated.json");
-
-const REQUIRED_LABEL = "release-note";
 
 // ── Config from env ─────────────────────────────────────────────────────────
 
@@ -109,8 +110,7 @@ async function main() {
 
   try {
     // Fetch closed PRs sorted by most recently updated.
-    // We request more than maxEntries because not all closed PRs are merged
-    // or carry the required label.
+    // We request a large page so the content-based filter has enough to work with.
     const url = new URL(
       `https://api.github.com/repos/${owner}/${repo}/pulls`
     );
@@ -135,33 +135,21 @@ async function main() {
 
     const pulls = await res.json();
 
-    // Filter: must be merged + must have the required label
-    const merged = pulls
-      .filter(
-        (pr) =>
-          pr.merged_at !== null &&
-          pr.labels.some((l) => l.name === REQUIRED_LABEL)
-      )
-      .slice(0, maxEntries);
-
-    if (merged.length === 0) {
-      writeEmpty("No merged PRs with the 'release-note' label found");
-      return;
-    }
-
-    // Build changelog entries — skip PRs with no parseable release notes
-    const entries = merged
+    // Filter: must be merged AND have a parseable # Release Notes section
+    const entries = pulls
+      .filter((pr) => pr.merged_at !== null)
       .map((pr) => ({
         id: pr.number,
         date: pr.merged_at.slice(0, 10), // YYYY-MM-DD
         title: pr.title,
         features: parseReleaseNotesSection(pr.body),
       }))
-      .filter((entry) => entry.features.length > 0);
+      .filter((entry) => entry.features.length > 0)
+      .slice(0, maxEntries);
 
     if (entries.length === 0) {
       writeEmpty(
-        "Labeled PRs found but none had a parseable '# Release Notes' section"
+        "No merged PRs with a parseable '# Release Notes' section found"
       );
       return;
     }
