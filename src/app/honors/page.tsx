@@ -29,7 +29,7 @@ export default function HonorsCalcu() {
   const termsDataRef = React.useRef(termsData);
   termsDataRef.current = termsData;
 
-  // Load persisted data
+  // Load persisted data – falls back to the old Latin Honors page data for one-time migration
   React.useEffect(() => {
     try {
       const savedData = localStorage.getItem("honorsTermsData");
@@ -37,10 +37,19 @@ export default function HonorsCalcu() {
         const parsedData = JSON.parse(savedData);
         if (typeof parsedData === 'object' && !Array.isArray(parsedData) && parsedData !== null) {
           setTermsData(parsedData);
+          return;
+        }
+      }
+      // One-time migration: import data entered on the old Latin Honors page
+      const legacyData = localStorage.getItem("latinHonorsTermsData");
+      if (legacyData) {
+        const parsedData = JSON.parse(legacyData);
+        if (typeof parsedData === 'object' && !Array.isArray(parsedData) && parsedData !== null) {
+          setTermsData(parsedData);
         }
       }
     } catch (error) {
-      console.error("Failed to parse honorsTermsData from localStorage", error);
+      console.error("Failed to parse termsData from localStorage", error);
     }
   }, []);
 
@@ -179,6 +188,26 @@ export default function HonorsCalcu() {
     return nextYearStats;
   }, [termsData]);
 
+  // Derive Latin Honors result from per-year stats — same logic as the former Latin Honors page
+  const latinHonorsSummary = React.useMemo(() => {
+    const yearsWithData = Object.values(yearStats).filter(s => s.totalUnits > 0);
+    if (yearsWithData.length === 0) return { overallGPA: "0.00", latinHonor: "-" };
+
+    const averageGPA = yearsWithData.reduce((sum, s) => sum + s.gpa, 0) / yearsWithData.length;
+    const totalUnits = yearsWithData.reduce((sum, s) => sum + s.totalUnits, 0);
+    const totalRGrades = yearsWithData.reduce((sum, s) => sum + s.rGrades, 0);
+
+    let latinHonor: string;
+    if (totalUnits < 144) latinHonor = "Not enough units yet";
+    else if (totalRGrades > 8) latinHonor = "No, more than 8 R grades";
+    else if (averageGPA >= 3.85) latinHonor = "Summa Cum Laude";
+    else if (averageGPA >= 3.70) latinHonor = "Magna Cum Laude";
+    else if (averageGPA >= 3.50) latinHonor = "Cum Laude";
+    else latinHonor = "No Latin Honor";
+
+    return { overallGPA: averageGPA.toFixed(2), latinHonor };
+  }, [yearStats]);
+
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
@@ -198,9 +227,8 @@ export default function HonorsCalcu() {
         </div>
       </header>
 
-
-  {/* Main Content */}
-  <main className="container mx-auto px-4 py-16">
+      {/* Main Content */}
+      <main className="container mx-auto px-4 py-16">
         {/* Hero Section */}
         <div className="text-center mb-10">
           <div className="flex justify-center mb-4">
@@ -213,7 +241,22 @@ export default function HonorsCalcu() {
             (Click on an input box first then you can use the arrow keys!)
           </p>
         </div>
-  <hr className="mb-10 border-border/100" />
+
+        <hr className="m-0 border-border/100" />
+
+        {/* Latin Honors Live Summary */}
+        <div className="flex items-center justify-center gap-4 py-16">
+          <div className="rounded-lg border bg-card px-6 py-4 shadow-sm text-center">
+            <p className="text-sm text-muted-foreground mb-1">Overall GPA</p>
+            <p className="text-2xl font-bold text-foreground">{latinHonorsSummary.overallGPA}</p>
+          </div>
+          <div className="rounded-lg border bg-card px-6 py-4 shadow-sm text-center">
+            <p className="text-sm text-muted-foreground mb-1">Latin Honor</p>
+            <p className="text-2xl font-bold text-foreground">{latinHonorsSummary.latinHonor}</p>
+          </div>
+        </div>
+
+        <hr className="m-0 border-border/100" />
 
         {/* Year Sections */}
         {[1,2,3,4].map((yearNum) => {
@@ -245,12 +288,12 @@ export default function HonorsCalcu() {
 
                 {/* Year Summary */}
                 {yearStats[yearKey] && (
-                  <div className="flex justify-center mt-6 gap-4">
-                    <div className="rounded-lg border bg-card px-6 py-4 shadow-sm">
+                  <div className="flex flex-wrap justify-center mt-6 gap-4">
+                    <div className="rounded-lg border bg-card px-6 py-4 shadow-sm text-center min-w-[140px]">
                       <p className="text-sm text-muted-foreground mb-1">Current GPA</p>
                       <p className="text-2xl font-bold text-foreground">{yearStats[yearKey].gpa.toFixed(2)}</p>
                     </div>
-                    <div className="rounded-lg border bg-card px-6 py-4 shadow-sm">
+                    <div className="rounded-lg border bg-card px-6 py-4 shadow-sm text-center min-w-[140px]">
                       <p className="text-sm text-muted-foreground mb-1">Eligible for Honors</p>
                       <p className="text-2xl font-bold text-foreground">{yearStats[yearKey].eligible}</p>
                     </div>
