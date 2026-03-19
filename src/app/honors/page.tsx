@@ -362,6 +362,8 @@ export default function HonorsCalcu() {
     return stats;
   }, [liteData, showUnits]);
 
+  const topSummaryYearKey = "Year 1";
+
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
@@ -448,6 +450,84 @@ export default function HonorsCalcu() {
             </label>
           </div>
         </div>
+
+        {/* Year Summary */}
+        <div className="flex justify-center mb-10">
+          <AnimatePresence mode="wait">
+            {liteMode ? (
+              <motion.div
+                layout
+                key="lite-stats"
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                className="flex gap-0 flex-wrap justify-center items-center p-6 rounded-xl border bg-card/50 shadow-sm"
+              >
+                <motion.div
+                  layout
+                  className="flex flex-col items-center px-8 py-2 border-r border-border/50 last:border-0"
+                >
+                  <p className="text-sm text-muted-foreground mb-1">Average GPA</p>
+                  <p className="text-3xl font-bold tracking-tight text-foreground">
+                    {liteStats[topSummaryYearKey]?.gpa > 0
+                      ? liteStats[topSummaryYearKey].gpa.toFixed(2)
+                      : "0.00"}
+                  </p>
+                </motion.div>
+                <AnimatePresence mode="popLayout">
+                  {showUnits && (
+                    <motion.div
+                      layout
+                      initial={{ opacity: 0, scale: 0.8 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      exit={{ opacity: 0, scale: 0.8 }}
+                      transition={{ duration: 0.3 }}
+                      className="flex flex-col items-center px-8 py-2 border-r border-border/50 last:border-0"
+                    >
+                      <p className="text-sm text-muted-foreground mb-1">Total Units</p>
+                      <p className="text-3xl font-bold tracking-tight text-foreground">
+                        {liteStats[topSummaryYearKey]?.totalUnits ?? "0"}
+                      </p>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+                <motion.div
+                  layout
+                  className="flex flex-col items-center px-8 py-2"
+                >
+                  <p className="text-sm text-muted-foreground mb-1">Eligible for Honors</p>
+                  <p className="text-3xl font-bold tracking-tight text-primary">
+                    {liteStats[topSummaryYearKey]?.eligible ?? "-"}
+                  </p>
+                </motion.div>
+              </motion.div>
+            ) : (
+              yearStats[topSummaryYearKey] && (
+                <motion.div
+                  key="full-stats"
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  className="flex gap-0 flex-wrap justify-center items-center p-6 rounded-xl border bg-card/50 shadow-sm"
+                >
+                  <div className="flex flex-col items-center px-8 py-2 border-r border-border/50">
+                    <p className="text-sm text-muted-foreground mb-1">Current GPA</p>
+                    <p className="text-3xl font-bold tracking-tight text-foreground">
+                      {yearStats[topSummaryYearKey].gpa.toFixed(2)}
+                    </p>
+                  </div>
+                  <div className="flex flex-col items-center px-8 py-2">
+                    <p className="text-sm text-muted-foreground mb-1">Eligible for Honors</p>
+                    <p className="text-3xl font-bold tracking-tight text-primary">
+                      {yearStats[topSummaryYearKey].eligible}
+                    </p>
+                  </div>
+                </motion.div>
+              )
+            )}
+          </AnimatePresence>
+        </div>
+
 
         <hr className="mb-10 border-border/100" />
 
@@ -544,82 +624,7 @@ export default function HonorsCalcu() {
                   )}
                 </AnimatePresence>
 
-                {/* Year Summary */}
-                <div className="flex justify-center mt-6 gap-4">
-                  <AnimatePresence mode="wait">
-                    {liteMode ? (
-                      <motion.div
-                        layout
-                        key="lite-stats"
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: -10 }}
-                        className="flex gap-4 flex-wrap justify-center items-center"
-                      >
-                        <motion.div
-                          layout
-                          className="rounded-lg border bg-card px-6 py-4 shadow-sm"
-                        >
-                          <p className="text-sm text-muted-foreground mb-1">Average GPA</p>
-                          <p className="text-2xl font-bold text-foreground">
-                            {liteStats[yearKey]?.gpa > 0
-                              ? liteStats[yearKey].gpa.toFixed(2)
-                              : "0.00"}
-                          </p>
-                        </motion.div>
-                        <AnimatePresence mode="popLayout">
-                          {showUnits && (
-                            <motion.div
-                              layout
-                              initial={{ opacity: 0, scale: 0.8 }}
-                              animate={{ opacity: 1, scale: 1 }}
-                              exit={{ opacity: 0, scale: 0.8 }}
-                              transition={{ duration: 0.3 }}
-                              className="rounded-lg border bg-card px-6 py-4 shadow-sm"
-                            >
-                              <p className="text-sm text-muted-foreground mb-1">Total Units</p>
-                              <p className="text-2xl font-bold text-foreground">
-                                {liteStats[yearKey]?.totalUnits ?? "0"}
-                              </p>
-                            </motion.div>
-                          )}
-                        </AnimatePresence>
-                        <motion.div
-                          layout
-                          className="rounded-lg border bg-card px-6 py-4 shadow-sm"
-                        >
-                          <p className="text-sm text-muted-foreground mb-1">Eligible for Honors</p>
-                          <p className="text-2xl font-bold text-foreground">
-                            {liteStats[yearKey]?.eligible ?? "-"}
-                          </p>
-                        </motion.div>
-                      </motion.div>
-                    ) : (
-                      yearStats[yearKey] && (
-                        <motion.div
-                          key="full-stats"
-                          initial={{ opacity: 0, y: 10 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          exit={{ opacity: 0, y: -10 }}
-                          className="flex gap-4"
-                        >
-                          <div className="rounded-lg border bg-card px-6 py-4 shadow-sm">
-                            <p className="text-sm text-muted-foreground mb-1">Current GPA</p>
-                            <p className="text-2xl font-bold text-foreground">
-                              {yearStats[yearKey].gpa.toFixed(2)}
-                            </p>
-                          </div>
-                          <div className="rounded-lg border bg-card px-6 py-4 shadow-sm">
-                            <p className="text-sm text-muted-foreground mb-1">Eligible for Honors</p>
-                            <p className="text-2xl font-bold text-foreground">
-                              {yearStats[yearKey].eligible}
-                            </p>
-                          </div>
-                        </motion.div>
-                      )
-                    )}
-                  </AnimatePresence>
-                </div>
+                
 
                 {yearNum < (liteMode ? 1 : 4) && <hr className="my-12 border-border/100" />}
               </motion.section>
