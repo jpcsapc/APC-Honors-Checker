@@ -29,71 +29,136 @@ interface LiteYearData {
   term1: string;
   term2: string;
   term3: string;
+  units1: string;
+  units2: string;
+  units3: string;
 }
 
-function calcLiteStats(data: LiteYearData): { gpa: number; eligible: string } {
+function calcLiteStats(data: LiteYearData): { gpa: number; eligible: string; totalUnits: number } {
   const t1 = parseFloat(data.term1);
   const t2 = parseFloat(data.term2);
   const t3 = parseFloat(data.term3);
 
+  const u1 = parseFloat(data.units1) || 0;
+  const u2 = parseFloat(data.units2) || 0;
+  const u3 = parseFloat(data.units3) || 0;
+  const totalUnits = u1 + u2 + u3;
+
   const values = [t1, t2, t3].filter(v => !isNaN(v) && v > 0);
-  if (values.length === 0) return { gpa: 0, eligible: '-' };
+  if (values.length === 0) return { gpa: 0, eligible: '-', totalUnits };
 
   const avg = values.reduce((a, b) => a + b, 0) / values.length;
 
-  // Same honors criteria as full mode — GPA between 3.0 and 4.0
   let eligible: string;
-  if (avg >= 3.0 && avg <= 4.0) eligible = "Yes";
-  else eligible = "No";
+  if (avg >= 3.0 && avg <= 4.0) {
+    if (totalUnits >= 36) eligible = "Yes";
+    else eligible = "No, not enough units (need 36)";
+  } else {
+    eligible = "No";
+  }
 
-  return { gpa: avg, eligible };
+  return { gpa: avg, eligible, totalUnits };
 }
 
-// Shared input style matching TermTable inputs
-function LiteInput({
-  label,
-  value,
-  onChange,
-  id,
+// ── Lite Mode row: Grade input (wider) + Units input (narrow) side by side ──
+function LiteTermRow({
+  termNum,
+  yearKey,
+  gradeValue,
+  unitsValue,
+  onGradeChange,
+  onUnitsChange,
+  onKeyDown,
 }: {
-  label: string;
-  value: string;
-  onChange: (v: string) => void;
-  id: string;
+  termNum: number;
+  yearKey: string;
+  gradeValue: string;
+  unitsValue: string;
+  onGradeChange: (v: string) => void;
+  onUnitsChange: (v: string) => void;
+  onKeyDown: (
+    e: React.KeyboardEvent<HTMLInputElement>,
+    type: "grade" | "units",
+    termNum: number,
+    yearKey: string
+  ) => void;
 }) {
   return (
-    <div className="flex flex-col gap-1">
-      <label htmlFor={id} className="text-xs text-muted-foreground font-medium">
-        {label}
-      </label>
-      <input
-        id={id}
-        type="number"
-        step="0.01"
-        min="0"
-        max="5"
-        value={value}
-        onChange={e => onChange(e.target.value)}
-        placeholder="0.00"
-        className="
-          w-28 rounded-md border border-input bg-background px-3 py-1.5
-          text-sm text-foreground shadow-sm
-          placeholder:text-muted-foreground/50
-          focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent
-          transition-colors
-        "
-      />
+    <div className="flex flex-col gap-1.5">
+      {/* Term label */}
+      <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+        Term {termNum}
+      </p>
+
+      {/* Grade + Units side by side */}
+      <div className="flex items-end gap-2">
+        {/* Grade — wider */}
+        <div className="flex flex-col gap-1 flex-1">
+          <label
+            htmlFor={`lite-${yearKey}-grade-${termNum}`}
+            className="text-xs text-muted-foreground font-medium"
+          >
+            Grade
+          </label>
+          <input
+            id={`lite-${yearKey}-grade-${termNum}`}
+            type="number"
+            step="0.01"
+            min="0"
+            max="5"
+            value={gradeValue}
+            onChange={e => onGradeChange(e.target.value)}
+            onKeyDown={e => onKeyDown(e, "grade", termNum, yearKey)}
+            placeholder="0.00"
+            className="
+              w-full rounded-md border border-input bg-background px-3 py-1.5
+              text-sm text-foreground shadow-sm
+              placeholder:text-muted-foreground/50
+              focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent
+              transition-colors
+            "
+          />
+        </div>
+
+        {/* Units — narrow pill */}
+        <div className="flex flex-col gap-1 w-14">
+          <label
+            htmlFor={`lite-${yearKey}-units-${termNum}`}
+            className="text-xs text-muted-foreground font-medium"
+          >
+            Units
+          </label>
+          <input
+            id={`lite-${yearKey}-units-${termNum}`}
+            type="number"
+            step="1"
+            min="0"
+            value={unitsValue}
+            onChange={e => onUnitsChange(e.target.value)}
+            onKeyDown={e => onKeyDown(e, "units", termNum, yearKey)}
+            placeholder="0"
+            className="
+              w-full rounded-md border border-input bg-background px-2 py-1.5
+              text-sm text-center text-foreground shadow-sm
+              placeholder:text-muted-foreground/50
+              focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent
+              transition-colors
+            "
+          />
+        </div>
+      </div>
     </div>
   );
 }
+
 export default function HonorsCalcu() {
   const [termsData, setTermsData] = React.useState<Record<string, RowData[]>>({});
   const [liteMode, setLiteMode] = React.useState(true);
   const [liteData, setLiteData] = React.useState<Record<string, LiteYearData>>({
-    "Year 1": { term1: "", term2: "", term3: "" },
-    "Year 2": { term1: "", term2: "", term3: "" },
-    "Year 3": { term1: "", term2: "", term3: "" },
-    "Year 4": { term1: "", term2: "", term3: "" },
+    "Year 1": { term1: "", term2: "", term3: "", units1: "", units2: "", units3: "" },
+    "Year 2": { term1: "", term2: "", term3: "", units1: "", units2: "", units3: "" },
+    "Year 3": { term1: "", term2: "", term3: "", units1: "", units2: "", units3: "" },
+    "Year 4": { term1: "", term2: "", term3: "", units1: "", units2: "", units3: "" },
   });
 
   const termsDataRef = React.useRef(termsData);
@@ -116,13 +181,6 @@ export default function HonorsCalcu() {
           setLiteData(parsedLite);
         }
       }
-      const savedLiteMode = localStorage.getItem("honorsLiteMode");
-      if (savedLiteMode !== null) {
-        // We set it to true by default, but if they explicitly changed it in this session,
-        // we could load it. However, the user said "always checked once opened".
-        // To be safe and follow the request literally, we can just let it default to true.
-        // setLiteMode(JSON.parse(savedLiteMode)); 
-      }
     } catch (error) {
       console.error("Failed to parse honors data from localStorage", error);
     }
@@ -138,12 +196,10 @@ export default function HonorsCalcu() {
     return () => { if (persistTimerRef.current) clearTimeout(persistTimerRef.current); };
   }, [termsData]);
 
-  // Persist lite data
   React.useEffect(() => {
     localStorage.setItem("honorsLiteData", JSON.stringify(liteData));
   }, [liteData]);
 
-  // Persist lite mode toggle
   React.useEffect(() => {
     localStorage.setItem("honorsLiteMode", JSON.stringify(liteMode));
   }, [liteMode]);
@@ -158,6 +214,52 @@ export default function HonorsCalcu() {
       [year]: { ...prev[year], [field]: value },
     }));
   }, []);
+
+  /**
+   * Keyboard navigation grid (visual):
+   *
+   *           Term 1          Term 2          Term 3
+   *  Grade  [grade-1]  ←→  [grade-2]  ←→  [grade-3]
+   *                ↕                  ↕                  ↕
+   *  Units  [units-1]  ←→  [units-2]  ←→  [units-3]
+   *
+   *  ArrowLeft  → same field type, previous term column
+   *  ArrowRight → same field type, next term column
+   *  ArrowUp    → units → grade, same term column
+   *  ArrowDown  → grade → units, same term column
+   */
+  const handleLiteKeyDown = (
+    e: React.KeyboardEvent<HTMLInputElement>,
+    type: "grade" | "units",
+    termNum: number,
+    yearKey: string
+  ) => {
+    const keys = ["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight"];
+    if (!keys.includes(e.key)) return;
+
+    e.preventDefault();
+
+    let nextId = "";
+
+    if (e.key === "ArrowRight" || e.key === "ArrowDown") {
+      if (type === "grade") {
+        nextId = `lite-${yearKey}-units-${termNum}`;
+      } else if (termNum < 3) {
+        nextId = `lite-${yearKey}-grade-${termNum + 1}`;
+      }
+    } else if (e.key === "ArrowLeft" || e.key === "ArrowUp") {
+      if (type === "units") {
+        nextId = `lite-${yearKey}-grade-${termNum}`;
+      } else if (termNum > 1) {
+        nextId = `lite-${yearKey}-units-${termNum - 1}`;
+      }
+    }
+
+    if (nextId) {
+      const el = document.getElementById(nextId) as HTMLInputElement;
+      if (el) { el.focus(); el.select(); }
+    }
+  };
 
   const tableLayout = React.useMemo(() => [
     ["Year 1 Term 1", "Year 1 Term 2", "Year 1 Term 3"],
@@ -241,7 +343,7 @@ export default function HonorsCalcu() {
   }, [termsData]);
 
   const liteStats = React.useMemo(() => {
-    const stats: Record<string, { gpa: number; eligible: string }> = {};
+    const stats: Record<string, { gpa: number; eligible: string; totalUnits: number }> = {};
     Object.entries(liteData).forEach(([year, data]) => {
       stats[year] = calcLiteStats(data);
     });
@@ -297,7 +399,7 @@ export default function HonorsCalcu() {
             </AnimatePresence>
           </p>
 
-          {/* ── Lite Mode Toggle ── placed right below the subtitle, centered */}
+          {/* Lite Mode Toggle */}
           <div className="flex items-center justify-center gap-2.5 mt-6">
             <button
               role="checkbox"
@@ -337,7 +439,6 @@ export default function HonorsCalcu() {
 
         <hr className="mb-10 border-border/100" />
 
-        {/* Year Sections */}
         <div className="space-y-12">
           {(liteMode ? [1] : [1, 2, 3, 4]).map((yearNum) => {
             const yearKey = `Year ${yearNum}`;
@@ -355,7 +456,7 @@ export default function HonorsCalcu() {
 
                 <AnimatePresence mode="wait">
                   {liteMode ? (
-                    /* ── Lite Mode: 3 term average inputs ── */
+                    /* Lite Mode: 3 term inputs (grade + units inline) */
                     <motion.div
                       key="lite-view"
                       initial={{ opacity: 0, x: 20 }}
@@ -368,30 +469,24 @@ export default function HonorsCalcu() {
                         <p className="text-sm font-medium text-foreground mb-5">
                           General Average per Term
                         </p>
-                        <div className="flex flex-wrap gap-6">
-                          <LiteInput
-                            id={`lite-${yearKey}-t1`}
-                            label="Term 1"
-                            value={liteData[yearKey]?.term1 ?? ""}
-                            onChange={v => handleLiteChange(yearKey, "term1", v)}
-                          />
-                          <LiteInput
-                            id={`lite-${yearKey}-t2`}
-                            label="Term 2"
-                            value={liteData[yearKey]?.term2 ?? ""}
-                            onChange={v => handleLiteChange(yearKey, "term2", v)}
-                          />
-                          <LiteInput
-                            id={`lite-${yearKey}-t3`}
-                            label="Term 3"
-                            value={liteData[yearKey]?.term3 ?? ""}
-                            onChange={v => handleLiteChange(yearKey, "term3", v)}
-                          />
+                        <div className="grid grid-cols-3 gap-4">
+                          {[1, 2, 3].map(num => (
+                            <LiteTermRow
+                              key={num}
+                              termNum={num}
+                              yearKey={yearKey}
+                              gradeValue={liteData[yearKey]?.[`term${num}` as keyof LiteYearData] || ""}
+                              unitsValue={liteData[yearKey]?.[`units${num}` as keyof LiteYearData] || ""}
+                              onGradeChange={v => handleLiteChange(yearKey, `term${num}` as keyof LiteYearData, v)}
+                              onUnitsChange={v => handleLiteChange(yearKey, `units${num}` as keyof LiteYearData, v)}
+                              onKeyDown={handleLiteKeyDown}
+                            />
+                          ))}
                         </div>
                       </div>
                     </motion.div>
                   ) : (
-                    /* ── Full Mode: term tables ── */
+                    /* Full Mode: term tables */
                     <motion.div
                       key="full-view"
                       initial={{ opacity: 0, x: -20 }}
@@ -431,7 +526,7 @@ export default function HonorsCalcu() {
                         initial={{ opacity: 0, y: 10 }}
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0, y: -10 }}
-                        className="flex gap-4"
+                        className="flex gap-4 flex-wrap justify-center"
                       >
                         <div className="rounded-lg border bg-card px-6 py-4 shadow-sm">
                           <p className="text-sm text-muted-foreground mb-1">Average GPA</p>
@@ -439,6 +534,12 @@ export default function HonorsCalcu() {
                             {liteStats[yearKey]?.gpa > 0
                               ? liteStats[yearKey].gpa.toFixed(2)
                               : "0.00"}
+                          </p>
+                        </div>
+                        <div className="rounded-lg border bg-card px-6 py-4 shadow-sm">
+                          <p className="text-sm text-muted-foreground mb-1">Total Units</p>
+                          <p className="text-2xl font-bold text-foreground">
+                            {liteStats[yearKey]?.totalUnits ?? "0"}
                           </p>
                         </div>
                         <div className="rounded-lg border bg-card px-6 py-4 shadow-sm">
