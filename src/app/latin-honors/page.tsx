@@ -289,12 +289,14 @@ export default function LatinHonorsCalculator() {
       if (allTermGPAs.length > 0) {
         if (showUnits && totalUnits < 144) {
           eligible = "No, not enough units (need 144)";
-        } else if (averageGPA >= 3.85) {
+        } else if (averageGPA >= 3.80) {
           eligible = "Summa Cum Laude";
-        } else if (averageGPA >= 3.70) {
+        } else if (averageGPA >= 3.60) {
           eligible = "Magna Cum Laude";
-        } else if (averageGPA >= 3.50) {
+        } else if (averageGPA >= 3.40) {
           eligible = "Cum Laude";
+        } else if (averageGPA >= 3.00) {
+          eligible = "Academic Distinction";
         } else {
           eligible = "No Latin Honor";
         }
@@ -333,9 +335,10 @@ export default function LatinHonorsCalculator() {
       if (yearGPAs.length > 0) {
         if (combinedUnits < 144) eligible = "No, not enough units (need 144)";
         else if (combinedRs > 8) eligible = "No, more than 8 R grades";
-        else if (averageGPA >= 3.85) eligible = "Summa Cum Laude";
-        else if (averageGPA >= 3.70) eligible = "Magna Cum Laude";
-        else if (averageGPA >= 3.50) eligible = "Cum Laude";
+        else if (averageGPA >= 3.80) eligible = "Summa Cum Laude";
+        else if (averageGPA >= 3.60) eligible = "Magna Cum Laude";
+        else if (averageGPA >= 3.40) eligible = "Cum Laude";
+        else if (averageGPA >= 3.00) eligible = "Academic Distinction";
         else eligible = "No Latin Honor";
       }
 
@@ -427,7 +430,7 @@ export default function LatinHonorsCalculator() {
             </AnimatePresence>
 
             <motion.div layout className="flex flex-col items-center px-8 py-2">
-              <p className="text-sm text-muted-foreground mb-1">Latin Honor Status</p>
+              <p className="text-sm text-muted-foreground mb-1">Academic Honor Status</p>
               <p className="text-3xl font-bold tracking-tight text-primary">{results.latinHonor}</p>
             </motion.div>
           </motion.div>
