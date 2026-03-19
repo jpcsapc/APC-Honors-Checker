@@ -399,7 +399,7 @@ export default function HonorsCalcu() {
                 transition={{ duration: 0.2 }}
               >
                 {liteMode ? (
-                  <>Enter your general average for each term per academic year</>
+                  <>Enter your general average for a school year</>
                 ) : (
                   <>
                     Enter subjects and grades for each term per academic year <br />
