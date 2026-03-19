@@ -17,20 +17,20 @@ interface RowData {
   honorPoints: number;
 }
 
-interface YearStats {
-  gpa: number;
-  totalHonorPoints: number;
-  totalUnits: number;
-  rGrades: number;
+// Lite Mode: per-term general averages (3 terms each year, for 4 years)
+interface LiteYearData {
+  term1: string;
+  term2: string;
+  term3: string;
+  units1: string;
+  units2: string;
+  units3: string;
 }
 
-interface LiteYearInput {
-  gpa: string;
-  units: string;
-}
-
-// ── Lite Mode row for Latin Honors (one year per row/cell) ──
-function LiteYearRow({
+// ── Lite Mode Term Row ──
+function LiteTermRow({
+  termNum,
+  yearKey,
   yearNum,
   gradeValue,
   unitsValue,
@@ -39,6 +39,8 @@ function LiteYearRow({
   onKeyDown,
   showUnits,
 }: {
+  termNum: number;
+  yearKey: string;
   yearNum: number;
   gradeValue: string;
   unitsValue: string;
@@ -47,36 +49,37 @@ function LiteYearRow({
   onKeyDown: (
     e: React.KeyboardEvent<HTMLInputElement>,
     type: "grade" | "units",
+    termNum: number,
     yearNum: number
   ) => void;
   showUnits: boolean;
 }) {
   return (
     <div className="flex flex-col gap-1.5">
-      <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
-        Year {yearNum}
+      <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
+        Term {termNum}
       </p>
 
       <div className="flex items-end gap-2">
         <div className="flex flex-col gap-1 flex-1">
           <label
-            htmlFor={`lite-year-${yearNum}-grade`}
-            className="text-xs text-muted-foreground font-medium"
+            htmlFor={`lite-year-${yearNum}-term-${termNum}-grade`}
+            className="text-[10px] text-muted-foreground font-medium"
           >
             GPA
           </label>
           <input
-            id={`lite-year-${yearNum}-grade`}
+            id={`lite-year-${yearNum}-term-${termNum}-grade`}
             type="number"
             step="0.01"
             min="0"
             max="5"
             value={gradeValue}
             onChange={e => onGradeChange(e.target.value)}
-            onKeyDown={e => onKeyDown(e, "grade", yearNum)}
+            onKeyDown={e => onKeyDown(e, "grade", termNum, yearNum)}
             placeholder="0.00"
             className="
-              w-full rounded-md border border-input bg-background px-3 py-1.5
+              w-full rounded-md border border-input bg-background px-2.5 py-1
               text-sm text-foreground shadow-sm
               placeholder:text-muted-foreground/50
               focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent
@@ -89,27 +92,27 @@ function LiteYearRow({
           {showUnits && (
             <motion.div
               initial={{ opacity: 0, width: 0, x: 10 }}
-              animate={{ opacity: 1, width: 64, x: 0 }}
+              animate={{ opacity: 1, width: 50, x: 0 }}
               exit={{ opacity: 0, width: 0, x: 10 }}
               className="flex flex-col gap-1 overflow-hidden"
             >
               <label
-                htmlFor={`lite-year-${yearNum}-units`}
-                className="text-xs text-muted-foreground font-medium whitespace-nowrap"
+                htmlFor={`lite-year-${yearNum}-term-${termNum}-units`}
+                className="text-[10px] text-muted-foreground font-medium whitespace-nowrap"
               >
                 Units
               </label>
               <input
-                id={`lite-year-${yearNum}-units`}
+                id={`lite-year-${yearNum}-term-${termNum}-units`}
                 type="number"
                 step="1"
                 min="0"
                 value={unitsValue}
                 onChange={e => onUnitsChange(e.target.value)}
-                onKeyDown={e => onKeyDown(e, "units", yearNum)}
+                onKeyDown={e => onKeyDown(e, "units", termNum, yearNum)}
                 placeholder="0"
                 className="
-                  w-full rounded-md border border-input bg-background px-2 py-1.5
+                  w-full rounded-md border border-input bg-background px-2 py-1
                   text-sm text-center text-foreground shadow-sm
                   placeholder:text-muted-foreground/50
                   focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent
@@ -128,11 +131,11 @@ export default function LatinHonorsCalculator() {
   const [termsData, setTermsData] = React.useState<Record<string, RowData[]>>({});
   const [liteMode, setLiteMode] = React.useState(true);
   const [showUnits, setShowUnits] = React.useState(false);
-  const [liteData, setLiteData] = React.useState<Record<number, LiteYearInput>>({
-    1: { gpa: "", units: "" },
-    2: { gpa: "", units: "" },
-    3: { gpa: "", units: "" },
-    4: { gpa: "", units: "" },
+  const [liteData, setLiteData] = React.useState<Record<number, LiteYearData>>({
+    1: { term1: "", term2: "", term3: "", units1: "", units2: "", units3: "" },
+    2: { term1: "", term2: "", term3: "", units1: "", units2: "", units3: "" },
+    3: { term1: "", term2: "", term3: "", units1: "", units2: "", units3: "" },
+    4: { term1: "", term2: "", term3: "", units1: "", units2: "", units3: "" },
   });
 
   const termsDataRef = React.useRef(termsData);
@@ -179,7 +182,7 @@ export default function LatinHonorsCalculator() {
     setTermsData(prev => ({ ...prev, [term]: rows }));
   }, []);
 
-  const handleLiteChange = (yearNum: number, field: keyof LiteYearInput, value: string) => {
+  const handleLiteChange = (yearNum: number, field: keyof LiteYearData, value: string) => {
     setLiteData(prev => ({
       ...prev,
       [yearNum]: { ...prev[yearNum], [field]: value },
@@ -189,6 +192,7 @@ export default function LatinHonorsCalculator() {
   const handleLiteKeyDown = (
     e: React.KeyboardEvent<HTMLInputElement>,
     type: "grade" | "units",
+    termNum: number,
     yearNum: number
   ) => {
     const keys = ["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight"];
@@ -198,15 +202,19 @@ export default function LatinHonorsCalculator() {
     let nextId = "";
     if (e.key === "ArrowRight" || e.key === "ArrowDown") {
       if (type === "grade") {
-        nextId = showUnits ? `lite-year-${yearNum}-units` : (yearNum < 4 ? `lite-year-${yearNum + 1}-grade` : "");
+        nextId = showUnits ? `lite-year-${yearNum}-term-${termNum}-units` : (termNum < 3 ? `lite-year-${yearNum}-term-${termNum + 1}-grade` : (yearNum < 4 ? `lite-year-${yearNum + 1}-term-1-grade` : ""));
+      } else if (termNum < 3) {
+        nextId = `lite-year-${yearNum}-term-${termNum + 1}-grade`;
       } else if (yearNum < 4) {
-        nextId = `lite-year-${yearNum + 1}-grade`;
+        nextId = `lite-year-${yearNum + 1}-term-1-grade`;
       }
     } else if (e.key === "ArrowLeft" || e.key === "ArrowUp") {
       if (type === "units") {
-        nextId = `lite-year-${yearNum}-grade`;
+        nextId = `lite-year-${yearNum}-term-${termNum}-grade`;
+      } else if (termNum > 1) {
+        nextId = showUnits ? `lite-year-${yearNum}-term-${termNum - 1}-units` : `lite-year-${yearNum}-term-${termNum - 1}-grade`;
       } else if (yearNum > 1) {
-        nextId = showUnits ? `lite-year-${yearNum - 1}-units` : `lite-year-${yearNum - 1}-grade`;
+        nextId = showUnits ? `lite-year-${yearNum - 1}-term-3-units` : `lite-year-${yearNum - 1}-term-3-grade`;
       }
     }
 
@@ -260,29 +268,40 @@ export default function LatinHonorsCalculator() {
   const results = React.useMemo(() => {
     if (liteMode) {
       const years = Object.values(liteData);
-      const validGPA = years.map(y => parseFloat(y.gpa)).filter(v => !isNaN(v) && v > 0);
-      const totalUnits = years.reduce((sum, y) => sum + (parseFloat(y.units) || 0), 0);
       
-      const avgGPA = validGPA.length > 0 ? validGPA.reduce((a, b) => a + b, 0) / validGPA.length : 0;
+      const allTermGPAs: number[] = [];
+      let totalUnits = 0;
+
+      years.forEach(year => {
+        [1, 2, 3].forEach(termNum => {
+          const gpaVal = parseFloat(year[`term${termNum}` as keyof LiteYearData]);
+          const unitVal = parseFloat(year[`units${termNum}` as keyof LiteYearData]) || 0;
+          if (!isNaN(gpaVal) && gpaVal > 0) {
+            allTermGPAs.push(gpaVal);
+          }
+          totalUnits += unitVal;
+        });
+      });
+      
+      const averageGPA = allTermGPAs.length > 0 ? allTermGPAs.reduce((a, b) => a + b, 0) / allTermGPAs.length : 0;
       
       let eligible = "-";
-      if (validGPA.length > 0) {
+      if (allTermGPAs.length > 0) {
         if (showUnits && totalUnits < 144) {
           eligible = "No, not enough units (need 144)";
-        } else if (avgGPA >= 3.85) {
+        } else if (averageGPA >= 3.85) {
           eligible = "Summa Cum Laude";
-        } else if (avgGPA >= 3.70) {
+        } else if (averageGPA >= 3.70) {
           eligible = "Magna Cum Laude";
-        } else if (avgGPA >= 3.50) {
+        } else if (averageGPA >= 3.50) {
           eligible = "Cum Laude";
         } else {
           eligible = "No Latin Honor";
         }
       }
-      return { gpa: avgGPA.toFixed(2), latinHonor: eligible, units: totalUnits };
+      return { gpa: averageGPA.toFixed(2), latinHonor: eligible, units: totalUnits };
     } else {
       // Full Mode logic
-      let totalHonorPoints = 0;
       let totalUnits = 0;
       let totalRGrades = 0;
 
@@ -358,7 +377,7 @@ export default function LatinHonorsCalculator() {
                 transition={{ duration: 0.2 }}
               >
                 {liteMode ? (
-                  <>Enter your general average for each school year</>
+                  <>Enter your general average for each term across all four years</>
                 ) : (
                   <>Enter subjects and grades for all four years</>
                 )}
@@ -425,9 +444,9 @@ export default function LatinHonorsCalculator() {
               exit={{ opacity: 0, y: -20 }}
               className="max-w-4xl mx-auto"
             >
-              <div className="rounded-xl border bg-card p-8 shadow-sm">
-                <div className="flex items-center justify-between mb-8">
-                  <h3 className="text-xl font-medium">Yearly Performance</h3>
+              <div className="rounded-xl border bg-card p-6 shadow-sm overflow-x-auto">
+                <div className="flex items-center justify-between mb-8 px-2">
+                  <h3 className="text-xl font-medium">12-Term Performance Grid</h3>
                   <div className="flex items-center gap-2">
                     <label htmlFor="latin-units-toggle" className="text-xs text-muted-foreground cursor-pointer select-none">Include Units?</label>
                     <input
@@ -439,18 +458,31 @@ export default function LatinHonorsCalculator() {
                     />
                   </div>
                 </div>
-                <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-                  {[1, 2, 3, 4].map(num => (
-                    <LiteYearRow
-                      key={num}
-                      yearNum={num}
-                      gradeValue={liteData[num].gpa}
-                      unitsValue={liteData[num].units}
-                      onGradeChange={v => handleLiteChange(num, "gpa", v)}
-                      onUnitsChange={v => handleLiteChange(num, "units", v)}
-                      onKeyDown={handleLiteKeyDown}
-                      showUnits={showUnits}
-                    />
+                
+                <div className="space-y-10">
+                  {[1, 2, 3, 4].map(yNum => (
+                    <div key={yNum} className="space-y-4">
+                      <div className="flex items-center gap-4 px-2">
+                        <span className="text-sm font-semibold text-foreground whitespace-nowrap">Year {yNum}</span>
+                        <div className="h-px bg-border/50 flex-1" />
+                      </div>
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        {[1, 2, 3].map(tNum => (
+                          <LiteTermRow
+                            key={tNum}
+                            termNum={tNum}
+                            yearNum={yNum}
+                            yearKey={`Year ${yNum}`}
+                            gradeValue={liteData[yNum][`term${tNum}` as keyof LiteYearData]}
+                            unitsValue={liteData[yNum][`units${tNum}` as keyof LiteYearData]}
+                            onGradeChange={v => handleLiteChange(yNum, `term${tNum}` as keyof LiteYearData, v)}
+                            onUnitsChange={v => handleLiteChange(yNum, `units${tNum}` as keyof LiteYearData, v)}
+                            onKeyDown={handleLiteKeyDown}
+                            showUnits={showUnits}
+                          />
+                        ))}
+                      </div>
+                    </div>
                   ))}
                 </div>
               </div>
