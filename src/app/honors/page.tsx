@@ -193,6 +193,8 @@ export default function HonorsCalcu() {
           setLiteData(parsedLite);
         }
       }
+      const savedLiteMode = localStorage.getItem("honorsLiteMode");
+      if (savedLiteMode !== null) setLiteMode(JSON.parse(savedLiteMode));
     } catch (error) {
       console.error("Failed to parse honors data from localStorage", error);
     }
@@ -227,19 +229,6 @@ export default function HonorsCalcu() {
     }));
   }, []);
 
-  /**
-   * Keyboard navigation grid (visual):
-   *
-   *           Term 1          Term 2          Term 3
-   *  Grade  [grade-1]  ←→  [grade-2]  ←→  [grade-3]
-   *                ↕                  ↕                  ↕
-   *  Units  [units-1]  ←→  [units-2]  ←→  [units-3]
-   *
-   *  ArrowLeft  → same field type, previous term column
-   *  ArrowRight → same field type, next term column
-   *  ArrowUp    → units → grade, same term column
-   *  ArrowDown  → grade → units, same term column
-   */
   const handleLiteKeyDown = (
     e: React.KeyboardEvent<HTMLInputElement>,
     type: "grade" | "units",
@@ -343,7 +332,7 @@ export default function HonorsCalcu() {
       const hasEnoughUnits = totalUnits >= 36;
       const hasTooManyRs = rGrades > 2;
       let eligible: string;
-      if (!hasEnoughUnits) eligible = "No, not enough units";
+      if (!hasEnoughUnits) eligible = "No, not enough units (need 36)";
       else if (hasTooManyRs) eligible = "No, more than 2 R grades";
       else if (gpa >= 3.0 && gpa <= 4.0) eligible = "Yes";
       else eligible = "No";
@@ -516,6 +505,12 @@ export default function HonorsCalcu() {
                       {yearStats[topSummaryYearKey].gpa.toFixed(2)}
                     </p>
                   </div>
+                  <div className="flex flex-col items-center px-8 py-2 border-r border-border/50">
+                    <p className="text-sm text-muted-foreground mb-1">Total Units</p>
+                    <p className="text-3xl font-bold tracking-tight text-foreground">
+                      {yearStats[topSummaryYearKey].totalUnits}
+                    </p>
+                  </div>
                   <div className="flex flex-col items-center px-8 py-2">
                     <p className="text-sm text-muted-foreground mb-1">Eligible for Honors</p>
                     <p className="text-3xl font-bold tracking-tight text-primary">
@@ -527,7 +522,6 @@ export default function HonorsCalcu() {
             )}
           </AnimatePresence>
         </div>
-
 
         <hr className="mb-10 border-border/100" />
 
@@ -623,8 +617,6 @@ export default function HonorsCalcu() {
                     </motion.div>
                   )}
                 </AnimatePresence>
-
-                
 
                 {yearNum < (liteMode ? 1 : 4) && <hr className="my-12 border-border/100" />}
               </motion.section>

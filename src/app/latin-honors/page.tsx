@@ -285,7 +285,6 @@ export default function LatinHonorsCalculator() {
       let totalHonorPoints = 0;
       let totalUnits = 0;
       let totalRGrades = 0;
-      let yearCount = 0;
 
       const yearSums: Record<string, { points: number, units: number, rs: number }> = {};
 
@@ -313,7 +312,7 @@ export default function LatinHonorsCalculator() {
 
       let eligible = "-";
       if (yearGPAs.length > 0) {
-        if (combinedUnits < 144) eligible = "No, not enough units";
+        if (combinedUnits < 144) eligible = "No, not enough units (need 144)";
         else if (combinedRs > 8) eligible = "No, more than 8 R grades";
         else if (averageGPA >= 3.85) eligible = "Summa Cum Laude";
         else if (averageGPA >= 3.70) eligible = "Magna Cum Laude";
@@ -386,21 +385,21 @@ export default function LatinHonorsCalculator() {
         <div className="flex justify-center mb-12">
           <motion.div 
             layout 
-            className="flex gap-4 flex-wrap justify-center items-center p-6 rounded-xl border bg-card/50 shadow-sm"
+            className="flex gap-0 flex-wrap justify-center items-center p-6 rounded-xl border bg-card/50 shadow-sm"
           >
-            <motion.div layout className="flex flex-col items-center px-6 py-2 border-r border-border/50 last:border-0">
+            <motion.div layout className="flex flex-col items-center px-8 py-2 border-r border-border/50 last:border-0">
               <p className="text-sm text-muted-foreground mb-1">Overall GPA</p>
               <p className="text-3xl font-bold tracking-tight">{results.gpa}</p>
             </motion.div>
             
             <AnimatePresence mode="popLayout">
-              {liteMode && showUnits && (
+              {(!liteMode || showUnits) && (
                 <motion.div 
                   layout
                   initial={{ opacity: 0, scale: 0.8 }}
                   animate={{ opacity: 1, scale: 1 }}
                   exit={{ opacity: 0, scale: 0.8 }}
-                  className="flex flex-col items-center px-6 py-2 border-r border-border/50 last:border-0"
+                  className="flex flex-col items-center px-8 py-2 border-r border-border/50 last:border-0"
                 >
                   <p className="text-sm text-muted-foreground mb-1">Total Units</p>
                   <p className="text-3xl font-bold tracking-tight">{results.units}</p>
@@ -408,7 +407,7 @@ export default function LatinHonorsCalculator() {
               )}
             </AnimatePresence>
 
-            <motion.div layout className="flex flex-col items-center px-6 py-2">
+            <motion.div layout className="flex flex-col items-center px-8 py-2">
               <p className="text-sm text-muted-foreground mb-1">Latin Honor Status</p>
               <p className="text-3xl font-bold tracking-tight text-primary">{results.latinHonor}</p>
             </motion.div>
