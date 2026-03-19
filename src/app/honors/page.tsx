@@ -34,7 +34,7 @@ interface LiteYearData {
   units3: string;
 }
 
-function calcLiteStats(data: LiteYearData): { gpa: number; eligible: string; totalUnits: number } {
+function calcLiteStats(data: LiteYearData, showUnits: boolean): { gpa: number; eligible: string; totalUnits: number } {
   const t1 = parseFloat(data.term1);
   const t2 = parseFloat(data.term2);
   const t3 = parseFloat(data.term3);
@@ -51,7 +51,7 @@ function calcLiteStats(data: LiteYearData): { gpa: number; eligible: string; tot
 
   let eligible: string;
   if (avg >= 3.0 && avg <= 4.0) {
-    if (totalUnits >= 36) eligible = "Yes";
+    if (!showUnits || totalUnits >= 36) eligible = "Yes";
     else eligible = "No, not enough units (need 36)";
   } else {
     eligible = "No";
@@ -69,6 +69,7 @@ function LiteTermRow({
   onGradeChange,
   onUnitsChange,
   onKeyDown,
+  showUnits,
 }: {
   termNum: number;
   yearKey: string;
@@ -82,6 +83,7 @@ function LiteTermRow({
     termNum: number,
     yearKey: string
   ) => void;
+  showUnits: boolean;
 }) {
   return (
     <div className="flex flex-col gap-1.5">
@@ -121,31 +123,40 @@ function LiteTermRow({
         </div>
 
         {/* Units — narrow pill */}
-        <div className="flex flex-col gap-1 w-14">
-          <label
-            htmlFor={`lite-${yearKey}-units-${termNum}`}
-            className="text-xs text-muted-foreground font-medium"
-          >
-            Units
-          </label>
-          <input
-            id={`lite-${yearKey}-units-${termNum}`}
-            type="number"
-            step="1"
-            min="0"
-            value={unitsValue}
-            onChange={e => onUnitsChange(e.target.value)}
-            onKeyDown={e => onKeyDown(e, "units", termNum, yearKey)}
-            placeholder="0"
-            className="
-              w-full rounded-md border border-input bg-background px-2 py-1.5
-              text-sm text-center text-foreground shadow-sm
-              placeholder:text-muted-foreground/50
-              focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent
-              transition-colors
-            "
-          />
-        </div>
+        <AnimatePresence>
+          {showUnits && (
+            <motion.div
+              initial={{ opacity: 0, width: 0, x: 10 }}
+              animate={{ opacity: 1, width: 56, x: 0 }}
+              exit={{ opacity: 0, width: 0, x: 10 }}
+              className="flex flex-col gap-1 overflow-hidden"
+            >
+              <label
+                htmlFor={`lite-${yearKey}-units-${termNum}`}
+                className="text-xs text-muted-foreground font-medium whitespace-nowrap"
+              >
+                Units
+              </label>
+              <input
+                id={`lite-${yearKey}-units-${termNum}`}
+                type="number"
+                step="1"
+                min="0"
+                value={unitsValue}
+                onChange={e => onUnitsChange(e.target.value)}
+                onKeyDown={e => onKeyDown(e, "units", termNum, yearKey)}
+                placeholder="0"
+                className="
+                  w-full rounded-md border border-input bg-background px-2 py-1.5
+                  text-sm text-center text-foreground shadow-sm
+                  placeholder:text-muted-foreground/50
+                  focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent
+                  transition-colors
+                "
+              />
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
     </div>
   );
@@ -154,6 +165,7 @@ function LiteTermRow({
 export default function HonorsCalcu() {
   const [termsData, setTermsData] = React.useState<Record<string, RowData[]>>({});
   const [liteMode, setLiteMode] = React.useState(true);
+  const [showUnits, setShowUnits] = React.useState(false);
   const [liteData, setLiteData] = React.useState<Record<string, LiteYearData>>({
     "Year 1": { term1: "", term2: "", term3: "", units1: "", units2: "", units3: "" },
     "Year 2": { term1: "", term2: "", term3: "", units1: "", units2: "", units3: "" },
@@ -345,10 +357,10 @@ export default function HonorsCalcu() {
   const liteStats = React.useMemo(() => {
     const stats: Record<string, { gpa: number; eligible: string; totalUnits: number }> = {};
     Object.entries(liteData).forEach(([year, data]) => {
-      stats[year] = calcLiteStats(data);
+      stats[year] = calcLiteStats(data, showUnits);
     });
     return stats;
-  }, [liteData]);
+  }, [liteData, showUnits]);
 
   return (
     <div className="min-h-screen bg-background">
@@ -466,9 +478,23 @@ export default function HonorsCalcu() {
                       className="flex justify-center"
                     >
                       <div className="rounded-lg border bg-card p-6 shadow-sm w-full max-w-lg">
-                        <p className="text-sm font-medium text-foreground mb-5">
-                          General Average per Term
-                        </p>
+                        <div className="flex items-center justify-between mb-5">
+                          <p className="text-sm font-medium text-foreground">
+                            General Average per Term
+                          </p>
+                          <div className="flex items-center gap-2">
+                            <label htmlFor="show-units-toggle" className="text-xs text-muted-foreground cursor-pointer select-none">
+                              Include Units?
+                            </label>
+                            <input
+                              id="show-units-toggle"
+                              type="checkbox"
+                              checked={showUnits}
+                              onChange={e => setShowUnits(e.target.checked)}
+                              className="w-3.5 h-3.5 rounded border-input text-foreground focus:ring-ring cursor-pointer"
+                            />
+                          </div>
+                        </div>
                         <div className="grid grid-cols-3 gap-4">
                           {[1, 2, 3].map(num => (
                             <LiteTermRow
@@ -480,6 +506,7 @@ export default function HonorsCalcu() {
                               onGradeChange={v => handleLiteChange(yearKey, `term${num}` as keyof LiteYearData, v)}
                               onUnitsChange={v => handleLiteChange(yearKey, `units${num}` as keyof LiteYearData, v)}
                               onKeyDown={handleLiteKeyDown}
+                              showUnits={showUnits}
                             />
                           ))}
                         </div>
@@ -522,32 +549,50 @@ export default function HonorsCalcu() {
                   <AnimatePresence mode="wait">
                     {liteMode ? (
                       <motion.div
+                        layout
                         key="lite-stats"
                         initial={{ opacity: 0, y: 10 }}
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0, y: -10 }}
-                        className="flex gap-4 flex-wrap justify-center"
+                        className="flex gap-4 flex-wrap justify-center items-center"
                       >
-                        <div className="rounded-lg border bg-card px-6 py-4 shadow-sm">
+                        <motion.div
+                          layout
+                          className="rounded-lg border bg-card px-6 py-4 shadow-sm"
+                        >
                           <p className="text-sm text-muted-foreground mb-1">Average GPA</p>
                           <p className="text-2xl font-bold text-foreground">
                             {liteStats[yearKey]?.gpa > 0
                               ? liteStats[yearKey].gpa.toFixed(2)
                               : "0.00"}
                           </p>
-                        </div>
-                        <div className="rounded-lg border bg-card px-6 py-4 shadow-sm">
-                          <p className="text-sm text-muted-foreground mb-1">Total Units</p>
-                          <p className="text-2xl font-bold text-foreground">
-                            {liteStats[yearKey]?.totalUnits ?? "0"}
-                          </p>
-                        </div>
-                        <div className="rounded-lg border bg-card px-6 py-4 shadow-sm">
+                        </motion.div>
+                        <AnimatePresence mode="popLayout">
+                          {showUnits && (
+                            <motion.div
+                              layout
+                              initial={{ opacity: 0, scale: 0.8 }}
+                              animate={{ opacity: 1, scale: 1 }}
+                              exit={{ opacity: 0, scale: 0.8 }}
+                              transition={{ duration: 0.3 }}
+                              className="rounded-lg border bg-card px-6 py-4 shadow-sm"
+                            >
+                              <p className="text-sm text-muted-foreground mb-1">Total Units</p>
+                              <p className="text-2xl font-bold text-foreground">
+                                {liteStats[yearKey]?.totalUnits ?? "0"}
+                              </p>
+                            </motion.div>
+                          )}
+                        </AnimatePresence>
+                        <motion.div
+                          layout
+                          className="rounded-lg border bg-card px-6 py-4 shadow-sm"
+                        >
                           <p className="text-sm text-muted-foreground mb-1">Eligible for Honors</p>
                           <p className="text-2xl font-bold text-foreground">
                             {liteStats[yearKey]?.eligible ?? "-"}
                           </p>
-                        </div>
+                        </motion.div>
                       </motion.div>
                     ) : (
                       yearStats[yearKey] && (
