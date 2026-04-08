@@ -2,8 +2,13 @@ import { NextRequest } from "next/server"
 
 export const CHANGELOG_ADMIN_SESSION_COOKIE = "changelog_admin_session"
 
-export const ADMIN_USERNAME = "admin"
-export const ADMIN_PASSWORD = "apc-admin-2026"
+export function getAdminUsernameFromEnv(): string {
+  return process.env.ADMIN_USERNAME || ""
+}
+
+export function getAdminPasswordFromEnv(): string {
+  return process.env.ADMIN_PASSWORD || ""
+}
 
 export function getAdminTokenFromEnv(): string {
   return process.env.CHANGELOG_ADMIN_TOKEN || ""
