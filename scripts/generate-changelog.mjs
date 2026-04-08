@@ -1,8 +1,8 @@
 /**
  * generate-changelog.mjs
  *
- * Build-time script that fetches recently merged PRs from GitHub and writes
- * them as a JSON changelog consumed by the UpdateToast component.
+ * Build-time script that fetches recently merged PRs from GitHub and appends
+ * parsed release notes into a persistent JSON store consumed by the toast API.
  *
  * A PR is included if and only if its body contains a populated
  * `# Release Notes` section with at least one `## Feature` entry.
@@ -19,15 +19,15 @@
  *   node scripts/generate-changelog.mjs
  *
  * Output:
- *   src/lib/changelog-generated.json
+ *   src/lib/update-logs.json
  */
 
-import { writeFileSync } from "node:fs";
+import { readFileSync, writeFileSync } from "node:fs";
 import { resolve, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
-const OUTPUT_PATH = resolve(__dirname, "../src/lib/changelog-generated.json");
+const OUTPUT_PATH = resolve(__dirname, "../src/lib/update-logs.json");
 
 // ── Config from env ─────────────────────────────────────────────────────────
 
@@ -40,8 +40,27 @@ const maxEntries = parseInt(process.env.CHANGELOG_MAX_ENTRIES || "10", 10);
 // ── Helpers ─────────────────────────────────────────────────────────────────
 
 function writeEmpty(reason) {
-  console.log(`[generate-changelog] ${reason} — writing empty changelog.`);
-  writeFileSync(OUTPUT_PATH, JSON.stringify([], null, 2) + "\n");
+  console.log(`[generate-changelog] ${reason} — leaving existing update logs unchanged.`);
+}
+
+function readExistingLogs() {
+  try {
+    const raw = readFileSync(OUTPUT_PATH, "utf-8");
+    const parsed = JSON.parse(raw);
+    if (!Array.isArray(parsed)) return [];
+    return parsed
+      .filter(
+        (entry) =>
+          typeof entry.id === "number" &&
+          typeof entry.title === "string" &&
+          typeof entry.description === "string" &&
+          typeof entry.created_at === "string" &&
+          typeof entry.is_visible === "boolean"
+      )
+      .sort((a, b) => a.id - b.id);
+  } catch {
+    return [];
+  }
 }
 
 /**
@@ -99,6 +118,8 @@ function parseReleaseNotesSection(body) {
 // ── Main ────────────────────────────────────────────────────────────────────
 
 async function main() {
+  const existingLogs = readExistingLogs();
+
   if (!token || !owner || !repo) {
     writeEmpty("Missing GITHUB_TOKEN, GITHUB_OWNER, or GITHUB_REPO");
     return;
@@ -135,31 +156,61 @@ async function main() {
 
     const pulls = await res.json();
 
-    // Filter: must be merged AND have a parseable # Release Notes section
-    const entries = pulls
+    const parsedFeatureRows = pulls
       .filter((pr) => pr.merged_at !== null)
-      .map((pr) => ({
-        id: pr.number,
-        date: pr.merged_at.slice(0, 10), // YYYY-MM-DD
-        title: pr.title,
-        features: parseReleaseNotesSection(pr.body),
-      }))
-      .filter((entry) => entry.features.length > 0)
-      .slice(0, maxEntries);
+      .map((pr) => {
+        const features = parseReleaseNotesSection(pr.body);
+        return features.map((feature) => ({
+          source_pr_number: pr.number,
+          source_feature_title: feature.title,
+          title: feature.title,
+          description: feature.description,
+          created_at: pr.merged_at,
+        }));
+      })
+      .flat();
 
-    if (entries.length === 0) {
+    if (parsedFeatureRows.length === 0) {
       writeEmpty(
         "No merged PRs with a parseable '# Release Notes' section found"
       );
       return;
     }
 
-    // Sort by id ascending (oldest first) so the toast can reverse for display
-    entries.sort((a, b) => a.id - b.id);
+    const existingKeys = new Set(
+      existingLogs.map(
+        (entry) => `${entry.title}::${entry.description}::${entry.created_at}`
+      )
+    );
 
-    writeFileSync(OUTPUT_PATH, JSON.stringify(entries, null, 2) + "\n");
+    const newRows = parsedFeatureRows.filter((entry) => {
+      const key = `${entry.title}::${entry.description}::${entry.created_at}`;
+      return !existingKeys.has(key);
+    });
+
+    if (newRows.length === 0) {
+      console.log("[generate-changelog] No new entries detected — store unchanged.");
+      return;
+    }
+
+    const latestId = existingLogs.length > 0 ? Math.max(...existingLogs.map((e) => e.id)) : 0;
+    const nextRows = newRows.map((entry, index) => ({
+      id: latestId + index + 1,
+      title: entry.title,
+      description: entry.description,
+      created_at: entry.created_at,
+      is_visible: true,
+      source_pr_number: entry.source_pr_number,
+      source_feature_title: entry.source_feature_title,
+    }));
+
+    const mergedLogs = [...existingLogs, ...nextRows]
+      .sort((a, b) => a.id - b.id)
+      .slice(-maxEntries);
+
+    writeFileSync(OUTPUT_PATH, JSON.stringify(mergedLogs, null, 2) + "\n");
     console.log(
-      `[generate-changelog] Wrote ${entries.length} entries to changelog-generated.json`
+      `[generate-changelog] Added ${nextRows.length} entries. Store now has ${mergedLogs.length} entries.`
     );
   } catch (err) {
     writeEmpty(`Error: ${err.message}`);

@@ -4,61 +4,83 @@ import * as React from "react";
 import { X, Megaphone } from "lucide-react";
 import {
   CHANGELOG_STORAGE_KEY,
-  LATEST_CHANGELOG_ID,
   MAX_INITIAL_DISPLAY,
+  getLatestChangelogId,
   getUnreadEntries,
   type ChangelogEntry,
 } from "@/lib/changelog";
 
 export function UpdateToast() {
   const [unread, setUnread] = React.useState<ChangelogEntry[]>([]);
+  const [latestVisibleId, setLatestVisibleId] = React.useState(0);
   const [visible, setVisible] = React.useState(false);
   const [exiting, setExiting] = React.useState(false);
 
-  // Read localStorage only on the client
   React.useEffect(() => {
-    try {
-      const raw = localStorage.getItem(CHANGELOG_STORAGE_KEY);
-      const isNewVisitor = raw === null;
-      const lastSeen = isNewVisitor ? -1 : parseInt(raw, 10);
-      let entries = getUnreadEntries(lastSeen);
+    let mounted = true;
+    let timeout: ReturnType<typeof setTimeout> | null = null;
 
-      // For brand-new visitors, cap the number of entries shown
-      if (isNewVisitor && entries.length > MAX_INITIAL_DISPLAY) {
-        entries = entries
-          .sort((a, b) => b.id - a.id)
-          .slice(0, MAX_INITIAL_DISPLAY);
-      }
+    const load = async () => {
+      try {
+        const response = await fetch("/api/changelog", {
+          cache: "no-store",
+        });
 
-      if (entries.length > 0) {
+        if (!response.ok) {
+          return;
+        }
+
+        const data = (await response.json()) as {
+          entries?: ChangelogEntry[];
+        };
+
+        const allEntries = Array.isArray(data.entries) ? data.entries : [];
+        const latestId = getLatestChangelogId(allEntries);
+
+        const raw = localStorage.getItem(CHANGELOG_STORAGE_KEY);
+        const isNewVisitor = raw === null;
+        const parsedLastSeen = isNewVisitor ? -1 : parseInt(raw, 10);
+        const lastSeen = Number.isNaN(parsedLastSeen) ? -1 : parsedLastSeen;
+
+        let entries = getUnreadEntries(allEntries, lastSeen);
+
+        if (isNewVisitor && entries.length > MAX_INITIAL_DISPLAY) {
+          entries = entries.sort((a, b) => b.id - a.id).slice(0, MAX_INITIAL_DISPLAY);
+        }
+
+        if (!mounted || entries.length === 0) {
+          return;
+        }
+
+        setLatestVisibleId(latestId);
         setUnread(entries);
-        // Small delay so the slide-in animates after hydration
-        const t = setTimeout(() => setVisible(true), 120);
-        return () => clearTimeout(t);
+        timeout = setTimeout(() => setVisible(true), 120);
+      } catch {
+        // ignore network/localStorage failures
       }
-    } catch {
-      // localStorage unavailable (e.g. SSR guard)
-    }
+    };
+
+    void load();
+
+    return () => {
+      mounted = false;
+      if (timeout) clearTimeout(timeout);
+    };
   }, []);
 
   const dismiss = React.useCallback(() => {
     setExiting(true);
-    // Persist the read state immediately so a refresh won't re-show it
     try {
-      localStorage.setItem(CHANGELOG_STORAGE_KEY, String(LATEST_CHANGELOG_ID));
+      localStorage.setItem(CHANGELOG_STORAGE_KEY, String(latestVisibleId));
     } catch {
       /* ignore */
     }
-    // Wait for the slide-out animation to finish before un-mounting
     setTimeout(() => setVisible(false), 350);
-  }, []);
+  }, [latestVisibleId]);
 
   if (!visible) return null;
 
-  // Sort most-recent first; skip entries that have no displayable features
-  const visibleEntries = [...unread]
-    .sort((a, b) => b.id - a.id)
-    .filter((e) => (e.features?.length ?? 0) > 0);
+  const visibleEntries = [...unread].sort((a, b) => b.id - a.id);
 
   if (visibleEntries.length === 0) return null;
 
@@ -88,16 +110,14 @@ export function UpdateToast() {
       <div className="update-toast__entries">
         {visibleEntries.map((entry) => (
           <div key={entry.id} className="update-toast__entry">
-            {entry.features.map((feature, i) => (
-              <div key={i} className="update-toast__feature">
-                {feature.title && (
-                  <p className="update-toast__feature-title">{feature.title}</p>
-                )}
-                {feature.description && (
-                  <p className="update-toast__feature-desc">{feature.description}</p>
-                )}
-              </div>
-            ))}
+            <div className="update-toast__feature">
+              {entry.title && (
+                <p className="update-toast__feature-title">{entry.title}</p>
+              )}
+              {entry.description && (
+                <p className="update-toast__feature-desc">{entry.description}</p>
+              )}
+            </div>
           </div>
         ))}
       </div>
