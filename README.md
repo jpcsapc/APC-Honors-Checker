@@ -33,17 +33,20 @@ npm install
 yarn install
 ```
 
-3. Set up environment variables (required for feedback system):
+3. Set up environment variables (required for feedback system and admin dashboard):
 ```bash
 cp .env.local.example .env.local
 ```
 
-Edit `.env.local` and add your GitHub Personal Access Token:
+Edit `.env.local` and add your configuration:
 ```env
+# Admin Dashboard Token
+CHANGELOG_ADMIN_TOKEN=your_secure_admin_token_here
+
+# GitHub API (for feedback system)
 GITHUB_TOKEN=your_github_token_here
 GITHUB_OWNER=jpcsapc
 GITHUB_REPO=APC-Honors-Checker
-CHANGELOG_ADMIN_TOKEN=your_admin_token_here
 ```
 
 See [FEEDBACK_SYSTEM.md](./FEEDBACK_SYSTEM.md) for detailed setup instructions.

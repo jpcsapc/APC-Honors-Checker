@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from "next/server"
 import {
-  ADMIN_PASSWORD,
-  ADMIN_USERNAME,
   CHANGELOG_ADMIN_SESSION_COOKIE,
   getAdminTokenFromEnv,
+  getAdminUsernameFromEnv,
+  getAdminPasswordFromEnv,
 } from "@/lib/changelog-admin-auth"
 
 export const runtime = "nodejs"
@@ -17,12 +17,22 @@ export async function POST(request: NextRequest) {
     )
   }
 
+  const adminUsername = getAdminUsernameFromEnv()
+  const adminPassword = getAdminPasswordFromEnv()
+
+  if (!adminUsername || !adminPassword) {
+    return NextResponse.json(
+      { error: "Admin credentials are not configured." },
+      { status: 500 }
+    )
+  }
+
   try {
     const body = await request.json()
     const username = String(body?.username || "")
     const password = String(body?.password || "")
 
-    if (username !== ADMIN_USERNAME || password !== ADMIN_PASSWORD) {
+    if (username !== adminUsername || password !== adminPassword) {
       return NextResponse.json({ error: "Invalid credentials" }, { status: 401 })
     }
 
