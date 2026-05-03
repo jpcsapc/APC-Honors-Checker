@@ -360,17 +360,26 @@ export default function HonorsCalcu() {
     const averageGPA = yearsWithData.reduce((sum, s) => sum + s.gpa, 0) / yearsWithData.length;
     const totalUnits = yearsWithData.reduce((sum, s) => sum + s.totalUnits, 0);
     const totalRGrades = yearsWithData.reduce((sum, s) => sum + s.rGrades, 0);
+    
+    // Check for any failing grades (0.0)
+    const hasFailingGrade = Object.values(termsDataRef.current).some(term => 
+      term.some(row => row.grade === "0.0" || row.grade === "0")
+    );
 
     let latinHonor: string;
-    if (totalUnits < 144) latinHonor = "Not enough units yet";
-    else if (totalRGrades > 8) latinHonor = "No, more than 8 R grades";
-    else if (averageGPA >= 3.85) latinHonor = "Summa Cum Laude";
-    else if (averageGPA >= 3.70) latinHonor = "Magna Cum Laude";
-    else if (averageGPA >= 3.50) latinHonor = "Cum Laude";
-    else latinHonor = "No Latin Honor";
+    
+    // Basic eligibility requirements
+    if (averageGPA < 3.0) latinHonor = "No, CGPA below 3.0";
+    else if (hasFailingGrade) latinHonor = "No, has failing grade (0.0)";
+    else if (totalRGrades > 6) latinHonor = "No, more than 6 R grades";
+    // Honors classification (per official APC policy)
+    else if (averageGPA >= 3.80) latinHonor = "Summa Cum Laude";
+    else if (averageGPA >= 3.60) latinHonor = "Magna Cum Laude";
+    else if (averageGPA >= 3.40) latinHonor = "Cum Laude";
+    else latinHonor = "Academic Distinction";
 
     return { overallGPA: averageGPA.toFixed(2), latinHonor };
-  }, [yearStats]);
+  }, [yearStats, termsDataRef]);
 
   const liteStats = React.useMemo(() => {
     const stats: Record<string, { gpa: number; eligible: string; totalUnits: number }> = {};
