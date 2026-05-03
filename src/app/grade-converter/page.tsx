@@ -171,29 +171,14 @@ export default function GradeConverterPage() {
   }
 
   const getDescriptionColor = (description: string): string => {
-    const colors: Record<string, string> = {
-      "Excellent": "text-green-600 dark:text-green-400",
-      "Very Good": "text-emerald-600 dark:text-emerald-400",
-      "Good": "text-blue-600 dark:text-blue-400",
-      "Satisfactory": "text-teal-600 dark:text-teal-400",
-      "Pass": "text-orange-600 dark:text-orange-400",
-      "Conditional": "text-yellow-600 dark:text-yellow-400",
-      "Fail": "text-red-600 dark:text-red-400",
-    }
-    return colors[description] || "text-muted-foreground"
+    return "text-foreground"
   }
 
   const getHonorsBadge = (honorsLevel?: string) => {
     if (!honorsLevel) return null
-    
-    const badgeColors: Record<string, string> = {
-      "Summa Cum Laude": "bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-200 border-amber-300 dark:border-amber-700",
-      "Magna Cum Laude": "bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-200 border-purple-300 dark:border-purple-700",
-      "Cum Laude": "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-200 border-blue-300 dark:border-blue-700",
-    }
 
     return (
-      <div className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold border ${badgeColors[honorsLevel]}`}>
+      <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold border border-foreground bg-background text-foreground">
         <Award className="h-3.5 w-3.5" />
         {honorsLevel}
       </div>
@@ -442,9 +427,9 @@ export default function GradeConverterPage() {
                   Honors Requirements
                 </h4>
                 <ul className="text-sm text-muted-foreground space-y-1">
-                  <li><span className="font-semibold text-amber-600 dark:text-amber-400">Summa Cum Laude:</span> 4.0 APC / 1.00 UP (95–100%)</li>
-                  <li><span className="font-semibold text-purple-600 dark:text-purple-400">Magna Cum Laude:</span> 3.5 APC / 1.25 UP (94–94%)</li>
-                  <li><span className="font-semibold text-blue-600 dark:text-blue-400">Cum Laude:</span> 3.0 APC / 1.50 UP (91–93%)</li>
+                  <li><span className="font-semibold text-foreground">Summa Cum Laude:</span> 4.0 APC / 1.00 UP (95–100%)</li>
+                  <li><span className="font-semibold text-foreground">Magna Cum Laude:</span> 3.5 APC / 1.25 UP (94–94%)</li>
+                  <li><span className="font-semibold text-foreground">Cum Laude:</span> 3.0 APC / 1.50 UP (91–93%)</li>
                 </ul>
               </div>
             </CardContent>
