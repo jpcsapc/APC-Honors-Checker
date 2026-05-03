@@ -1,1 +1,16 @@
-[]
+[
+  {
+    "id": 1,
+    "title": "Latin Honors Calculator Sunset",
+    "description": "The Latin Honors calculator has been removed and consolidated into the main Honors Calculator. All Latin honors calculations are now available on the Honors page, which provides a unified experience for tracking your academic standing.",
+    "created_at": "2026-05-03T00:00:00Z",
+    "is_visible": true
+  },
+  {
+    "id": 2,
+    "title": "Build Stability Improvements",
+    "description": "Fixed missing framer-motion dependency that was causing build failures. The application now builds reliably for production deployments.",
+    "created_at": "2026-05-03T00:00:00Z",
+    "is_visible": true
+  }
+]
