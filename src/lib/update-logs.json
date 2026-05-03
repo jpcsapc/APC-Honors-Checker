@@ -23,15 +23,15 @@
   {
     "id": 4,
     "title": "Updating the Calculation of the Latin Honors",
-    "description": "The Latin Honors calculation now follows the same method as the one used by the institution, based from the APC Student Handbook.",
+    "description": "The Latin Honors calculation now follows one stated by the institution, based from the APC Student Handbook.",
     "created_at": "2026-05-03T00:00:00Z",
-    "is_visible": false
+    "is_visible": true
   },
   {
     "id": 5,
     "title": "Grade Converter System Update",
     "description": "The Grade Converter now supports the official APC and UP grading systems with accurate conversions. Convert between APC (US-based 4.0 scale), UP (Philippine-based 5.0 scale), and percentage grades. Features expanded grading tables with letter grades for both systems.",
     "created_at": "2026-05-03T00:00:00Z",
-    "is_visible": true
+    "is_visible": false
   }
 ]

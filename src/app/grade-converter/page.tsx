@@ -375,7 +375,7 @@ export default function GradeConverterPage() {
         {/* Comparison Chart */}
         <div className="max-w-6xl mx-auto">
           <p className="text-xs text-muted-foreground mb-2 italic">
-            * Based on Asia Pacific College&apos;s Student Handbook
+            * Based on Asia Pacific College&apos;s Student Handbook and UP&apos;s Revised UP Code
           </p>
           <Card>
             <CardHeader>
@@ -386,8 +386,8 @@ export default function GradeConverterPage() {
                 <table className="w-full border-collapse">
                   <thead>
                     <tr className="border-b-2 border-border">
-                      <th className="text-left p-3 font-semibold">APC Grade (US-Based)</th>
-                      <th className="text-left p-3 font-semibold">UP Grade (1.0–5.0)</th>
+                      <th className="text-left p-3 font-semibold">APC Grade</th>
+                      <th className="text-left p-3 font-semibold">UP Grade</th>
                       <th className="text-left p-3 font-semibold">Percentage</th>
                       <th className="text-left p-3 font-semibold">Letter Grade</th>
                       <th className="text-left p-3 font-semibold">Description</th>
