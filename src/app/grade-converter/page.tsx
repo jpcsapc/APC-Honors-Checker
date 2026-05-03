@@ -10,22 +10,27 @@ import Link from "next/link"
 import { ThemeToggle } from "@/components/theme-toggle"
 
 interface GradeData {
-  apcGrade: number
+  apcGrade: number | string
   upGrade: number
+  letterGrade: string
   percentageMin: number
   percentageMax: number
-  remark: string
+  description: string
   honorsLevel?: string
 }
 
 const gradeConversionTable: GradeData[] = [
-  { apcGrade: 4.0, upGrade: 1.0, percentageMin: 95, percentageMax: 100, remark: "Excellent", honorsLevel: "Summa Cum Laude" },
-  { apcGrade: 3.5, upGrade: 1.25, percentageMin: 91, percentageMax: 94, remark: "Very Good", honorsLevel: "Magna Cum Laude" },
-  { apcGrade: 3.0, upGrade: 1.5, percentageMin: 87, percentageMax: 90, remark: "Good", honorsLevel: "Cum Laude" },
-  { apcGrade: 2.5, upGrade: 1.75, percentageMin: 83, percentageMax: 86, remark: "Above Satisfactory" },
-  { apcGrade: 2.0, upGrade: 2.0, percentageMin: 79, percentageMax: 82, remark: "Satisfactory" },
-  { apcGrade: 1.5, upGrade: 2.5, percentageMin: 75, percentageMax: 78, remark: "Fair" },
-  { apcGrade: 1.0, upGrade: 3.0, percentageMin: 70, percentageMax: 74, remark: "Pass" },
+  { apcGrade: 4.0, upGrade: 1.0, letterGrade: "A", percentageMin: 95, percentageMax: 100, description: "Excellent", honorsLevel: "Summa Cum Laude" },
+  { apcGrade: 3.5, upGrade: 1.25, letterGrade: "A-", percentageMin: 94, percentageMax: 94, description: "Excellent", honorsLevel: "Magna Cum Laude" },
+  { apcGrade: 3.0, upGrade: 1.5, letterGrade: "B+", percentageMin: 91, percentageMax: 93, description: "Very Good", honorsLevel: "Cum Laude" },
+  { apcGrade: 2.75, upGrade: 1.75, letterGrade: "B", percentageMin: 88, percentageMax: 90, description: "Very Good" },
+  { apcGrade: 2.5, upGrade: 2.0, letterGrade: "B-", percentageMin: 86, percentageMax: 87, description: "Good" },
+  { apcGrade: 2.25, upGrade: 2.25, letterGrade: "C+", percentageMin: 83, percentageMax: 85, description: "Good" },
+  { apcGrade: 2.0, upGrade: 2.5, letterGrade: "C", percentageMin: 80, percentageMax: 82, description: "Satisfactory" },
+  { apcGrade: 1.75, upGrade: 2.75, letterGrade: "C-", percentageMin: 77, percentageMax: 79, description: "Satisfactory" },
+  { apcGrade: 1.0, upGrade: 3.0, letterGrade: "D", percentageMin: 75, percentageMax: 76, description: "Pass" },
+  { apcGrade: 0.0, upGrade: 4.0, letterGrade: "F", percentageMin: 0, percentageMax: 74, description: "Conditional" },
+  { apcGrade: "R", upGrade: 5.0, letterGrade: "F", percentageMin: 0, percentageMax: 69, description: "Fail" },
 ]
 
 export default function GradeConverterPage() {
@@ -35,105 +40,59 @@ export default function GradeConverterPage() {
   const [convertedResult, setConvertedResult] = useState<GradeData | null>(null)
   const [inputType, setInputType] = useState<"apc" | "up" | "percentage" | null>(null)
 
-  const findGradeByAPC = (grade: number): GradeData | null => {
+  const findGradeByAPC = (grade: number | string): GradeData | null => {
+    // Handle special grades
+    if (typeof grade === "string") {
+      if (grade.toUpperCase() === "R") {
+        return { apcGrade: "R", upGrade: 5.0, letterGrade: "F", percentageMin: 0, percentageMax: 69, description: "Fail" }
+      }
+      return null
+    }
+
     if (grade < 0) return null
     if (grade > 4.0) grade = 4.0
     
-    // Find exact match or interpolate between grade brackets
-    for (let i = 0; i < gradeConversionTable.length; i++) {
-      const current = gradeConversionTable[i]
-      
-      // Exact match
-      if (grade === current.apcGrade) {
-        return current
-      }
-      
-      // Interpolate between brackets
-      if (i < gradeConversionTable.length - 1) {
-        const next = gradeConversionTable[i + 1]
-        
-        if (grade < current.apcGrade && grade > next.apcGrade) {
-          // Linear interpolation for UP grade
-          const apcRange = current.apcGrade - next.apcGrade
-          const apcDiff = current.apcGrade - grade
-          const ratio = apcDiff / apcRange
-          
-          const upGrade = current.upGrade + ratio * (next.upGrade - current.upGrade)
-          
-          // Determine which bracket it falls into for percentage and remark
-          const midpoint = (current.apcGrade + next.apcGrade) / 2
-          const bracket = grade >= midpoint ? current : next
-          
-          return {
-            apcGrade: grade,
-            upGrade: upGrade,
-            percentageMin: bracket.percentageMin,
-            percentageMax: bracket.percentageMax,
-            remark: bracket.remark,
-            honorsLevel: bracket.honorsLevel
-          }
+    // Find exact match or closest match
+    let closest: GradeData | null = null
+    let closestDiff = Infinity
+    
+    for (const row of gradeConversionTable) {
+      if (typeof row.apcGrade === "number") {
+        const diff = Math.abs(row.apcGrade - grade)
+        if (diff < closestDiff) {
+          closestDiff = diff
+          closest = row
         }
       }
     }
     
-    // Below 1.0 is fail/repeat
-    if (grade < 1.0) {
-      return { apcGrade: 'R' as any, upGrade: 5.0, percentageMin: 0, percentageMax: 69, remark: "Repeat" }
-    }
-    
-    return { apcGrade: grade, upGrade: 5.0, percentageMin: 0, percentageMax: 69, remark: "Repeat" }
+    return closest
   }
 
   const findGradeByUP = (grade: number): GradeData | null => {
-    if (grade < 1.0 || grade > 6.0) return null
+    if (grade < 1.0 || grade > 5.0) return null
     
     // Handle special grades
+    if (grade === 4.0) {
+      return { apcGrade: 0.0, upGrade: 4.0, letterGrade: "F", percentageMin: 0, percentageMax: 74, description: "Conditional" }
+    }
     if (grade === 5.0) {
-      return { apcGrade: 'R' as any, upGrade: 5.0, percentageMin: 0, percentageMax: 69, remark: "Repeat" }
-    }
-    if (grade === 6.0) {
-      return { apcGrade: 'A.W.' as any, upGrade: 6.0, percentageMin: 0, percentageMax: 0, remark: "Authorized Withdrawal" }
+      return { apcGrade: "R", upGrade: 5.0, letterGrade: "F", percentageMin: 0, percentageMax: 69, description: "Fail" }
     }
     
-    // Find exact match or interpolate between grade brackets
-    for (let i = 0; i < gradeConversionTable.length; i++) {
-      const current = gradeConversionTable[i]
-      
-      // Exact match
-      if (grade === current.upGrade) {
-        return current
-      }
-      
-      // Interpolate between brackets
-      if (i < gradeConversionTable.length - 1) {
-        const next = gradeConversionTable[i + 1]
-        
-        if (grade > current.upGrade && grade < next.upGrade) {
-          // Linear interpolation for APC grade
-          const upRange = next.upGrade - current.upGrade
-          const upDiff = grade - current.upGrade
-          const ratio = upDiff / upRange
-          
-          const apcGrade = current.apcGrade - ratio * (current.apcGrade - next.apcGrade)
-          
-          // Determine which bracket it falls into for percentage and remark
-          const midpoint = (current.upGrade + next.upGrade) / 2
-          const bracket = grade <= midpoint ? current : next
-          
-          return {
-            apcGrade: apcGrade,
-            upGrade: grade,
-            percentageMin: bracket.percentageMin,
-            percentageMax: bracket.percentageMax,
-            remark: bracket.remark,
-            honorsLevel: bracket.honorsLevel
-          }
-        }
+    // Find exact match or closest match
+    let closest: GradeData | null = null
+    let closestDiff = Infinity
+    
+    for (const row of gradeConversionTable) {
+      const diff = Math.abs(row.upGrade - grade)
+      if (diff < closestDiff) {
+        closestDiff = diff
+        closest = row
       }
     }
     
-    // Above 3.0 is fail
-    return { apcGrade: 0, upGrade: grade, percentageMin: 0, percentageMax: 69, remark: "Repeat" }
+    return closest
   }
 
   const findGradeByPercentage = (percentage: number): GradeData | null => {
@@ -151,19 +110,11 @@ export default function GradeConverterPage() {
   const handleApcConvert = () => {
     // Handle special grades
     if (apcInput.toUpperCase() === 'R') {
-      const result = { apcGrade: 'R' as any, upGrade: 5.0, percentageMin: 0, percentageMax: 69, remark: "Repeat" }
+      const result = { apcGrade: "R", upGrade: 5.0, letterGrade: "F", percentageMin: 0, percentageMax: 69, description: "Fail" }
       setConvertedResult(result)
       setInputType("apc")
       setUpInput('5.0')
       setPercentageInput('< 70%')
-      return
-    }
-    if (apcInput.toUpperCase() === 'A.W.' || apcInput.toUpperCase() === 'AW') {
-      const result = { apcGrade: 'A.W.' as any, upGrade: 6.0, percentageMin: 0, percentageMax: 0, remark: "Authorized Withdrawal" }
-      setConvertedResult(result)
-      setInputType("apc")
-      setUpInput('6.0')
-      setPercentageInput('—')
       return
     }
     
@@ -219,19 +170,17 @@ export default function GradeConverterPage() {
     setInputType(null)
   }
 
-  const getRemarkColor = (remark: string): string => {
+  const getDescriptionColor = (description: string): string => {
     const colors: Record<string, string> = {
       "Excellent": "text-green-600 dark:text-green-400",
       "Very Good": "text-emerald-600 dark:text-emerald-400",
       "Good": "text-blue-600 dark:text-blue-400",
-      "Above Satisfactory": "text-cyan-600 dark:text-cyan-400",
       "Satisfactory": "text-teal-600 dark:text-teal-400",
-      "Fair": "text-yellow-600 dark:text-yellow-400",
       "Pass": "text-orange-600 dark:text-orange-400",
-      "Repeat": "text-red-600 dark:text-red-400",
-      "Authorized Withdrawal": "text-gray-600 dark:text-gray-400",
+      "Conditional": "text-yellow-600 dark:text-yellow-400",
+      "Fail": "text-red-600 dark:text-red-400",
     }
-    return colors[remark] || "text-muted-foreground"
+    return colors[description] || "text-muted-foreground"
   }
 
   const getHonorsBadge = (honorsLevel?: string) => {
@@ -322,7 +271,7 @@ export default function GradeConverterPage() {
 
                 {/* UP Grade Input */}
                 <div className="space-y-2">
-                  <Label htmlFor="upInput">UP Grade (1.0 - 6.0)</Label>
+                  <Label htmlFor="upInput">UP Grade (1.0 - 5.0)</Label>
                   <Input
                     id="upInput"
                     type="text"
@@ -330,8 +279,8 @@ export default function GradeConverterPage() {
                     value={upInput}
                     onChange={(e) => {
                       const value = e.target.value
-                      // Allow only numbers 1-6 with decimals
-                      if (value === '' || /^[1-6](\.\d{0,2})?$/.test(value)) {
+                      // Allow only numbers 1-5 with decimals
+                      if (value === '' || /^[1-5](\.\d{0,2})?$/.test(value)) {
                         setUpInput(value)
                       }
                     }}
@@ -414,9 +363,9 @@ export default function GradeConverterPage() {
                         </p>
                       </div>
                       <div>
-                        <p className="text-xs text-muted-foreground mb-1">Remark</p>
-                        <p className={`text-2xl font-bold ${getRemarkColor(convertedResult.remark)}`}>
-                          {convertedResult.remark}
+                        <p className="text-xs text-muted-foreground mb-1">Description</p>
+                        <p className={`text-2xl font-bold ${getDescriptionColor(convertedResult.description)}`}>
+                          {convertedResult.description}
                         </p>
                       </div>
                     </div>
@@ -453,9 +402,10 @@ export default function GradeConverterPage() {
                   <thead>
                     <tr className="border-b-2 border-border">
                       <th className="text-left p-3 font-semibold">APC Grade (US-Based)</th>
+                      <th className="text-left p-3 font-semibold">Letter Grade</th>
                       <th className="text-left p-3 font-semibold">UP Grade (1.0–5.0)</th>
                       <th className="text-left p-3 font-semibold">Percentage</th>
-                      <th className="text-left p-3 font-semibold">Remark</th>
+                      <th className="text-left p-3 font-semibold">Description</th>
                       <th className="text-left p-3 font-semibold">Honors Level</th>
                     </tr>
                   </thead>
@@ -465,14 +415,15 @@ export default function GradeConverterPage() {
                         key={index} 
                         className="border-b border-border hover:bg-muted/50 transition-colors"
                       >
-                        <td className="p-3 font-medium">{grade.apcGrade.toFixed(1)}</td>
+                        <td className="p-3 font-medium">{typeof grade.apcGrade === "number" ? grade.apcGrade.toFixed(1) : grade.apcGrade}</td>
+                        <td className="p-3 font-medium">{grade.letterGrade}</td>
                         <td className="p-3 font-medium">{grade.upGrade.toFixed(2)}</td>
                         <td className="p-3">
                           {`${grade.percentageMin}–${grade.percentageMax}%`}
                         </td>
                         <td className="p-3">
-                          <span className={`font-semibold ${getRemarkColor(grade.remark)}`}>
-                            {grade.remark}
+                          <span className={`font-semibold ${getDescriptionColor(grade.description)}`}>
+                            {grade.description}
                           </span>
                         </td>
                         <td className="p-3">
@@ -480,31 +431,6 @@ export default function GradeConverterPage() {
                         </td>
                       </tr>
                     ))}
-                    <tr className="border-b-2 border-border">
-                      <td colSpan={5} className="p-0"></td>
-                    </tr>
-                    <tr className="hover:bg-muted/50 transition-colors">
-                      <td className="p-3 font-medium">R</td>
-                      <td className="p-3 font-medium">5.0</td>
-                      <td className="p-3">&lt; 70%</td>
-                      <td className="p-3">
-                        <span className="font-semibold text-red-600 dark:text-red-400">
-                          Repeat
-                        </span>
-                      </td>
-                      <td className="p-3">—</td>
-                    </tr>
-                    <tr className="hover:bg-muted/50 transition-colors">
-                      <td className="p-3 font-medium">A.W.</td>
-                      <td className="p-3 font-medium">6.0</td>
-                      <td className="p-3">—</td>
-                      <td className="p-3">
-                        <span className="font-semibold text-gray-600 dark:text-gray-400">
-                          Authorized Withdrawal
-                        </span>
-                      </td>
-                      <td className="p-3">—</td>
-                    </tr>
                   </tbody>
                 </table>
               </div>
@@ -516,9 +442,9 @@ export default function GradeConverterPage() {
                   Honors Requirements
                 </h4>
                 <ul className="text-sm text-muted-foreground space-y-1">
-                  <li><span className="font-semibold text-amber-600 dark:text-amber-400">Summa Cum Laude:</span> 4.0 APC / 1.0 UP (95–100%)</li>
-                  <li><span className="font-semibold text-purple-600 dark:text-purple-400">Magna Cum Laude:</span> 3.5 APC / 1.25 UP (91–94%)</li>
-                  <li><span className="font-semibold text-blue-600 dark:text-blue-400">Cum Laude:</span> 3.0 APC / 1.5 UP (87–90%)</li>
+                  <li><span className="font-semibold text-amber-600 dark:text-amber-400">Summa Cum Laude:</span> 4.0 APC / 1.00 UP (95–100%)</li>
+                  <li><span className="font-semibold text-purple-600 dark:text-purple-400">Magna Cum Laude:</span> 3.5 APC / 1.25 UP (94–94%)</li>
+                  <li><span className="font-semibold text-blue-600 dark:text-blue-400">Cum Laude:</span> 3.0 APC / 1.50 UP (91–93%)</li>
                 </ul>
               </div>
             </CardContent>
