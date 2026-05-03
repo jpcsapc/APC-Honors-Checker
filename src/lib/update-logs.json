@@ -1,1 +1,31 @@
-[]
+[
+{
+    "id": 1,
+    "title": "Toast Notifications :D",
+    "description": "Latest updates will now show through this notification! Cheers in keeping you updated on the changes made in this site ^^",
+    "created_at": "2026-05-03T00:00:00Z",
+    "is_visible": true
+  },
+  {
+    "id": 2,
+    "title": "Latin Honors Calculator Sunset",
+    "description": "The Latin Honors calculator has been removed and consolidated into the main Grades (changed from Honors) Calculator. All Latin honors calculations are now available on the Grades Calculator page.",
+    "created_at": "2026-05-03T00:00:00Z",
+    "is_visible": true
+  },
+  {
+    "id": 3,
+    "title": "Lite Mode",
+    "description": "You will now be able to quickly compute your general averages per term instead of encoding every subject. This can be found in the Grades Calculator Page.",
+    "created_at": "2026-05-03T00:00:00Z",
+    "is_visible": true
+  },
+  {
+    "id": 4,
+    "title": "Updating the Calculation of the Latin Honors",
+    "description": "The Latin Honors calculation now follows the same method as the one used by the institution, based from the APC Student Handbook.",
+    "created_at": "2026-05-03T00:00:00Z",
+    "is_visible": false
+  }
+  
+]
