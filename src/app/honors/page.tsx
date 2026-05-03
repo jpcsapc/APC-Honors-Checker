@@ -176,7 +176,7 @@ export default function HonorsCalcu() {
   const termsDataRef = React.useRef(termsData);
   termsDataRef.current = termsData;
 
-  // Load persisted data
+  // Load persisted data – falls back to the old Latin Honors page data for one-time migration
   React.useEffect(() => {
     try {
       const savedData = localStorage.getItem("honorsTermsData");
@@ -184,6 +184,15 @@ export default function HonorsCalcu() {
         const parsedData = JSON.parse(savedData);
         if (typeof parsedData === 'object' && !Array.isArray(parsedData) && parsedData !== null) {
           setTermsData(parsedData);
+        }
+      } else {
+        // One-time migration: import data entered on the old Latin Honors page
+        const legacyData = localStorage.getItem("latinHonorsTermsData");
+        if (legacyData) {
+          const parsedData = JSON.parse(legacyData);
+          if (typeof parsedData === 'object' && !Array.isArray(parsedData) && parsedData !== null) {
+            setTermsData(parsedData);
+          }
         }
       }
       const savedLite = localStorage.getItem("honorsLiteData");
@@ -343,6 +352,26 @@ export default function HonorsCalcu() {
     return nextYearStats;
   }, [termsData]);
 
+  // Derive Latin Honors result from per-year stats — same logic as the former Latin Honors page
+  const latinHonorsSummary = React.useMemo(() => {
+    const yearsWithData = Object.values(yearStats).filter(s => s.totalUnits > 0);
+    if (yearsWithData.length === 0) return { overallGPA: "0.00", latinHonor: "-" };
+
+    const averageGPA = yearsWithData.reduce((sum, s) => sum + s.gpa, 0) / yearsWithData.length;
+    const totalUnits = yearsWithData.reduce((sum, s) => sum + s.totalUnits, 0);
+    const totalRGrades = yearsWithData.reduce((sum, s) => sum + s.rGrades, 0);
+
+    let latinHonor: string;
+    if (totalUnits < 144) latinHonor = "Not enough units yet";
+    else if (totalRGrades > 8) latinHonor = "No, more than 8 R grades";
+    else if (averageGPA >= 3.85) latinHonor = "Summa Cum Laude";
+    else if (averageGPA >= 3.70) latinHonor = "Magna Cum Laude";
+    else if (averageGPA >= 3.50) latinHonor = "Cum Laude";
+    else latinHonor = "No Latin Honor";
+
+    return { overallGPA: averageGPA.toFixed(2), latinHonor };
+  }, [yearStats]);
+
   const liteStats = React.useMemo(() => {
     const stats: Record<string, { gpa: number; eligible: string; totalUnits: number }> = {};
     Object.entries(liteData).forEach(([year, data]) => {
@@ -491,34 +520,26 @@ export default function HonorsCalcu() {
                 </motion.div>
               </motion.div>
             ) : (
-              yearStats[topSummaryYearKey] && (
-                <motion.div
-                  key="full-stats"
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -10 }}
-                  className="flex gap-0 flex-wrap justify-center items-center p-6 rounded-xl border bg-card/50 shadow-sm"
-                >
-                  <div className="flex flex-col items-center px-8 py-2 border-r border-border/50">
-                    <p className="text-sm text-muted-foreground mb-1">Current GPA</p>
-                    <p className="text-3xl font-bold tracking-tight text-foreground">
-                      {yearStats[topSummaryYearKey].gpa.toFixed(2)}
-                    </p>
-                  </div>
-                  <div className="flex flex-col items-center px-8 py-2 border-r border-border/50">
-                    <p className="text-sm text-muted-foreground mb-1">Total Units</p>
-                    <p className="text-3xl font-bold tracking-tight text-foreground">
-                      {yearStats[topSummaryYearKey].totalUnits}
-                    </p>
-                  </div>
-                  <div className="flex flex-col items-center px-8 py-2">
-                    <p className="text-sm text-muted-foreground mb-1">Eligible for Honors</p>
-                    <p className="text-3xl font-bold tracking-tight text-primary">
-                      {yearStats[topSummaryYearKey].eligible}
-                    </p>
-                  </div>
-                </motion.div>
-              )
+              <motion.div
+                key="full-stats"
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                className="flex gap-0 flex-wrap justify-center items-center p-6 rounded-xl border bg-card/50 shadow-sm"
+              >
+                <div className="flex flex-col items-center px-8 py-2 border-r border-border/50">
+                  <p className="text-sm text-muted-foreground mb-1">Overall GPA</p>
+                  <p className="text-3xl font-bold tracking-tight text-foreground">
+                    {latinHonorsSummary.overallGPA}
+                  </p>
+                </div>
+                <div className="flex flex-col items-center px-8 py-2">
+                  <p className="text-sm text-muted-foreground mb-1">Latin Honor</p>
+                  <p className="text-3xl font-bold tracking-tight text-primary">
+                    {latinHonorsSummary.latinHonor}
+                  </p>
+                </div>
+              </motion.div>
             )}
           </AnimatePresence>
         </div>
@@ -617,6 +638,19 @@ export default function HonorsCalcu() {
                     </motion.div>
                   )}
                 </AnimatePresence>
+
+                {yearStats[yearKey] && !liteMode && (
+                  <div className="flex flex-wrap justify-center mt-6 gap-4">
+                    <div className="rounded-lg border bg-card px-6 py-4 shadow-sm text-center min-w-[140px]">
+                      <p className="text-sm text-muted-foreground mb-1">Current GPA</p>
+                      <p className="text-2xl font-bold text-foreground">{yearStats[yearKey].gpa.toFixed(2)}</p>
+                    </div>
+                    <div className="rounded-lg border bg-card px-6 py-4 shadow-sm text-center min-w-[140px]">
+                      <p className="text-sm text-muted-foreground mb-1">Eligible for Honors</p>
+                      <p className="text-2xl font-bold text-foreground">{yearStats[yearKey].eligible}</p>
+                    </div>
+                  </div>
+                )}
 
                 {yearNum < (liteMode ? 1 : 4) && <hr className="my-12 border-border/100" />}
               </motion.section>

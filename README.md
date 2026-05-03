@@ -33,13 +33,17 @@ npm install
 yarn install
 ```
 
-3. Set up environment variables (required for feedback system):
+3. Set up environment variables (required for feedback system and admin dashboard):
 ```bash
 cp .env.local.example .env.local
 ```
 
-Edit `.env.local` and add your GitHub Personal Access Token:
+Edit `.env.local` and add your configuration:
 ```env
+# Admin Dashboard Token
+CHANGELOG_ADMIN_TOKEN=your_secure_admin_token_here
+
+# GitHub API (for feedback system)
 GITHUB_TOKEN=your_github_token_here
 GITHUB_OWNER=jpcsapc
 GITHUB_REPO=APC-Honors-Checker
@@ -132,6 +136,29 @@ src/
 - Optional contact information with consent checkbox
 - Real-time form validation
 - Success confirmation with issue number
+
+### Update Log Management
+- Update logs are stored in `src/lib/update-logs.json`
+- Each log entry uses this schema:
+    - `id: number`
+    - `title: string`
+    - `description: string`
+    - `created_at: string`
+    - `is_visible: boolean`
+- Build script appends new PR release-note entries into this store (no full overwrite)
+- Public toast data source: `GET /api/changelog` (visible entries only)
+- `CHANGELOG_ADMIN_TOKEN` must be set in environment (used server-side for admin session validation)
+- Admin management endpoint: `/api/changelog/admin`
+    - Accepts authenticated cookie session (browser admin page)
+    - Also supports `x-admin-token` for script/API usage
+    - `GET` returns all entries
+    - `PATCH` body `{ "id": number, "is_visible": boolean }`
+    - `DELETE` body `{ "id": number }`
+- Minimal browser admin page: `/admin/changelog`
+    - Login with hardcoded credentials:
+        - Username: `admin`
+        - Password: `apc-admin-2026`
+    - Toggle visibility or delete logs directly from the UI
 
 ## Learn More
 

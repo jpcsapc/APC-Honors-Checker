@@ -2,23 +2,17 @@
 
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Calculator, Award, HelpCircle, MessageSquare, ArrowRightLeft } from "lucide-react"
+import { Award, HelpCircle, MessageSquare, ArrowRightLeft } from "lucide-react"
 import Link from "next/link"
 import { ThemeToggle } from "@/components/theme-toggle"
 
 export default function FrontPage() {
   const calculatorCards = [
     {
-      title: "Honors Calculator",
-      description: "Calculate your academic standing and determine honors eligibility",
+      title: "Grades Calculator",
+      description: "Calculate your academic standing, honors eligibility, and latin honors eligibility based on your grades",
       icon: <Award className="h-5 w-5" />,
       href: "/honors",
-    },
-    {
-      title: "Latin Honors Calculator",
-      description: "Calculate Latin honors and academic distinctions",
-      icon: <Calculator className="h-5 w-5" />,
-      href: "/latin-honors",
     },
     {
       title: "Grade Converter",
