@@ -387,9 +387,9 @@ export default function GradeConverterPage() {
                   <thead>
                     <tr className="border-b-2 border-border">
                       <th className="text-left p-3 font-semibold">APC Grade (US-Based)</th>
-                      <th className="text-left p-3 font-semibold">Letter Grade</th>
                       <th className="text-left p-3 font-semibold">UP Grade (1.0–5.0)</th>
                       <th className="text-left p-3 font-semibold">Percentage</th>
+                      <th className="text-left p-3 font-semibold">Letter Grade</th>
                       <th className="text-left p-3 font-semibold">Description</th>
                       <th className="text-left p-3 font-semibold">Honors Level</th>
                     </tr>
@@ -401,11 +401,11 @@ export default function GradeConverterPage() {
                         className="border-b border-border hover:bg-muted/50 transition-colors"
                       >
                         <td className="p-3 font-medium">{typeof grade.apcGrade === "number" ? grade.apcGrade.toFixed(1) : grade.apcGrade}</td>
-                        <td className="p-3 font-medium">{grade.letterGrade}</td>
                         <td className="p-3 font-medium">{grade.upGrade.toFixed(2)}</td>
                         <td className="p-3">
                           {`${grade.percentageMin}–${grade.percentageMax}%`}
                         </td>
+                        <td className="p-3 font-medium">{grade.letterGrade}</td>
                         <td className="p-3">
                           <span className={`font-semibold ${getDescriptionColor(grade.description)}`}>
                             {grade.description}
