@@ -389,6 +389,22 @@ export default function HonorsCalcu() {
     return stats;
   }, [liteData, showUnits]);
 
+  const liteLatinHonorsSummary = React.useMemo(() => {
+    const yearsWithData = Object.values(liteStats).filter(s => s.gpa > 0);
+    if (yearsWithData.length === 0) return { overallGPA: "0.00", latinHonor: "-" };
+
+    const averageGPA = yearsWithData.reduce((sum, s) => sum + s.gpa, 0) / yearsWithData.length;
+
+    let latinHonor: string;
+    if (averageGPA < 3.0) latinHonor = "No, CGPA below 3.0";
+    else if (averageGPA >= 3.80) latinHonor = "Summa Cum Laude";
+    else if (averageGPA >= 3.60) latinHonor = "Magna Cum Laude";
+    else if (averageGPA >= 3.40) latinHonor = "Cum Laude";
+    else latinHonor = "Academic Distinction";
+
+    return { overallGPA: averageGPA.toFixed(2), latinHonor };
+  }, [liteStats]);
+
   const topSummaryYearKey = "Year 1";
 
   return (
@@ -403,7 +419,7 @@ export default function HonorsCalcu() {
                   <ArrowLeft className="h-4 w-4" />
                 </Button>
               </Link>
-              <h1 className="text-sm text-muted-foreground">Honors Calculator</h1>
+              <h1 className="text-sm text-muted-foreground">Grades Calculator</h1>
             </div>
             <ThemeToggle />
           </div>
@@ -417,7 +433,7 @@ export default function HonorsCalcu() {
           <div className="flex justify-center mb-4">
             <Calculator className="h-12 w-12 text-muted-foreground" />
           </div>
-          <h1 className="text-4xl font-normal text-foreground mb-4">Honors Calculator</h1>
+          <h1 className="text-4xl font-normal text-foreground mb-4">Grades Calculator</h1>
           <p className="text-muted-foreground text-lg">
             <AnimatePresence mode="wait">
               <motion.span
@@ -490,43 +506,18 @@ export default function HonorsCalcu() {
                 exit={{ opacity: 0, y: -10 }}
                 className="flex gap-0 flex-wrap justify-center items-center p-6 rounded-xl border bg-card/50 shadow-sm"
               >
-                <motion.div
-                  layout
-                  className="flex flex-col items-center px-8 py-2 border-r border-border/50 last:border-0"
-                >
-                  <p className="text-sm text-muted-foreground mb-1">Average GPA</p>
+                <div className="flex flex-col items-center px-8 py-2 border-r border-border/50">
+                  <p className="text-sm text-muted-foreground mb-1">Overall GPA</p>
                   <p className="text-3xl font-bold tracking-tight text-foreground">
-                    {liteStats[topSummaryYearKey]?.gpa > 0
-                      ? liteStats[topSummaryYearKey].gpa.toFixed(2)
-                      : "0.00"}
+                    {liteLatinHonorsSummary.overallGPA}
                   </p>
-                </motion.div>
-                <AnimatePresence mode="popLayout">
-                  {showUnits && (
-                    <motion.div
-                      layout
-                      initial={{ opacity: 0, scale: 0.8 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      exit={{ opacity: 0, scale: 0.8 }}
-                      transition={{ duration: 0.3 }}
-                      className="flex flex-col items-center px-8 py-2 border-r border-border/50 last:border-0"
-                    >
-                      <p className="text-sm text-muted-foreground mb-1">Total Units</p>
-                      <p className="text-3xl font-bold tracking-tight text-foreground">
-                        {liteStats[topSummaryYearKey]?.totalUnits ?? "0"}
-                      </p>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-                <motion.div
-                  layout
-                  className="flex flex-col items-center px-8 py-2"
-                >
-                  <p className="text-sm text-muted-foreground mb-1">Eligible for Honors</p>
+                </div>
+                <div className="flex flex-col items-center px-8 py-2">
+                  <p className="text-sm text-muted-foreground mb-1">Latin Honor</p>
                   <p className="text-3xl font-bold tracking-tight text-primary">
-                    {liteStats[topSummaryYearKey]?.eligible ?? "-"}
+                    {liteLatinHonorsSummary.latinHonor}
                   </p>
-                </motion.div>
+                </div>
               </motion.div>
             ) : (
               <motion.div
@@ -556,7 +547,7 @@ export default function HonorsCalcu() {
         <hr className="mb-10 border-border/100" />
 
         <div className="space-y-12">
-          {(liteMode ? [1] : [1, 2, 3, 4]).map((yearNum) => {
+          {[1, 2, 3, 4].map((yearNum) => {
             const yearKey = `Year ${yearNum}`;
             return (
               <motion.section
@@ -587,11 +578,11 @@ export default function HonorsCalcu() {
                             General Average per Term
                           </p>
                           <div className="flex items-center gap-2">
-                            <label htmlFor="show-units-toggle" className="text-xs text-muted-foreground cursor-pointer select-none">
+                            <label htmlFor={`show-units-toggle-${yearKey}`} className="text-xs text-muted-foreground cursor-pointer select-none">
                               Include Units?
                             </label>
                             <input
-                              id="show-units-toggle"
+                              id={`show-units-toggle-${yearKey}`}
                               type="checkbox"
                               checked={showUnits}
                               onChange={e => setShowUnits(e.target.checked)}
@@ -648,20 +639,28 @@ export default function HonorsCalcu() {
                   )}
                 </AnimatePresence>
 
-                {yearStats[yearKey] && !liteMode && (
+                {((liteMode && liteStats[yearKey]?.gpa > 0) || (!liteMode && yearStats[yearKey])) && (
                   <div className="flex flex-wrap justify-center mt-6 gap-4">
                     <div className="rounded-lg border bg-card px-6 py-4 shadow-sm text-center min-w-[140px]">
-                      <p className="text-sm text-muted-foreground mb-1">Current GPA</p>
-                      <p className="text-2xl font-bold text-foreground">{yearStats[yearKey].gpa.toFixed(2)}</p>
+                      <p className="text-sm text-muted-foreground mb-1">{liteMode ? "Average GPA" : "Current GPA"}</p>
+                      <p className="text-2xl font-bold text-foreground">
+                        {liteMode 
+                          ? liteStats[yearKey].gpa.toFixed(2)
+                          : yearStats[yearKey].gpa.toFixed(2)}
+                      </p>
                     </div>
                     <div className="rounded-lg border bg-card px-6 py-4 shadow-sm text-center min-w-[140px]">
                       <p className="text-sm text-muted-foreground mb-1">Eligible for Honors</p>
-                      <p className="text-2xl font-bold text-foreground">{yearStats[yearKey].eligible}</p>
+                      <p className="text-2xl font-bold text-foreground">
+                        {liteMode 
+                          ? liteStats[yearKey].eligible
+                          : yearStats[yearKey].eligible}
+                      </p>
                     </div>
                   </div>
                 )}
 
-                {yearNum < (liteMode ? 1 : 4) && <hr className="my-12 border-border/100" />}
+                {yearNum < 4 && <hr className="my-12 border-border/100" />}
               </motion.section>
             );
           })}
