@@ -357,7 +357,7 @@ export default function HonorsCalcu() {
     const yearsWithData = Object.values(yearStats).filter(s => s.totalUnits > 0);
     if (yearsWithData.length === 0) return { overallGPA: "0.00", latinHonor: "-" };
 
-    const averageGPA = yearsWithData.reduce((sum, s) => sum + s.gpa, 0) / yearsWithData.length;
+    const rawAverageGPA = yearsWithData.reduce((sum, s) => sum + s.gpa, 0) / yearsWithData.length;
     const totalUnits = yearsWithData.reduce((sum, s) => sum + s.totalUnits, 0);
     const totalRGrades = yearsWithData.reduce((sum, s) => sum + s.rGrades, 0);
     
@@ -368,17 +368,17 @@ export default function HonorsCalcu() {
 
     let latinHonor: string;
     
-    // Basic eligibility requirements
-    if (averageGPA < 3.0) latinHonor = "No, CGPA below 3.0";
+    // Basic eligibility requirements (use raw GPA for decisions)
+    if (rawAverageGPA < 3.0) latinHonor = "No, CGPA below 3.0";
     else if (hasFailingGrade) latinHonor = "No, has failing grade (0.0)";
     else if (totalRGrades > 6) latinHonor = "No, more than 6 R grades";
-    // Honors classification (per official APC policy)
-    else if (averageGPA >= 3.80) latinHonor = "Summa Cum Laude";
-    else if (averageGPA >= 3.60) latinHonor = "Magna Cum Laude";
-    else if (averageGPA >= 3.40) latinHonor = "Cum Laude";
+    // Honors classification (per official APC policy) — raw values, no rounding
+    else if (rawAverageGPA >= 3.80) latinHonor = "Summa Cum Laude";
+    else if (rawAverageGPA >= 3.60) latinHonor = "Magna Cum Laude";
+    else if (rawAverageGPA >= 3.40) latinHonor = "Cum Laude";
     else latinHonor = "Academic Distinction";
 
-    return { overallGPA: averageGPA.toFixed(2), latinHonor };
+    return { overallGPA: truncateToDecimals(rawAverageGPA, 4).toFixed(4), latinHonor };
   }, [yearStats, termsDataRef]);
 
   const liteStats = React.useMemo(() => {
@@ -393,16 +393,16 @@ export default function HonorsCalcu() {
     const yearsWithData = Object.values(liteStats).filter(s => s.gpa > 0);
     if (yearsWithData.length === 0) return { overallGPA: "0.00", latinHonor: "-" };
 
-    const averageGPA = yearsWithData.reduce((sum, s) => sum + s.gpa, 0) / yearsWithData.length;
+    const rawAverageGPA = yearsWithData.reduce((sum, s) => sum + s.gpa, 0) / yearsWithData.length;
 
     let latinHonor: string;
-    if (averageGPA < 3.0) latinHonor = "No, CGPA below 3.0";
-    else if (averageGPA >= 3.80) latinHonor = "Summa Cum Laude";
-    else if (averageGPA >= 3.60) latinHonor = "Magna Cum Laude";
-    else if (averageGPA >= 3.40) latinHonor = "Cum Laude";
+    if (rawAverageGPA < 3.0) latinHonor = "No, CGPA below 3.0";
+    else if (rawAverageGPA >= 3.80) latinHonor = "Summa Cum Laude";
+    else if (rawAverageGPA >= 3.60) latinHonor = "Magna Cum Laude";
+    else if (rawAverageGPA >= 3.40) latinHonor = "Cum Laude";
     else latinHonor = "Academic Distinction";
 
-    return { overallGPA: averageGPA.toFixed(2), latinHonor };
+    return { overallGPA: truncateToDecimals(rawAverageGPA, 4).toFixed(4), latinHonor };
   }, [liteStats]);
 
   const topSummaryYearKey = "Year 1";
@@ -675,4 +675,10 @@ export default function HonorsCalcu() {
       </main>
     </div>
   );
+}
+
+// Truncate a number to `decimals` places without rounding (e.g. 3.7999 -> 3.79)
+function truncateToDecimals(num: number, decimals: number) {
+  const factor = Math.pow(10, decimals);
+  return Math.trunc(num * factor) / factor;
 }
