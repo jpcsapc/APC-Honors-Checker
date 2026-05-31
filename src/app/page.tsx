@@ -3,20 +3,13 @@
 import { Button } from "@/components/ui/button"
 import { Award, HelpCircle, MessageSquare, ArrowRightLeft, ArrowRight } from "lucide-react"
 import Link from "next/link"
-import { ThemeToggle } from "@/components/theme-toggle"
+import { Header } from "@/components/Header"
+import { Footer } from "@/components/Footer"
 
 export default function FrontPage() {
   return (
     <div className="min-h-screen bg-background">
-      {/* Header */}
-      <header className="border-b border-border bg-card">
-        <div className="max-w-5xl mx-auto px-6 py-4 flex items-center justify-between">
-          <span className="text-sm font-medium tracking-wide text-muted-foreground uppercase">
-            APC Honors Checker
-          </span>
-          <ThemeToggle />
-        </div>
-      </header>
+      <Header />
 
       <main className="max-w-5xl mx-auto px-6 py-16">
         {/* Hero — left-aligned with accent bar */}
@@ -118,13 +111,8 @@ export default function FrontPage() {
           </div>
         </section>
 
-        {/* Footer */}
-        <footer className="border-t border-border pt-8">
-          <p className="text-xs text-muted-foreground">
-            Created by the Developers of JPCS - APC | Edwin Gumba Jr. (SS221) &amp; Marwin John Gonzales (IT241)
-          </p>
-        </footer>
       </main>
+      <Footer />
     </div>
   )
 }

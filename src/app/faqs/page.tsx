@@ -9,7 +9,8 @@ import {
 } from "@/components/ui/accordion"
 import { ArrowLeft, HelpCircle, BookOpen, Award } from "lucide-react"
 import Link from "next/link"
-import { ThemeToggle } from "@/components/theme-toggle"
+import { Header } from "@/components/Header"
+import { Footer } from "@/components/Footer"
 
 export default function FAQPage() {
   const faqSections = [
@@ -115,22 +116,7 @@ export default function FAQPage() {
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Header */}
-      <header className="border-b border-border bg-card">
-        <div className="max-w-4xl mx-auto px-6 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <Link href="/">
-              <Button variant="ghost" size="sm" className="p-2 hover:bg-secondary">
-                <ArrowLeft className="h-4 w-4" />
-              </Button>
-            </Link>
-            <span className="text-sm font-medium tracking-wide text-muted-foreground uppercase">
-              Frequently Asked Questions
-            </span>
-          </div>
-          <ThemeToggle />
-        </div>
-      </header>
+      <Header title="Frequently Asked Questions" backHref="/" />
 
       {/* Main Content */}
       <main className="max-w-4xl mx-auto px-6 py-16">
@@ -201,13 +187,8 @@ export default function FAQPage() {
           ))}
         </div>
 
-        {/* Footer */}
-        <footer className="border-t border-border pt-8 mt-16">
-          <p className="text-left text-xs text-muted-foreground">
-            Created by the Developers of JPCS - APC | Edwin Gumba Jr. (SS221) & Marwin John Gonzales (IT241)
-          </p>
-        </footer>
       </main>
+      <Footer />
     </div>
   )
 } 

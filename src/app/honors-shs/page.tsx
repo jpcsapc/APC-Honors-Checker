@@ -4,7 +4,8 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { ArrowLeft, Calculator, Zap, Award } from "lucide-react";
 import Link from "next/link";
-import { ThemeToggle } from "@/components/theme-toggle";
+import { Header } from "@/components/Header";
+import { Footer } from "@/components/Footer";
 import { motion, AnimatePresence } from "framer-motion";
 import { Input } from '@/components/ui/input';
 import { cn } from "@/lib/utils";
@@ -619,32 +620,16 @@ export default function SHSHonorsCalcu() {
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Header */}
-      <header className="border-b bg-card">
-        <div className="container mx-auto px-4 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <Link href="/">
-                <Button variant="ghost" size="sm" className="p-2">
-                  <ArrowLeft className="h-4 w-4" />
-                </Button>
-              </Link>
-              <h1 className="text-sm text-muted-foreground">SHS Grades Calculator</h1>
-            </div>
-            <ThemeToggle />
-          </div>
-        </div>
-      </header>
+      <Header title="SHS Grades Calculator" backHref="/" />
 
       {/* Main Content */}
-      <main className="container mx-auto px-4 py-16">
-        {/* Hero Section */}
-        <div className="text-center mb-10">
-          <div className="flex justify-center mb-4">
-            <Calculator className="h-12 w-12 text-muted-foreground" />
-          </div>
-          <h1 className="text-4xl font-normal text-foreground mb-4">SHS Grades Calculator</h1>
-          <p className="text-muted-foreground text-lg">
+      <main className="max-w-5xl mx-auto px-6 py-16">
+        {/* Hero — left-aligned with accent bar */}
+        <section className="mb-10 pl-6 border-l-[3px] border-primary">
+          <h1 className="text-4xl font-medium tracking-tight text-foreground leading-tight">
+            SHS Grades Calculator
+          </h1>
+          <p className="mt-3 text-lg text-muted-foreground">
             <AnimatePresence mode="wait">
               <motion.span
                 key={liteMode ? "lite" : "full"}
@@ -667,7 +652,7 @@ export default function SHSHonorsCalcu() {
           </p>
 
           {/* Lite Mode Toggle */}
-          <div className="flex items-center justify-center gap-2.5 mt-6">
+          <div className="flex items-center justify-start gap-2.5 mt-6">
             <button
               role="checkbox"
               aria-checked={liteMode}
@@ -702,7 +687,7 @@ export default function SHSHonorsCalcu() {
               Lite Mode
             </label>
           </div>
-        </div>
+        </section>
 
         {/* Overall Honors Summary Card */}
         <div className="flex justify-center mb-10">
@@ -875,13 +860,8 @@ export default function SHSHonorsCalcu() {
         </div>
 
 
-        {/* Footer */}
-        <footer className=" pt-8 mt-16">
-          <p className="text-center text-xs text-muted-foreground">
-            Created by the Developers of JPCS - APC | Edwin Gumba Jr. (SS221) & Marwin John Gonzales (IT241)
-          </p>
-        </footer>
       </main>
+      <Footer />
     </div>
   );
 }
