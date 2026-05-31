@@ -15,6 +15,12 @@ export default function FrontPage() {
       href: "/honors",
     },
     {
+      title: "SHS Grades calculator",
+      description: "Calculate your academic standing and honors elibility based on your grades (Senior Highschool)",
+      icon: <Award className="h-5 w-5" />,
+      href: "/honors-shs",
+    },
+    {
       title: "Grade Converter",
       description: "Convert between APC, UP, and Percentage grading systems",
       icon: <ArrowRightLeft className="h-5 w-5" />,
