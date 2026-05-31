@@ -7,7 +7,7 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion"
-import { ArrowLeft, HelpCircle } from "lucide-react"
+import { ArrowLeft, HelpCircle, BookOpen, Award } from "lucide-react"
 import Link from "next/link"
 import { ThemeToggle } from "@/components/theme-toggle"
 
@@ -116,44 +116,63 @@ export default function FAQPage() {
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
-      <header className="border-b bg-card">
-        <div className="container mx-auto px-4 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <Link href="/">
-                <Button variant="ghost" size="sm" className="p-2">
-                  <ArrowLeft className="h-4 w-4" />
-                </Button>
-              </Link>
-              <h1 className="text-sm text-muted-foreground">Frequently Asked Questions</h1>
-            </div>
-            <ThemeToggle />
+      <header className="border-b border-border bg-card">
+        <div className="max-w-4xl mx-auto px-6 py-4 flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <Link href="/">
+              <Button variant="ghost" size="sm" className="p-2 hover:bg-secondary">
+                <ArrowLeft className="h-4 w-4" />
+              </Button>
+            </Link>
+            <span className="text-sm font-medium tracking-wide text-muted-foreground uppercase">
+              Frequently Asked Questions
+            </span>
           </div>
+          <ThemeToggle />
         </div>
       </header>
 
       {/* Main Content */}
-      <main className="container mx-auto px-4 py-16">
-        {/* Hero Section */}
-        <div className="text-center mb-16">
-          <div className="flex justify-center mb-4">
-            <HelpCircle className="h-12 w-12 text-muted-foreground" />
-          </div>
-          <h1 className="text-4xl font-normal text-foreground mb-4">
+      <main className="max-w-4xl mx-auto px-6 py-16">
+        {/* Hero — left-aligned with accent bar */}
+        <section className="mb-12 pl-6 border-l-[3px] border-primary">
+          <h1 className="text-4xl font-medium tracking-tight text-foreground leading-tight">
             Frequently Asked Questions
           </h1>
-          <p className="text-muted-foreground text-lg">
-            Find answers to common questions about academic calculations and honors
+          <p className="mt-3 text-lg text-muted-foreground">
+            Find answers to common questions about academic calculations, honor rules, and student guidelines.
           </p>
+        </section>
+
+        {/* Student Handbook Link Callout */}
+        <div className="mb-12 p-5 bg-card border border-border rounded-lg flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div className="flex gap-3">
+            <BookOpen className="h-5 w-5 text-primary shrink-0 mt-0.5" />
+            <div>
+              <h3 className="font-medium text-foreground text-sm">APC Student Handbook</h3>
+              <p className="text-xs text-muted-foreground mt-1 leading-relaxed">
+                For official guidelines and policies, refer to the handbook. Calculations start from page 45, section 4.2.
+              </p>
+            </div>
+          </div>
+          <div className="shrink-0">
+            <a 
+              href="https://apc.edu.ph/wp-content/uploads/2024/09/Student-Handbook-2024_v2.pdf" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="inline-flex items-center justify-center px-4 py-2 text-xs font-semibold bg-primary text-primary-foreground hover:bg-primary/90 active:scale-[0.98] transition-transform rounded-md"
+            >
+              View Student Handbook (PDF)
+            </a>
+          </div>
         </div>
 
         {/* FAQ Sections */}
-        <div className="max-w-4xl mx-auto space-y-12">
+        <div className="space-y-12">
           {faqSections.map((section, sectionIndex) => (
             <div key={sectionIndex} className="space-y-6">
               {/* Section Header */}
               <div className="flex items-center gap-3">
-                {/* <span className="text-2xl">{section.icon}</span> */}
                 <h2 className="text-2xl font-semibold text-foreground">
                   {section.title}
                 </h2>
@@ -172,7 +191,7 @@ export default function FAQPage() {
                     <AccordionTrigger className="text-left">
                       {item.question}
                     </AccordionTrigger>
-                    <AccordionContent className="text-muted-foreground">
+                    <AccordionContent className="text-muted-foreground leading-relaxed">
                       {item.answer}
                     </AccordionContent>
                   </AccordionItem>
@@ -183,8 +202,8 @@ export default function FAQPage() {
         </div>
 
         {/* Footer */}
-        <footer className="border-t pt-8 mt-16">
-          <p className="text-center text-xs text-muted-foreground">
+        <footer className="border-t border-border pt-8 mt-16">
+          <p className="text-left text-xs text-muted-foreground">
             Created by the Developers of JPCS - APC | Edwin Gumba Jr. (SS221) & Marwin John Gonzales (IT241)
           </p>
         </footer>
