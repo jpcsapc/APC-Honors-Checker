@@ -11,7 +11,7 @@ export default function FrontPage() {
     <div className="min-h-screen bg-background">
       <Header />
 
-      <main className="max-w-5xl mx-auto px-6 py-16">
+      <main className="max-w-5xl mx-auto px-6 pt-16 pb-4">
         {/* Hero — left-aligned with accent bar */}
         <section className="mb-16 pl-6 border-l-[3px] border-primary">
           <h1 className="text-4xl font-medium tracking-tight text-foreground leading-tight">

@@ -623,13 +623,14 @@ export default function SHSHonorsCalcu() {
       <Header title="SHS Grades Calculator" backHref="/" />
 
       {/* Main Content */}
-      <main className="max-w-5xl mx-auto px-6 py-16">
-        {/* Hero — left-aligned with accent bar */}
-        <section className="mb-10 pl-6 border-l-[3px] border-primary">
-          <h1 className="text-4xl font-medium tracking-tight text-foreground leading-tight">
-            SHS Grades Calculator
-          </h1>
-          <p className="mt-3 text-lg text-muted-foreground">
+      <main className="container mx-auto px-4 py-16">
+        {/* Hero Section */}
+        <div className="text-center mb-10">
+          <div className="flex justify-center mb-4">
+            <Calculator className="h-12 w-12 text-muted-foreground" />
+          </div>
+          <h1 className="text-4xl font-normal text-foreground mb-4">SHS Grades Calculator</h1>
+          <p className="text-muted-foreground text-lg">
             <AnimatePresence mode="wait">
               <motion.span
                 key={liteMode ? "lite" : "full"}
@@ -652,7 +653,7 @@ export default function SHSHonorsCalcu() {
           </p>
 
           {/* Lite Mode Toggle */}
-          <div className="flex items-center justify-start gap-2.5 mt-6">
+          <div className="flex items-center justify-center gap-2.5 mt-6">
             <button
               role="checkbox"
               aria-checked={liteMode}
@@ -687,7 +688,7 @@ export default function SHSHonorsCalcu() {
               Lite Mode
             </label>
           </div>
-        </section>
+        </div>
 
         {/* Overall Honors Summary Card */}
         <div className="flex justify-center mb-10">
