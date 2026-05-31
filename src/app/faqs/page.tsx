@@ -50,6 +50,36 @@ export default function FAQPage() {
         {
           question: "Can I graduate with honors if I transfer credits?",
           answer: "Transfer credits are typically not included in GPA calculations for honors. Only courses taken at your current institution are usually considered for Latin honors eligibility."
+        },
+        {
+          question: "What are the criteria for Senior High School Academic Excellence Awards?",
+          answer: (
+            <div className="space-y-4">
+              <p>
+                As per DepEd Order No. 36, s. 2016 (Policy Guidelines on Awards and Recognition for the K to 12 Basic Education Program) and Asia Pacific College Student Handbook, Academic Excellence Awards are given to students who have attained a General Average of at least 88.00 and no grade lower than 85.00 in all subject areas.
+              </p>
+              <div className="grid md:grid-cols-3 gap-4 mt-2">
+                <div className="p-3.5 bg-background rounded-lg border text-center">
+                  <h4 className="font-semibold text-foreground text-sm mb-1">With Highest Honors</h4>
+                  <p className="text-xs text-muted-foreground">General Average of</p>
+                  <p className="text-lg font-bold text-primary">97.00 - 100.00</p>
+                </div>
+                <div className="p-3.5 bg-background rounded-lg border text-center">
+                  <h4 className="font-semibold text-foreground text-sm mb-1">With High Honors</h4>
+                  <p className="text-xs text-muted-foreground">General Average of</p>
+                  <p className="text-lg font-bold text-primary">93.00 - 96.99</p>
+                </div>
+                <div className="p-3.5 bg-background rounded-lg border text-center">
+                  <h4 className="font-semibold text-foreground text-sm mb-1">With Honors</h4>
+                  <p className="text-xs text-muted-foreground">General Average of</p>
+                  <p className="text-lg font-bold text-primary">88.00 - 92.99</p>
+                </div>
+              </div>
+              <p className="text-xs text-muted-foreground italic mt-2">
+                * Note: All awards require a Final Subject Grade of 85.00 or higher in all subjects.
+              </p>
+            </div>
+          )
         }
       ]
     },
