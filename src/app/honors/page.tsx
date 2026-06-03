@@ -1,12 +1,14 @@
 "use client"
 import * as React from 'react';
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Calculator, Zap } from "lucide-react";
+import { ArrowLeft, Calculator, Zap, CheckCircle2 } from "lucide-react";
 import { TermTable } from '../../components/TermTable';
 import Link from "next/link";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { motion, AnimatePresence } from "framer-motion";
+import { Card, CardContent } from "@/components/ui/card";
+import { cn } from "@/lib/utils";
 
 // Memoized TermTable to prevent unnecessary re-renders
 const MemoizedTermTable = React.memo(TermTable);
@@ -174,6 +176,10 @@ export default function HonorsCalcu() {
     "Year 4": { term1: "", term2: "", term3: "", units1: "", units2: "", units3: "" },
   });
 
+  const [residencyChecked, setResidencyChecked] = React.useState(true);
+  const [noFailsChecked, setNoFailsChecked] = React.useState(true);
+  const [noExcessRepeatsChecked, setNoExcessRepeatsChecked] = React.useState(true);
+
   const termsDataRef = React.useRef(termsData);
   termsDataRef.current = termsData;
 
@@ -205,6 +211,15 @@ export default function HonorsCalcu() {
       }
       const savedLiteMode = localStorage.getItem("honorsLiteMode");
       if (savedLiteMode !== null) setLiteMode(JSON.parse(savedLiteMode));
+
+      const savedResidency = localStorage.getItem("honorsResidencyChecked");
+      if (savedResidency !== null) setResidencyChecked(JSON.parse(savedResidency));
+
+      const savedNoFails = localStorage.getItem("honorsNoFailsChecked");
+      if (savedNoFails !== null) setNoFailsChecked(JSON.parse(savedNoFails));
+
+      const savedNoExcessRepeats = localStorage.getItem("honorsNoExcessRepeatsChecked");
+      if (savedNoExcessRepeats !== null) setNoExcessRepeatsChecked(JSON.parse(savedNoExcessRepeats));
     } catch (error) {
       console.error("Failed to parse honors data from localStorage", error);
     }
@@ -227,6 +242,18 @@ export default function HonorsCalcu() {
   React.useEffect(() => {
     localStorage.setItem("honorsLiteMode", JSON.stringify(liteMode));
   }, [liteMode]);
+
+  React.useEffect(() => {
+    localStorage.setItem("honorsResidencyChecked", JSON.stringify(residencyChecked));
+  }, [residencyChecked]);
+
+  React.useEffect(() => {
+    localStorage.setItem("honorsNoFailsChecked", JSON.stringify(noFailsChecked));
+  }, [noFailsChecked]);
+
+  React.useEffect(() => {
+    localStorage.setItem("honorsNoExcessRepeatsChecked", JSON.stringify(noExcessRepeatsChecked));
+  }, [noExcessRepeatsChecked]);
 
   const handleTermChange = React.useCallback((term: string, rows: RowData[]) => {
     setTermsData(prev => ({ ...prev, [term]: rows }));
@@ -353,26 +380,36 @@ export default function HonorsCalcu() {
     return nextYearStats;
   }, [termsData]);
 
+  // Memoized total R grades (repeats) across all terms/years in Full Mode
+  const totalRGrades = React.useMemo(() => {
+    let sum = 0;
+    Object.values(yearStats).forEach(s => {
+      sum += s.rGrades;
+    });
+    return sum;
+  }, [yearStats]);
+
+  // Check for any failing grades (0.0 or 0) in Full Mode
+  const hasFailingGrade = React.useMemo(() => {
+    return Object.values(termsData).some(term => 
+      Array.isArray(term) && term.some(row => row.grade === "0.0" || row.grade === "0")
+    );
+  }, [termsData]);
+
   // Derive Latin Honors result from per-year stats — same logic as the former Latin Honors page
   const latinHonorsSummary = React.useMemo(() => {
     const yearsWithData = Object.values(yearStats).filter(s => s.totalUnits > 0);
     if (yearsWithData.length === 0) return { overallGPA: "0.00", latinHonor: "-" };
 
     const rawAverageGPA = yearsWithData.reduce((sum, s) => sum + s.gpa, 0) / yearsWithData.length;
-    const totalUnits = yearsWithData.reduce((sum, s) => sum + s.totalUnits, 0);
-    const totalRGrades = yearsWithData.reduce((sum, s) => sum + s.rGrades, 0);
-    
-    // Check for any failing grades (0.0)
-    const hasFailingGrade = Object.values(termsDataRef.current).some(term => 
-      term.some(row => row.grade === "0.0" || row.grade === "0")
-    );
 
     let latinHonor: string;
     
     // Basic eligibility requirements (use raw GPA for decisions)
-    if (rawAverageGPA < 3.0) latinHonor = "No, CGPA below 3.0";
+    if (!residencyChecked) latinHonor = "No, did not complete 70% of courses at APC";
     else if (hasFailingGrade) latinHonor = "No, has failing grade (0.0)";
     else if (totalRGrades > 6) latinHonor = "No, more than 6 R grades";
+    else if (rawAverageGPA < 3.0) latinHonor = "No, CGPA below 3.0";
     // Honors classification (per official APC policy) — raw values, no rounding
     else if (rawAverageGPA >= 3.80) latinHonor = "Summa Cum Laude";
     else if (rawAverageGPA >= 3.60) latinHonor = "Magna Cum Laude";
@@ -380,7 +417,7 @@ export default function HonorsCalcu() {
     else latinHonor = "Academic Distinction";
 
     return { overallGPA: truncateToDecimals(rawAverageGPA, 4).toFixed(4), latinHonor };
-  }, [yearStats, termsDataRef]);
+  }, [yearStats, residencyChecked, hasFailingGrade, totalRGrades]);
 
   const liteStats = React.useMemo(() => {
     const stats: Record<string, { gpa: number; eligible: string; totalUnits: number }> = {};
@@ -397,14 +434,17 @@ export default function HonorsCalcu() {
     const rawAverageGPA = yearsWithData.reduce((sum, s) => sum + s.gpa, 0) / yearsWithData.length;
 
     let latinHonor: string;
-    if (rawAverageGPA < 3.0) latinHonor = "No, CGPA below 3.0";
+    if (!residencyChecked) latinHonor = "No, did not complete 70% of courses at APC";
+    else if (!noFailsChecked) latinHonor = "No, has failing grade (0.0)";
+    else if (!noExcessRepeatsChecked) latinHonor = "No, more than 6 R grades";
+    else if (rawAverageGPA < 3.0) latinHonor = "No, CGPA below 3.0";
     else if (rawAverageGPA >= 3.80) latinHonor = "Summa Cum Laude";
     else if (rawAverageGPA >= 3.60) latinHonor = "Magna Cum Laude";
     else if (rawAverageGPA >= 3.40) latinHonor = "Cum Laude";
     else latinHonor = "Academic Distinction";
 
     return { overallGPA: truncateToDecimals(rawAverageGPA, 4).toFixed(4), latinHonor };
-  }, [liteStats]);
+  }, [liteStats, residencyChecked, noFailsChecked, noExcessRepeatsChecked]);
 
   const topSummaryYearKey = "Year 1";
 
@@ -528,6 +568,106 @@ export default function HonorsCalcu() {
               </motion.div>
             )}
           </AnimatePresence>
+        </div>
+
+        {/* Honors Checklist Card */}
+        <div className="flex justify-center mb-10">
+          <Card className="w-full max-w-lg shadow-md border bg-card/45 backdrop-blur-sm">
+            <CardContent className="pt-6">
+              <h3 className="text-sm font-semibold text-foreground mb-4 uppercase tracking-wider flex items-center gap-2">
+                <CheckCircle2 className="h-4 w-4 text-primary" />
+                Graduation Honors Checklist
+              </h3>
+              <div className="space-y-4">
+                {/* Residency Checkbox */}
+                <div className="flex items-start gap-3 p-3 rounded-lg hover:bg-muted/30 transition-colors">
+                  <input
+                    id="checklist-residency"
+                    type="checkbox"
+                    checked={residencyChecked}
+                    onChange={(e) => setResidencyChecked(e.target.checked)}
+                    className="w-4.5 h-4.5 mt-0.5 rounded border-input text-foreground focus:ring-ring cursor-pointer transition-transform duration-200 active:scale-95"
+                  />
+                  <div className="flex flex-col gap-0.5">
+                    <label htmlFor="checklist-residency" className="text-sm font-medium text-foreground cursor-pointer select-none leading-relaxed">
+                      Residency Requirement
+                    </label>
+                    <p className="text-xs text-muted-foreground">
+                      Completed 70% or more of curriculum courses at APC
+                    </p>
+                  </div>
+                </div>
+
+                {/* Failing Grades Checklist */}
+                <div className="flex items-start gap-3 p-3 rounded-lg hover:bg-muted/30 transition-colors">
+                  <input
+                    id="checklist-fails"
+                    type="checkbox"
+                    checked={liteMode ? noFailsChecked : !hasFailingGrade}
+                    disabled={!liteMode}
+                    onChange={(e) => liteMode && setNoFailsChecked(e.target.checked)}
+                    className={cn(
+                      "w-4.5 h-4.5 mt-0.5 rounded border-input text-foreground focus:ring-ring transition-transform duration-200 active:scale-95",
+                      liteMode ? "cursor-pointer" : "cursor-not-allowed opacity-70"
+                    )}
+                  />
+                  <div className="flex flex-col gap-0.5">
+                    <label 
+                      htmlFor={liteMode ? "checklist-fails" : undefined} 
+                      className={cn(
+                        "text-sm font-medium text-foreground leading-relaxed",
+                        liteMode ? "cursor-pointer select-none" : ""
+                      )}
+                    >
+                      No Failing Grades
+                    </label>
+                    <p className="text-xs text-muted-foreground flex items-center gap-1.5">
+                      No failing grades (0.0) in any course
+                      {!liteMode && (
+                        <span className="text-[10px] uppercase font-bold text-primary/80 bg-primary/10 px-1.5 py-0.5 rounded">
+                          Auto-detected
+                        </span>
+                      )}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Repeats/R Grades Checklist */}
+                <div className="flex items-start gap-3 p-3 rounded-lg hover:bg-muted/30 transition-colors">
+                  <input
+                    id="checklist-repeats"
+                    type="checkbox"
+                    checked={liteMode ? noExcessRepeatsChecked : totalRGrades <= 6}
+                    disabled={!liteMode}
+                    onChange={(e) => liteMode && setNoExcessRepeatsChecked(e.target.checked)}
+                    className={cn(
+                      "w-4.5 h-4.5 mt-0.5 rounded border-input text-foreground focus:ring-ring transition-transform duration-200 active:scale-95",
+                      liteMode ? "cursor-pointer" : "cursor-not-allowed opacity-70"
+                    )}
+                  />
+                  <div className="flex flex-col gap-0.5">
+                    <label 
+                      htmlFor={liteMode ? "checklist-repeats" : undefined} 
+                      className={cn(
+                        "text-sm font-medium text-foreground leading-relaxed",
+                        liteMode ? "cursor-pointer select-none" : ""
+                      )}
+                    >
+                      Repeats Limit
+                    </label>
+                    <p className="text-xs text-muted-foreground flex items-center gap-1.5 flex-wrap">
+                      <span>No more than 6 repeats ("R" grades) throughout college</span>
+                      {!liteMode ? (
+                        <span className="text-[10px] uppercase font-bold text-primary/80 bg-primary/10 px-1.5 py-0.5 rounded">
+                          Auto-detected ({totalRGrades} R)
+                        </span>
+                      ) : null}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
         </div>
 
         <hr className="mb-10 border-border/100" />
