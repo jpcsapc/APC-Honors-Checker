@@ -656,7 +656,7 @@ export default function HonorsCalcu() {
                       Repeats Limit
                     </label>
                     <p className="text-xs text-muted-foreground flex items-center gap-1.5 flex-wrap">
-                      <span>No more than 6 repeats ("R" grades) throughout college (final weighted subject grade, midterms not counted)</span>
+                      <span>No more than 6 R grades (final grades only, midterms excluded).</span>
                       {!liteMode ? (
                         <span className="text-[10px] uppercase font-bold text-primary/80 bg-primary/10 px-1.5 py-0.5 rounded">
                           Auto-detected ({totalRGrades} R)
