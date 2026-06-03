@@ -51,6 +51,141 @@ export default function FAQPage() {
         {
           question: "Can I graduate with honors if I transfer credits?",
           answer: "Transfer credits are typically not included in GPA calculations for honors. Only courses taken at your current institution are usually considered for Latin honors eligibility."
+        },
+        {
+          question: "What are the criteria for College Latin Honors and Academic Distinction at graduation?",
+          answer: (
+            <div className="space-y-4">
+              <p>
+                As per Section 4.2.2 of the APC Student Handbook, undergraduate students may be awarded academic honors upon graduation based on their Cumulative GPA (CGPA) and specific academic standing requirements:
+              </p>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mt-2">
+                <div className="p-3.5 bg-background rounded-lg border text-center">
+                  <h4 className="font-semibold text-foreground text-sm mb-1">Summa Cum Laude</h4>
+                  <p className="text-[10px] text-muted-foreground uppercase">CGPA of</p>
+                  <p className="text-base font-bold text-primary">3.80 - 4.00</p>
+                </div>
+                <div className="p-3.5 bg-background rounded-lg border text-center">
+                  <h4 className="font-semibold text-foreground text-sm mb-1">Magna Cum Laude</h4>
+                  <p className="text-[10px] text-muted-foreground uppercase">CGPA of</p>
+                  <p className="text-base font-bold text-primary">3.60 - 3.79</p>
+                </div>
+                <div className="p-3.5 bg-background rounded-lg border text-center">
+                  <h4 className="font-semibold text-foreground text-sm mb-1">Cum Laude</h4>
+                  <p className="text-[10px] text-muted-foreground uppercase">CGPA of</p>
+                  <p className="text-base font-bold text-primary">3.40 - 3.59</p>
+                </div>
+                <div className="p-3.5 bg-background rounded-lg border text-center">
+                  <h4 className="font-semibold text-foreground text-sm mb-1">Academic Distinction</h4>
+                  <p className="text-[10px] text-muted-foreground uppercase">CGPA of</p>
+                  <p className="text-base font-bold text-primary">3.00 - 3.39</p>
+                </div>
+              </div>
+              <div className="space-y-2 mt-2 text-xs text-muted-foreground leading-relaxed">
+                <p>⚠️ <strong>Failing Grades:</strong> Any historical failing grade (0.0) in any course permanently disqualifies you from honors eligibility.</p>
+                <p>🔄 <strong>Repeats:</strong> You must have no more than six (6) repeats ("R" grades) throughout your entire stay at APC.</p>
+                <p>📍 <strong>Residency:</strong> At least 70% of the courses in your curriculum must be completed at Asia Pacific College.</p>
+                <p>✂️ <strong>No Rounding:</strong> The CGPA is strictly truncated to evaluate boundaries (e.g., a CGPA of 3.799 remains 3.79 and will qualify for Magna Cum Laude, not Summa Cum Laude).</p>
+              </div>
+            </div>
+          )
+        },
+        {
+          question: "How does the interactive Graduation Honors Checklist work?",
+          answer: (
+            <div className="space-y-3 text-sm">
+              <p>
+                The college honors page contains a checklist card directly below the Overall GPA card to help you track auxiliary graduation requirements:
+              </p>
+              <div className="space-y-2 mt-2 leading-relaxed">
+                <p>• <strong>In Lite Mode:</strong> Since individual course tables aren't present, you manually toggle the checklist (residency, no-fails, repeats limit) to verify eligibility.</p>
+                <p>• <strong>In Full Mode:</strong> The tool automatically scans your semester tables to detect failing grades (0.0) and counts your repeated (R) courses, while allowing you to manually toggle the residency checkbox.</p>
+              </div>
+            </div>
+          )
+        },
+        {
+          question: "How does the JSON Grade Import work, and how does it handle duplicates?",
+          answer: (
+            <div className="space-y-3 text-sm">
+              <p>
+                You can upload a exported JSON file containing your academic history. The import system processes the grades as follows:
+              </p>
+              <div className="space-y-2 mt-2 leading-relaxed">
+                <p>• <strong>Deduplication:</strong> In case of duplicates (such as midterm drafts versus final grades), the system compares the <code>period_id</code> fields and automatically retains the final signed grade (<code>period_id: 6</code>) over the midterm draft (<code>period_id: 5</code>).</p>
+                <p>• <strong>Mapping:</strong> The import automatically maps your school years to Year 1 through Year 4 tables and disables Lite Mode to show you your complete list of courses.</p>
+              </div>
+            </div>
+          )
+        },
+        {
+          question: "Why does Year 4 have a customized internship eligibility status?",
+          answer: (
+            <p className="text-sm leading-relaxed">
+              During Year 4, students typically undergo internships and thesis work, resulting in fewer credit units than standard academic semesters. To prevent unfair disqualification at the year-level, if Year 4 has fewer than 36 units, the checklist marks it with a specialized status: <strong>"You're on internship mode, see you on Grad!"</strong>, and you remain fully eligible for graduation honors.
+            </p>
+          )
+        }
+      ]
+    },
+    {
+      title: "JSON Grades Import Guide",
+      items: [
+        {
+          question: "How do I get my JSON grades from the APC portal?",
+          answer: (
+            <div className="space-y-4 text-sm leading-relaxed text-muted-foreground">
+              <p>
+                To import your grades automatically instead of typing them manually, you can extract your academic record from the official APC Grades Viewer by following these simple steps:
+              </p>
+              <div className="space-y-3 mt-3">
+                <div className="flex gap-3 items-start">
+                  <span className="flex items-center justify-center h-6 w-6 rounded-full bg-primary/10 text-primary text-xs font-bold shrink-0 mt-0.5">1</span>
+                  <div>
+                    <strong className="text-foreground">Log in to the portal:</strong>
+                    <p className="mt-0.5">Open your web browser, go to <a href="https://rams.apc.edu.ph/gradesviewer" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline font-medium">RAMS Grades Viewer</a>, and log in with your credentials.</p>
+                  </div>
+                </div>
+                <div className="flex gap-3 items-start">
+                  <span className="flex items-center justify-center h-6 w-6 rounded-full bg-primary/10 text-primary text-xs font-bold shrink-0 mt-0.5">2</span>
+                  <div>
+                    <strong className="text-foreground">Open Developer Tools:</strong>
+                    <p className="mt-0.5">Press <kbd className="px-1.5 py-0.5 text-[11px] bg-muted border rounded">F12</kbd> (or right-click anywhere on the page and select <strong className="text-foreground">Inspect</strong>) to open the browser developer tools.</p>
+                  </div>
+                </div>
+                <div className="flex gap-3 items-start">
+                  <span className="flex items-center justify-center h-6 w-6 rounded-full bg-primary/10 text-primary text-xs font-bold shrink-0 mt-0.5">3</span>
+                  <div>
+                    <strong className="text-foreground">Locate the Network request:</strong>
+                    <p className="mt-0.5">Go to the <strong className="text-foreground">Network</strong> tab and click on the <strong className="text-foreground">Fetch/XHR</strong> filter. Reload the page (<kbd className="px-1.5 py-0.5 text-[11px] bg-muted border rounded">Ctrl + R</kbd> or <kbd className="px-1.5 py-0.5 text-[11px] bg-muted border rounded">⌘ + R</kbd>) if the list is empty.</p>
+                  </div>
+                </div>
+                <div className="flex gap-3 items-start">
+                  <span className="flex items-center justify-center h-6 w-6 rounded-full bg-primary/10 text-primary text-xs font-bold shrink-0 mt-0.5">4</span>
+                  <div>
+                    <strong className="text-foreground">Copy the response:</strong>
+                    <p className="mt-0.5">Look for a request named <strong className="text-foreground">gradesviewer</strong> (or similar JSON files). Click it, open the <strong className="text-foreground">Response</strong> tab, select all content (<kbd className="px-1.5 py-0.5 text-[11px] bg-muted border rounded">Ctrl + A</kbd>), and copy it.</p>
+                  </div>
+                </div>
+                <div className="flex gap-3 items-start">
+                  <span className="flex items-center justify-center h-6 w-6 rounded-full bg-primary/10 text-primary text-xs font-bold shrink-0 mt-0.5">5</span>
+                  <div>
+                    <strong className="text-foreground">Save as a JSON file:</strong>
+                    <p className="mt-0.5">Create a new text file on your computer (using Notepad, TextEdit, etc.), paste the copied contents, and save the file with a name ending in <strong className="text-foreground">.json</strong> (e.g., <code>grades.json</code>).</p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="mt-5 p-1 bg-muted/30 border border-border rounded-lg overflow-hidden">
+                <p className="text-xs text-muted-foreground px-3 py-2 bg-muted/60 font-medium">Developer Tools Network Tab Reference:</p>
+                <img 
+                  src="/grades-json-instruction.png" 
+                  alt="RAMS gradesviewer response in browser developer tools Network tab"
+                  className="w-full h-auto object-cover border-t border-border"
+                />
+              </div>
+            </div>
+          )
         }
       ]
     },

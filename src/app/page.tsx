@@ -32,7 +32,7 @@ export default function FrontPage() {
               <div className="border border-border rounded-lg p-6 bg-card hover:border-primary/40 transition-colors h-full flex flex-col">
                 <div className="flex items-center gap-3 mb-3">
                   <Award className="h-5 w-5 text-primary shrink-0" />
-                  <h2 className="text-lg font-medium text-foreground">Grades Calculator</h2>
+                  <h2 className="text-lg font-medium text-foreground">College Grades Calculator</h2>
                 </div>
                 <p className="text-sm text-muted-foreground leading-relaxed mb-6 flex-1">
                   Calculate your academic standing, honors eligibility, and latin honors eligibility based on your grades.
