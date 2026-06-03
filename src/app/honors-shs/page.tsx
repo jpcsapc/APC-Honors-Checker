@@ -290,6 +290,8 @@ function SHSLiteTermRow({
 
 export default function SHSHonorsCalcu() {
   const [liteMode, setLiteMode] = React.useState(true);
+  const [strictGradesMode, setStrictGradesMode] = React.useState(false);
+  const [peGrades, setPeGrades] = React.useState({ pe1: "", pe2: "", pe3: "", pe4: "" });
   const [liteData, setLiteData] = React.useState<Record<string, { term1: string; term2: string; term3: string; hasLowerThan85: boolean }>>({
     "Grade 11": { term1: "", term2: "", term3: "", hasLowerThan85: false },
     "Grade 12": { term1: "", term2: "", term3: "", hasLowerThan85: false },
@@ -305,6 +307,18 @@ export default function SHSHonorsCalcu() {
     try {
       const savedLiteMode = localStorage.getItem("shsLiteMode");
       if (savedLiteMode !== null) setLiteMode(JSON.parse(savedLiteMode));
+
+      const savedStrictGrades = localStorage.getItem("shsStrictGradesMode");
+      if (savedStrictGrades !== null) {
+        const isStrict = JSON.parse(savedStrictGrades);
+        setStrictGradesMode(isStrict);
+        if (isStrict) setLiteMode(false);
+      }
+
+      const savedPEGrades = localStorage.getItem("shsPeGrades");
+      if (savedPEGrades) {
+        setPeGrades(JSON.parse(savedPEGrades));
+      }
 
       const savedLiteData = localStorage.getItem("shsLiteData");
       if (savedLiteData) {
@@ -347,6 +361,14 @@ export default function SHSHonorsCalcu() {
   React.useEffect(() => {
     localStorage.setItem("shsLiteMode", JSON.stringify(liteMode));
   }, [liteMode]);
+
+  React.useEffect(() => {
+    localStorage.setItem("shsStrictGradesMode", JSON.stringify(strictGradesMode));
+  }, [strictGradesMode]);
+
+  React.useEffect(() => {
+    localStorage.setItem("shsPeGrades", JSON.stringify(peGrades));
+  }, [peGrades]);
 
   React.useEffect(() => {
     localStorage.setItem("shsLiteData", JSON.stringify(liteData));
@@ -464,6 +486,49 @@ export default function SHSHonorsCalcu() {
 
   // ── Calculation Logic ──
 
+  const peStats = React.useMemo(() => {
+    const pe1Val = parseFloat(peGrades.pe1);
+    const pe2Val = parseFloat(peGrades.pe2);
+    const pe3Val = parseFloat(peGrades.pe3);
+    const pe4Val = parseFloat(peGrades.pe4);
+
+    const hasPE1 = !isNaN(pe1Val) && pe1Val >= 0 && peGrades.pe1 !== "";
+    const hasPE2 = !isNaN(pe2Val) && pe2Val >= 0 && peGrades.pe2 !== "";
+    const hasPE3 = !isNaN(pe3Val) && pe3Val >= 0 && peGrades.pe3 !== "";
+    const hasPE4 = !isNaN(pe4Val) && pe4Val >= 0 && peGrades.pe4 !== "";
+
+    let midtermPE = 0;
+    let endtermPE = 0;
+    let finalPE = 0;
+
+    const hasMidterm = hasPE1 && hasPE2;
+    const hasEndterm = hasPE3 && hasPE4;
+
+    if (hasMidterm) {
+      midtermPE = (pe1Val + pe2Val) / 2;
+    }
+    if (hasEndterm) {
+      endtermPE = (pe3Val + pe4Val) / 2;
+    }
+
+    if (hasMidterm && hasEndterm) {
+      finalPE = (midtermPE + endtermPE) / 2;
+    } else if (hasMidterm) {
+      finalPE = midtermPE;
+    } else if (hasEndterm) {
+      finalPE = endtermPE;
+    }
+
+    return {
+      midtermPE,
+      endtermPE,
+      finalPE,
+      hasMidterm,
+      hasEndterm,
+      hasPE: hasMidterm || hasEndterm,
+    };
+  }, [peGrades]);
+
   // Lite Mode Calculation Stats
   const liteStats = React.useMemo(() => {
     const stats: Record<string, { average: number; eligible: string; award: string; hasTermBelow85: boolean }> = {};
@@ -555,15 +620,32 @@ export default function SHSHonorsCalcu() {
         });
       });
 
-      if (validRows.length === 0) {
+      let totalGradePoints = validRows.reduce((sum, r) => sum + parseFloat(r.grade), 0);
+      let totalSubjects = validRows.length;
+      let hasLowerThan85 = validRows.some(r => parseFloat(r.grade) < 85.00);
+
+      if (strictGradesMode) {
+        if (year === "Grade 11" && peStats.hasMidterm) {
+          totalGradePoints += peStats.midtermPE;
+          totalSubjects += 1;
+          if (peStats.midtermPE < 85.00) {
+            hasLowerThan85 = true;
+          }
+        } else if (year === "Grade 12" && peStats.hasEndterm) {
+          totalGradePoints += peStats.endtermPE;
+          totalSubjects += 1;
+          if (peStats.endtermPE < 85.00) {
+            hasLowerThan85 = true;
+          }
+        }
+      }
+
+      if (totalSubjects === 0) {
         stats[year] = { average: 0, eligible: "No data", award: "None", hasLowerThan85: false, totalSubjects: 0 };
         return;
       }
 
-      const totalGradePoints = validRows.reduce((sum, r) => sum + parseFloat(r.grade), 0);
-      const average = validRows.length > 0 ? totalGradePoints / validRows.length : 0;
-      const hasLowerThan85 = validRows.some(r => parseFloat(r.grade) < 85.00);
-
+      const average = totalGradePoints / totalSubjects;
       let award = "None";
       let eligible = "No";
 
@@ -578,22 +660,69 @@ export default function SHSHonorsCalcu() {
         eligible = "No, average below 88.00";
       }
 
-      stats[year] = { average, eligible, award, hasLowerThan85, totalSubjects: validRows.length };
+      stats[year] = { average, eligible, award, hasLowerThan85, totalSubjects };
     });
 
     return stats;
-  }, [fullData]);
+  }, [fullData, strictGradesMode, peStats]);
 
   // Full Mode Overall Summary
   const fullSummary = React.useMemo(() => {
     const activeYears = Object.keys(fullStats).filter(year => fullStats[year].totalSubjects > 0);
     if (activeYears.length === 0) return { overallAverage: "0.00", overallAward: "None", reason: "No subjects entered" };
 
-    // Overall SHS average is calculated as the simple average of Grade 11 average and Grade 12 average
-    const sum = activeYears.reduce((acc, year) => acc + fullStats[year].average, 0);
-    const overallAverage = sum / activeYears.length;
+    let overallAverage = 0;
+    if (strictGradesMode) {
+      let totalGradePointsAll = 0;
+      let totalSubjectsAll = 0;
 
-    const hasAnyLowerThan85 = activeYears.some(year => fullStats[year].hasLowerThan85);
+      // Sum all G11 and G12 subjects
+      Object.entries(fullData).forEach(([termKey, rows]) => {
+        if (rows && Array.isArray(rows)) {
+          rows.forEach(row => {
+            if (row.subjectCode.trim() !== '' && row.grade.trim() !== '') {
+              totalGradePointsAll += parseFloat(row.grade);
+              totalSubjectsAll += 1;
+            }
+          });
+        }
+      });
+
+      // Add PE if active
+      if (peStats.hasPE) {
+        totalGradePointsAll += peStats.finalPE;
+        totalSubjectsAll += 1;
+      }
+
+      overallAverage = totalSubjectsAll > 0 ? (totalGradePointsAll / totalSubjectsAll) : 0;
+    } else {
+      // Overall SHS average is calculated as the simple average of Grade 11 average and Grade 12 average
+      const sum = activeYears.reduce((acc, year) => acc + fullStats[year].average, 0);
+      overallAverage = sum / activeYears.length;
+    }
+
+    let hasAnyLowerThan85 = false;
+
+    // Check subjects in tables
+    Object.entries(fullData).forEach(([termKey, rows]) => {
+      if (rows && Array.isArray(rows)) {
+        rows.forEach(row => {
+          if (row.subjectCode.trim() !== '' && row.grade.trim() !== '') {
+            if (parseFloat(row.grade) < 85.00) {
+              hasAnyLowerThan85 = true;
+            }
+          }
+        });
+      }
+    });
+
+    if (strictGradesMode) {
+      if (peStats.hasPE && peStats.finalPE < 85.00) {
+        hasAnyLowerThan85 = true;
+      }
+    } else {
+      hasAnyLowerThan85 = activeYears.some(year => fullStats[year].hasLowerThan85);
+    }
 
     let overallAward = "None";
     let reason = "";
@@ -613,7 +742,7 @@ export default function SHSHonorsCalcu() {
       overallAward,
       reason
     };
-  }, [fullStats]);
+  }, [fullStats, fullData, strictGradesMode, peStats]);
 
   const summary = liteMode ? liteSummary : fullSummary;
   const currentStats = liteMode ? liteStats : fullStats;
@@ -652,46 +781,106 @@ export default function SHSHonorsCalcu() {
             </AnimatePresence>
           </p>
 
-          {/* Lite Mode Toggle */}
-          <div className="flex items-center justify-center gap-2.5 mt-6">
-            <button
-              role="checkbox"
-              aria-checked={liteMode}
-              onClick={() => setLiteMode(prev => !prev)}
-              className={`
-                relative inline-flex h-5 w-5 shrink-0 cursor-pointer items-center justify-center
-                rounded border-2 transition-colors duration-150
-                focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2
-                ${liteMode
-                  ? 'bg-foreground border-foreground'
-                  : 'bg-background border-input hover:border-foreground/50'
-                }
-              `}
-            >
-              {liteMode && (
-                <svg
-                  className="h-3 w-3 text-background"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                  strokeWidth={3}
-                >
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                </svg>
-              )}
-            </button>
-            <label
-              onClick={() => setLiteMode(prev => !prev)}
-              className="flex items-center gap-1.5 text-sm text-muted-foreground cursor-pointer select-none hover:text-foreground transition-colors"
-            >
-              <Zap className="h-3.5 w-3.5" />
-              Lite Mode
-            </label>
+          {/* Toggles */}
+          <div className="flex items-center justify-center gap-6 mt-6">
+            {/* Lite Mode Toggle */}
+            <div className="flex items-center gap-2.5">
+              <button
+                role="checkbox"
+                aria-checked={liteMode}
+                onClick={() => {
+                  if (!liteMode) {
+                    setLiteMode(true);
+                    setStrictGradesMode(false);
+                  }
+                }}
+                className={`
+                  relative inline-flex h-5 w-5 shrink-0 cursor-pointer items-center justify-center
+                  rounded border-2 transition-colors duration-150
+                  focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2
+                  ${liteMode
+                    ? 'bg-foreground border-foreground'
+                    : 'bg-background border-input hover:border-foreground/50'
+                  }
+                `}
+              >
+                {liteMode && (
+                  <svg
+                    className="h-3 w-3 text-background"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                    strokeWidth={3}
+                  >
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                  </svg>
+                )}
+              </button>
+              <label
+                onClick={() => {
+                  if (!liteMode) {
+                    setLiteMode(true);
+                    setStrictGradesMode(false);
+                  }
+                }}
+                className="flex items-center gap-1.5 text-sm text-muted-foreground cursor-pointer select-none hover:text-foreground transition-colors"
+              >
+                <Zap className="h-3.5 w-3.5" />
+                Lite Mode
+              </label>
+            </div>
+
+            {/* Strict Grades Mode Toggle */}
+            <div className="flex items-center gap-2.5">
+              <button
+                role="checkbox"
+                aria-checked={strictGradesMode}
+                onClick={() => {
+                  if (!strictGradesMode) {
+                    setStrictGradesMode(true);
+                    setLiteMode(false);
+                  }
+                }}
+                className={`
+                  relative inline-flex h-5 w-5 shrink-0 cursor-pointer items-center justify-center
+                  rounded border-2 transition-colors duration-150
+                  focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2
+                  ${strictGradesMode
+                    ? 'bg-foreground border-foreground'
+                    : 'bg-background border-input hover:border-foreground/50'
+                  }
+                `}
+              >
+                {strictGradesMode && (
+                  <svg
+                    className="h-3 w-3 text-background"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                    strokeWidth={3}
+                  >
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                  </svg>
+                )}
+              </button>
+              <label
+                onClick={() => {
+                  if (!strictGradesMode) {
+                    setStrictGradesMode(true);
+                    setLiteMode(false);
+                  }
+                }}
+                className="flex items-center gap-1.5 text-sm text-muted-foreground cursor-pointer select-none hover:text-foreground transition-colors"
+              >
+                <Calculator className="h-3.5 w-3.5" />
+                Strict Grades Mode
+              </label>
+            </div>
           </div>
         </div>
 
         {/* Overall Honors Summary Card */}
-        <div className="flex justify-center mb-10">
+        <div className="flex flex-col items-center mb-10">
           <AnimatePresence mode="wait">
             <motion.div
               layout
@@ -723,9 +912,151 @@ export default function SHSHonorsCalcu() {
               </div>
             </motion.div>
           </AnimatePresence>
+          {liteMode && (
+            <p className="text-xs text-amber-600/90 dark:text-amber-500/95 mt-3 max-w-md text-center leading-normal">
+              <strong>Note:</strong> Lite Mode estimates your honors based on term averages. This calculation may not be fully accurate, as the actual honors eligibility is computed using the direct average of all individual subject final grades. Switch to <strong>Strict Grades Mode</strong> for a precise calculation.
+            </p>
+          )}
         </div>
 
         <hr className="mb-10 border-border/100" />
+
+        {strictGradesMode && (
+          <div className="flex justify-center mb-8">
+            <div className="bg-amber-500/10 border border-amber-500/30 text-amber-600 dark:text-amber-500 rounded-lg p-4 max-w-xl text-sm leading-relaxed text-center">
+              <strong>Strict Grades Mode is Active:</strong> Please do not include PE subjects in the Grade 11 or Grade 12 term tables below. Use the dedicated Physical Education section to input your PE grades as PE is considered one subject only.
+            </div>
+          </div>
+        )}
+
+        {strictGradesMode && (
+          <motion.section
+            initial={{ opacity: 0, scale: 0.98 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="mb-16"
+          >
+            <h2 className="text-2xl font-semibold mb-6 text-center text-foreground">Physical Education (PE) Grades</h2>
+
+            <div className="flex justify-center">
+              <Card className="shadow-md w-full max-w-xl">
+                <CardContent className="pt-6">
+                  <p className="text-sm text-muted-foreground mb-6 text-center">
+                    Enter your final grade for each PE course to compute your PE Final Grade.
+                  </p>
+
+                  <div className="grid grid-cols-2 gap-4 mb-6">
+                    {/* PE1 */}
+                    <div className="flex flex-col gap-1.5">
+                      <label htmlFor="pe-1" className="text-xs font-semibold text-muted-foreground uppercase">PE 1</label>
+                      <Input
+                        id="pe-1"
+                        placeholder="85.00"
+                        value={peGrades.pe1}
+                        onChange={(e) => {
+                          const val = e.target.value;
+                          if (val === '' || (/^\d*\.?\d*$/.test(val) && parseFloat(val) <= 100)) {
+                            setPeGrades(prev => ({ ...prev, pe1: val }));
+                          }
+                        }}
+                        type="text"
+                        autoComplete="off"
+                        className={cn(
+                          parseFloat(peGrades.pe1) < 85 && parseFloat(peGrades.pe1) >= 0 && "border-red-500 text-red-500 bg-red-50 focus-visible:ring-red-500 dark:bg-red-950/20"
+                        )}
+                      />
+                    </div>
+
+                    {/* PE2 */}
+                    <div className="flex flex-col gap-1.5">
+                      <label htmlFor="pe-2" className="text-xs font-semibold text-muted-foreground uppercase">PE 2</label>
+                      <Input
+                        id="pe-2"
+                        placeholder="85.00"
+                        value={peGrades.pe2}
+                        onChange={(e) => {
+                          const val = e.target.value;
+                          if (val === '' || (/^\d*\.?\d*$/.test(val) && parseFloat(val) <= 100)) {
+                            setPeGrades(prev => ({ ...prev, pe2: val }));
+                          }
+                        }}
+                        type="text"
+                        autoComplete="off"
+                        className={cn(
+                          parseFloat(peGrades.pe2) < 85 && parseFloat(peGrades.pe2) >= 0 && "border-red-500 text-red-500 bg-red-50 focus-visible:ring-red-500 dark:bg-red-950/20"
+                        )}
+                      />
+                    </div>
+
+                    {/* PE3 */}
+                    <div className="flex flex-col gap-1.5">
+                      <label htmlFor="pe-3" className="text-xs font-semibold text-muted-foreground uppercase">PE 3</label>
+                      <Input
+                        id="pe-3"
+                        placeholder="85.00"
+                        value={peGrades.pe3}
+                        onChange={(e) => {
+                          const val = e.target.value;
+                          if (val === '' || (/^\d*\.?\d*$/.test(val) && parseFloat(val) <= 100)) {
+                            setPeGrades(prev => ({ ...prev, pe3: val }));
+                          }
+                        }}
+                        type="text"
+                        autoComplete="off"
+                        className={cn(
+                          parseFloat(peGrades.pe3) < 85 && parseFloat(peGrades.pe3) >= 0 && "border-red-500 text-red-500 bg-red-50 focus-visible:ring-red-500 dark:bg-red-950/20"
+                        )}
+                      />
+                    </div>
+
+                    {/* PE4 */}
+                    <div className="flex flex-col gap-1.5">
+                      <label htmlFor="pe-4" className="text-xs font-semibold text-muted-foreground uppercase">PE 4</label>
+                      <Input
+                        id="pe-4"
+                        placeholder="85.00"
+                        value={peGrades.pe4}
+                        onChange={(e) => {
+                          const val = e.target.value;
+                          if (val === '' || (/^\d*\.?\d*$/.test(val) && parseFloat(val) <= 100)) {
+                            setPeGrades(prev => ({ ...prev, pe4: val }));
+                          }
+                        }}
+                        type="text"
+                        autoComplete="off"
+                        className={cn(
+                          parseFloat(peGrades.pe4) < 85 && parseFloat(peGrades.pe4) >= 0 && "border-red-500 text-red-500 bg-red-50 focus-visible:ring-red-500 dark:bg-red-950/20"
+                        )}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-3 gap-4 pt-6 border-t text-center text-sm font-semibold">
+                    <div>
+                      <p className="text-xs font-medium text-muted-foreground mb-1">Midterm PE</p>
+                      <p className="text-lg font-bold text-foreground">
+                        {peStats.hasMidterm ? `${peStats.midtermPE.toFixed(2)}%` : "—"}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-xs font-medium text-muted-foreground mb-1">Endterm PE</p>
+                      <p className="text-lg font-bold text-foreground">
+                        {peStats.hasEndterm ? `${peStats.endtermPE.toFixed(2)}%` : "—"}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-xs font-medium text-primary mb-1">PE Final Grade</p>
+                      <p className="text-lg font-bold text-primary">
+                        {peStats.hasPE ? `${peStats.finalPE.toFixed(2)}%` : "—"}
+                      </p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+
+            <hr className="mt-12 border-border/100" />
+          </motion.section>
+        )}
 
         {/* Grades per Year Sections */}
         <div className="space-y-16">
@@ -830,28 +1161,35 @@ export default function SHSHonorsCalcu() {
 
                 {/* Yearly Stats Summary */}
                 {hasData && stats && (
-                  <div className="flex flex-wrap justify-center mt-8 gap-4">
-                    <div className="rounded-lg border bg-card px-6 py-4 shadow-sm text-center min-w-[150px]">
-                      <p className="text-sm text-muted-foreground mb-1">Yearly Average</p>
-                      <p className="text-2xl font-bold text-foreground">
-                        {stats.average.toFixed(2)}%
-                      </p>
-                    </div>
-                    {yearKey === "Grade 11" && (
-                      <div className="rounded-lg border bg-card px-6 py-4 shadow-sm text-center min-w-[200px]">
-                        <p className="text-sm text-muted-foreground mb-1">With Academic Excellence</p>
-                        <p className={cn(
-                          "text-2xl font-bold",
-                          stats.award !== "None" ? "text-primary" : "text-muted-foreground/70"
-                        )}>
-                          {stats.award !== "None" ? "Yes" : "No"}
+                  <div className="flex flex-col items-center mt-8">
+                    <div className="flex flex-wrap justify-center gap-4">
+                      <div className="rounded-lg border bg-card px-6 py-4 shadow-sm text-center min-w-[150px]">
+                        <p className="text-sm text-muted-foreground mb-1">Yearly Average</p>
+                        <p className="text-2xl font-bold text-foreground">
+                          {stats.average.toFixed(2)}%
                         </p>
-                        {stats.award === "None" && (
-                          <p className="text-xs text-red-500/80 mt-1 max-w-[180px] mx-auto leading-tight">
-                            {stats.eligible}
-                          </p>
-                        )}
                       </div>
+                      {yearKey === "Grade 11" && (
+                        <div className="rounded-lg border bg-card px-6 py-4 shadow-sm text-center min-w-[200px]">
+                          <p className="text-sm text-muted-foreground mb-1">With Academic Excellence</p>
+                          <p className={cn(
+                            "text-2xl font-bold",
+                            stats.award !== "None" ? "text-primary" : "text-muted-foreground/70"
+                          )}>
+                            {stats.award !== "None" ? "Yes" : "No"}
+                          </p>
+                          {stats.award === "None" && (
+                            <p className="text-xs text-red-500/80 mt-1 max-w-[180px] mx-auto leading-tight">
+                              {stats.eligible}
+                            </p>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                    {strictGradesMode && (
+                      <p className="text-xs text-muted-foreground/75 mt-3 text-center">
+                        * Note: In Strict Grades Mode, the graduation honors are computed using the direct average of all individual subject final grades. Year-level/term averages are for reference only.
+                      </p>
                     )}
                   </div>
                 )}
