@@ -2,7 +2,7 @@
 import * as React from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { ArrowLeft, Calculator, Zap, Award } from "lucide-react";
+import { ArrowLeft, Calculator, Zap, Award, Upload } from "lucide-react";
 import Link from "next/link";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
@@ -301,6 +301,159 @@ export default function SHSHonorsCalcu() {
 
   const fullDataRef = React.useRef(fullData);
   fullDataRef.current = fullData;
+
+  // ── JSON Import ──
+  const fileInputRef = React.useRef<HTMLInputElement>(null);
+  const [importError, setImportError] = React.useState<string | null>(null);
+
+  const handleJsonImport = React.useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (evt) => {
+      try {
+        const json = JSON.parse(evt.target?.result as string);
+        const grades: Array<{
+          subject_id: string;
+          subject_code: string;
+          units: string;
+          grade: string;
+          period_id: number;
+          subject?: { id: string; name: string };
+          term: { school_year: string; term: string };
+        }> = json.grades || [];
+
+        if (grades.length === 0) {
+          setImportError("No grades found in the JSON. Make sure you copied the full response from the RAMS gradesviewer network request.");
+          return;
+        }
+
+        setImportError(null);
+
+        // Find min school_year to identify Grade 11 vs 12
+        const uniqueYears = [...new Set(grades.map(g => parseInt(g.term.school_year)))].filter(y => !isNaN(y)).sort();
+
+        if (uniqueYears.length === 0) {
+          setImportError("No valid school years found in the JSON.");
+          return;
+        }
+        const minYear = uniqueYears[0];
+
+        interface GroupedGrade {
+          termKey: string;
+          subjectCode: string;
+          subjectName: string;
+          period5Grade: number | null;
+          period6Grade: number | null;
+        }
+
+        const groups: Record<string, GroupedGrade> = {};
+
+        for (const entry of grades) {
+          const yearVal = parseInt(entry.term.school_year);
+          if (isNaN(yearVal)) continue;
+
+          let gradeYear = "";
+          if (yearVal === minYear) {
+            gradeYear = "Grade 11";
+          } else if (yearVal >= minYear + 1) {
+            gradeYear = "Grade 12";
+          } else {
+            continue;
+          }
+
+          const termKey = `${gradeYear} Term ${entry.term.term}`;
+          const subjectId = entry.subject_id || entry.subject_code || entry.subject?.id || entry.subject?.name || "";
+          if (!subjectId) continue;
+
+          const key = `${termKey}_${subjectId}`;
+          if (!groups[key]) {
+            groups[key] = {
+              termKey,
+              subjectCode: entry.subject_code || "",
+              subjectName: entry.subject?.name || "",
+              period5Grade: null,
+              period6Grade: null,
+            };
+          }
+
+          const gradeVal = parseFloat(entry.grade);
+          if (!isNaN(gradeVal)) {
+            if (entry.period_id === 5) {
+              groups[key].period5Grade = gradeVal;
+            } else if (entry.period_id === 6) {
+              groups[key].period6Grade = gradeVal;
+            } else {
+              groups[key].period6Grade = gradeVal;
+            }
+          }
+        }
+
+        const newFullData: Record<string, SHSRowData[]> = {
+          "Grade 11 Term 1": [],
+          "Grade 11 Term 2": [],
+          "Grade 11 Term 3": [],
+          "Grade 12 Term 1": [],
+          "Grade 12 Term 2": [],
+          "Grade 12 Term 3": [],
+        };
+
+        const newPeGrades = { pe1: "", pe2: "", pe3: "", pe4: "" };
+
+        for (const group of Object.values(groups)) {
+          let finalGradeVal: number;
+          if (group.period5Grade !== null && group.period6Grade !== null) {
+            finalGradeVal = (group.period5Grade + group.period6Grade) / 2;
+          } else if (group.period6Grade !== null) {
+            finalGradeVal = group.period6Grade;
+          } else if (group.period5Grade !== null) {
+            finalGradeVal = group.period5Grade;
+          } else {
+            continue;
+          }
+
+          const gradeStr = finalGradeVal % 1 === 0 ? finalGradeVal.toString() : finalGradeVal.toFixed(1);
+          const subCode = group.subjectCode.toUpperCase();
+          const subName = group.subjectName.toUpperCase();
+
+          if (subCode === "SHPEH01" || subName.includes("PHYSICAL EDUCATION AND HEALTH 1")) {
+            newPeGrades.pe1 = gradeStr;
+          } else if (subCode === "SHPEH02" || subName.includes("PHYSICAL EDUCATION AND HEALTH 2")) {
+            newPeGrades.pe2 = gradeStr;
+          } else if (subCode === "SHPEH03" || subName.includes("PHYSICAL EDUCATION AND HEALTH 3")) {
+            newPeGrades.pe3 = gradeStr;
+          } else if (subCode === "SHPEH04" || subName.includes("PHYSICAL EDUCATION AND HEALTH 4")) {
+            newPeGrades.pe4 = gradeStr;
+          } else {
+            if (newFullData[group.termKey]) {
+              newFullData[group.termKey].push({
+                subjectCode: group.subjectCode,
+                grade: gradeStr,
+              });
+            }
+          }
+        }
+
+        Object.keys(newFullData).forEach(termKey => {
+          const rows = newFullData[termKey];
+          while (rows.length < 4) {
+            rows.push({ subjectCode: "", grade: "" });
+          }
+        });
+
+        setFullData(newFullData);
+        setPeGrades(newPeGrades);
+        setLiteMode(false);
+        setStrictGradesMode(true);
+      } catch (err) {
+        console.error("Failed to parse JSON", err);
+        setImportError("Invalid JSON file. The file could not be parsed — make sure you saved the complete response from the RAMS gradesviewer network tab, not a partial copy.");
+      }
+    };
+    reader.readAsText(file);
+    e.target.value = "";
+  }, []);
 
   // Load persisted data
   React.useEffect(() => {
@@ -876,6 +1029,37 @@ export default function SHSHonorsCalcu() {
                 Strict Grades Mode
               </label>
             </div>
+          </div>
+
+          {/* Import JSON Button */}
+          <div className="flex flex-col items-center gap-2 mt-3">
+            <div className="flex items-center justify-center gap-2.5">
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept=".json,application/json"
+                onChange={handleJsonImport}
+                className="hidden"
+                id="json-import-input"
+              />
+              <button
+                onClick={() => { setImportError(null); fileInputRef.current?.click(); }}
+                className="flex items-center gap-1.5 text-xs text-muted-foreground cursor-pointer select-none hover:text-foreground transition-colors px-3 py-1.5 border border-border rounded-md hover:bg-muted"
+              >
+                <Upload className="h-3.5 w-3.5" />
+                Import Grades (JSON)
+              </button>
+            </div>
+            {importError && (
+              <div className="flex items-start gap-2 max-w-md text-left bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-800 rounded-md px-3 py-2">
+                <span className="text-red-500 mt-0.5 shrink-0">⚠</span>
+                <p className="text-xs text-red-600 dark:text-red-400 leading-relaxed flex-1">
+                  {importError}{" "}
+                  <a href="/faqs" className="underline font-medium hover:text-red-700 dark:hover:text-red-300">See the FAQ guide</a> for how to get the correct file.
+                </p>
+                <button onClick={() => setImportError(null)} className="text-red-400 hover:text-red-600 shrink-0 text-base leading-none">×</button>
+              </div>
+            )}
           </div>
         </div>
 

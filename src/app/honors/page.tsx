@@ -459,6 +459,7 @@ export default function HonorsCalcu() {
 
   // ── JSON Import ──
   const fileInputRef = React.useRef<HTMLInputElement>(null);
+  const [importError, setImportError] = React.useState<string | null>(null);
 
   const handleJsonImport = React.useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -477,9 +478,11 @@ export default function HonorsCalcu() {
         }> = json.grades || [];
 
         if (grades.length === 0) {
-          alert("No grades found in the uploaded JSON.");
+          setImportError("No grades found in the JSON. Make sure you copied the full response from the RAMS gradesviewer network request.");
           return;
         }
+
+        setImportError(null);
 
         // Collect unique school years and sort them to map to Year 1..4
         const uniqueYears = [...new Set(grades.map(g => g.term.school_year))].sort();
@@ -546,7 +549,7 @@ export default function HonorsCalcu() {
         setLiteMode(false); // Switch to Full Mode to show imported data
       } catch (err) {
         console.error("Failed to parse JSON", err);
-        alert("Failed to parse the uploaded JSON file. Please check the format.");
+        setImportError("Invalid JSON file. The file could not be parsed — make sure you saved the complete response from the RAMS gradesviewer network tab, not a partial copy.");
       }
     };
     reader.readAsText(file);
@@ -627,22 +630,34 @@ export default function HonorsCalcu() {
           </div>
 
           {/* Import JSON Button */}
-          <div className="flex items-center justify-center gap-2.5 mt-3">
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept=".json,application/json"
-              onChange={handleJsonImport}
-              className="hidden"
-              id="json-import-input"
-            />
-            <button
-              onClick={() => fileInputRef.current?.click()}
-              className="flex items-center gap-1.5 text-xs text-muted-foreground cursor-pointer select-none hover:text-foreground transition-colors px-3 py-1.5 border border-border rounded-md hover:bg-muted"
-            >
-              <Upload className="h-3.5 w-3.5" />
-              Import Grades (JSON)
-            </button>
+          <div className="flex flex-col items-center gap-2 mt-3">
+            <div className="flex items-center justify-center gap-2.5">
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept=".json,application/json"
+                onChange={handleJsonImport}
+                className="hidden"
+                id="json-import-input"
+              />
+              <button
+                onClick={() => { setImportError(null); fileInputRef.current?.click(); }}
+                className="flex items-center gap-1.5 text-xs text-muted-foreground cursor-pointer select-none hover:text-foreground transition-colors px-3 py-1.5 border border-border rounded-md hover:bg-muted"
+              >
+                <Upload className="h-3.5 w-3.5" />
+                Import Grades (JSON)
+              </button>
+            </div>
+            {importError && (
+              <div className="flex items-start gap-2 max-w-md text-left bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-800 rounded-md px-3 py-2">
+                <span className="text-red-500 mt-0.5 shrink-0">⚠</span>
+                <p className="text-xs text-red-600 dark:text-red-400 leading-relaxed flex-1">
+                  {importError}{" "}
+                  <a href="/faqs" className="underline font-medium hover:text-red-700 dark:hover:text-red-300">See the FAQ guide</a> for how to get the correct file.
+                </p>
+                <button onClick={() => setImportError(null)} className="text-red-400 hover:text-red-600 shrink-0 text-base leading-none">×</button>
+              </div>
+            )}
           </div>
         </div>
 
