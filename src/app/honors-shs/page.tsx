@@ -854,7 +854,7 @@ export default function SHSHonorsCalcu() {
                   </div>
                 )}
 
-                <hr className="my-12 border-border/100" />
+                {yearKey !== "Grade 12" && <hr className="my-12 border-border/100" />}
               </motion.section>
             );
           })}
