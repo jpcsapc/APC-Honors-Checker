@@ -51,6 +51,58 @@ export default function FAQPage() {
         {
           question: "Can I graduate with honors if I transfer credits?",
           answer: "Transfer credits are typically not included in GPA calculations for honors. Only courses taken at your current institution are usually considered for Latin honors eligibility."
+        },
+        {
+          question: "What are the criteria for College Latin Honors and Academic Distinction at graduation?",
+          answer: (
+            <div className="space-y-4">
+              <p>
+                As per Section 4.2.2 of the APC Student Handbook, undergraduate students may be awarded academic honors upon graduation based on their Cumulative GPA (CGPA) and specific academic standing requirements:
+              </p>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mt-2">
+                <div className="p-3.5 bg-background rounded-lg border text-center">
+                  <h4 className="font-semibold text-foreground text-sm mb-1">Summa Cum Laude</h4>
+                  <p className="text-[10px] text-muted-foreground uppercase">CGPA of</p>
+                  <p className="text-base font-bold text-primary">3.80 - 4.00</p>
+                </div>
+                <div className="p-3.5 bg-background rounded-lg border text-center">
+                  <h4 className="font-semibold text-foreground text-sm mb-1">Magna Cum Laude</h4>
+                  <p className="text-[10px] text-muted-foreground uppercase">CGPA of</p>
+                  <p className="text-base font-bold text-primary">3.60 - 3.79</p>
+                </div>
+                <div className="p-3.5 bg-background rounded-lg border text-center">
+                  <h4 className="font-semibold text-foreground text-sm mb-1">Cum Laude</h4>
+                  <p className="text-[10px] text-muted-foreground uppercase">CGPA of</p>
+                  <p className="text-base font-bold text-primary">3.40 - 3.59</p>
+                </div>
+                <div className="p-3.5 bg-background rounded-lg border text-center">
+                  <h4 className="font-semibold text-foreground text-sm mb-1">Academic Distinction</h4>
+                  <p className="text-[10px] text-muted-foreground uppercase">CGPA of</p>
+                  <p className="text-base font-bold text-primary">3.00 - 3.39</p>
+                </div>
+              </div>
+              <div className="space-y-2 mt-2 text-xs text-muted-foreground leading-relaxed">
+                <p>⚠️ <strong>Failing Grades:</strong> Any historical failing grade (0.0) in any course permanently disqualifies you from honors eligibility.</p>
+                <p>🔄 <strong>Repeats:</strong> You must have no more than six (6) repeats ("R" grades) throughout your entire stay at APC.</p>
+                <p>📍 <strong>Residency:</strong> At least 70% of the courses in your curriculum must be completed at Asia Pacific College.</p>
+                <p>✂️ <strong>No Rounding:</strong> The CGPA is strictly truncated to evaluate boundaries (e.g., a CGPA of 3.799 remains 3.79 and will qualify for Magna Cum Laude, not Summa Cum Laude).</p>
+              </div>
+            </div>
+          )
+        },
+        {
+          question: "How does the interactive Graduation Honors Checklist work?",
+          answer: (
+            <div className="space-y-3 text-sm">
+              <p>
+                The college honors page contains a checklist card directly below the Overall GPA card to help you track auxiliary graduation requirements:
+              </p>
+              <div className="space-y-2 mt-2 leading-relaxed">
+                <p>• <strong>In Lite Mode:</strong> Since individual course tables aren't present, you manually toggle the checklist (residency, no-fails, repeats limit) to verify eligibility.</p>
+                <p>• <strong>In Full Mode:</strong> The tool automatically scans your semester tables to detect failing grades (0.0) and counts your repeated (R) courses, while allowing you to manually toggle the residency checkbox.</p>
+              </div>
+            </div>
+          )
         }
       ]
     },
