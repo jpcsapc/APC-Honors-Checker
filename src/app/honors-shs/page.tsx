@@ -837,20 +837,22 @@ export default function SHSHonorsCalcu() {
                         {stats.average.toFixed(2)}%
                       </p>
                     </div>
-                    <div className="rounded-lg border bg-card px-6 py-4 shadow-sm text-center min-w-[200px]">
-                      <p className="text-sm text-muted-foreground mb-1">With Academic Excellence</p>
-                      <p className={cn(
-                        "text-2xl font-bold",
-                        stats.award !== "None" ? "text-primary" : "text-muted-foreground/70"
-                      )}>
-                        {stats.award}
-                      </p>
-                      {stats.award === "None" && (
-                        <p className="text-xs text-red-500/80 mt-1 max-w-[180px] mx-auto leading-tight">
-                          {stats.eligible}
+                    {yearKey === "Grade 11" && (
+                      <div className="rounded-lg border bg-card px-6 py-4 shadow-sm text-center min-w-[200px]">
+                        <p className="text-sm text-muted-foreground mb-1">With Academic Excellence</p>
+                        <p className={cn(
+                          "text-2xl font-bold",
+                          stats.award !== "None" ? "text-primary" : "text-muted-foreground/70"
+                        )}>
+                          {stats.award !== "None" ? "Yes" : "No"}
                         </p>
-                      )}
-                    </div>
+                        {stats.award === "None" && (
+                          <p className="text-xs text-red-500/80 mt-1 max-w-[180px] mx-auto leading-tight">
+                            {stats.eligible}
+                          </p>
+                        )}
+                      </div>
+                    )}
                   </div>
                 )}
 
