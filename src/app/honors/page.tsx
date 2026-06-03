@@ -391,7 +391,7 @@ export default function HonorsCalcu() {
 
   // Check for any failing grades (0.0 or 0) in Full Mode
   const hasFailingGrade = React.useMemo(() => {
-    return Object.values(termsData).some(term => 
+    return Object.values(termsData).some(term =>
       Array.isArray(term) && term.some(row => row.grade === "0.0" || row.grade === "0")
     );
   }, [termsData]);
@@ -404,7 +404,7 @@ export default function HonorsCalcu() {
     const rawAverageGPA = yearsWithData.reduce((sum, s) => sum + s.gpa, 0) / yearsWithData.length;
 
     let latinHonor: string;
-    
+
     // Basic eligibility requirements (use raw GPA for decisions)
     if (!residencyChecked) latinHonor = "No, did not complete 70% of courses at APC";
     else if (hasFailingGrade) latinHonor = "No, has failing grade (0.0)";
@@ -450,7 +450,7 @@ export default function HonorsCalcu() {
 
   return (
     <div className="min-h-screen bg-background">
-      <Header title="Grades Calculator" backHref="/" />
+      <Header title="College Grades Calculator" backHref="/" />
 
       {/* Main Content */}
       <main className="container mx-auto px-4 py-16">
@@ -612,8 +612,8 @@ export default function HonorsCalcu() {
                     )}
                   />
                   <div className="flex flex-col gap-0.5">
-                    <label 
-                      htmlFor={liteMode ? "checklist-fails" : undefined} 
+                    <label
+                      htmlFor={liteMode ? "checklist-fails" : undefined}
                       className={cn(
                         "text-sm font-medium text-foreground leading-relaxed",
                         liteMode ? "cursor-pointer select-none" : ""
@@ -646,8 +646,8 @@ export default function HonorsCalcu() {
                     )}
                   />
                   <div className="flex flex-col gap-0.5">
-                    <label 
-                      htmlFor={liteMode ? "checklist-repeats" : undefined} 
+                    <label
+                      htmlFor={liteMode ? "checklist-repeats" : undefined}
                       className={cn(
                         "text-sm font-medium text-foreground leading-relaxed",
                         liteMode ? "cursor-pointer select-none" : ""
@@ -656,7 +656,7 @@ export default function HonorsCalcu() {
                       Repeats Limit
                     </label>
                     <p className="text-xs text-muted-foreground flex items-center gap-1.5 flex-wrap">
-                      <span>No more than 6 repeats ("R" grades) throughout college</span>
+                      <span>No more than 6 repeats ("R" grades) throughout college (final weighted subject grade, midterms not counted)</span>
                       {!liteMode ? (
                         <span className="text-[10px] uppercase font-bold text-primary/80 bg-primary/10 px-1.5 py-0.5 rounded">
                           Auto-detected ({totalRGrades} R)
@@ -770,7 +770,7 @@ export default function HonorsCalcu() {
                     <div className="rounded-lg border bg-card px-6 py-4 shadow-sm text-center min-w-[140px]">
                       <p className="text-sm text-muted-foreground mb-1">{liteMode ? "Average GPA" : "Current GPA"}</p>
                       <p className="text-2xl font-bold text-foreground">
-                        {liteMode 
+                        {liteMode
                           ? liteStats[yearKey].gpa.toFixed(2)
                           : yearStats[yearKey].gpa.toFixed(2)}
                       </p>
@@ -778,7 +778,7 @@ export default function HonorsCalcu() {
                     <div className="rounded-lg border bg-card px-6 py-4 shadow-sm text-center min-w-[140px]">
                       <p className="text-sm text-muted-foreground mb-1">Eligible for Honors</p>
                       <p className="text-2xl font-bold text-foreground">
-                        {liteMode 
+                        {liteMode
                           ? liteStats[yearKey].eligible
                           : yearStats[yearKey].eligible}
                       </p>
