@@ -37,7 +37,7 @@ interface LiteYearData {
   units3: string;
 }
 
-function calcLiteStats(data: LiteYearData, showUnits: boolean): { gpa: number; eligible: string; totalUnits: number } {
+function calcLiteStats(data: LiteYearData, showUnits: boolean, yearKey: string): { gpa: number; eligible: string; totalUnits: number } {
   const t1 = parseFloat(data.term1);
   const t2 = parseFloat(data.term2);
   const t3 = parseFloat(data.term3);
@@ -54,8 +54,13 @@ function calcLiteStats(data: LiteYearData, showUnits: boolean): { gpa: number; e
 
   let eligible: string;
   if (avg >= 3.0 && avg <= 4.0) {
-    if (!showUnits || totalUnits >= 36) eligible = "Yes";
-    else eligible = "No, not enough units (need 36)";
+    if (!showUnits || totalUnits >= 36) {
+      eligible = "Yes";
+    } else {
+      eligible = yearKey === "Year 4"
+        ? "You're on internship mode, see you on Grad!"
+        : "No, not enough units (need 36)";
+    }
   } else {
     eligible = "No";
   }
@@ -369,7 +374,11 @@ export default function HonorsCalcu() {
       const hasEnoughUnits = totalUnits >= 36;
       const hasTooManyRs = rGrades > 2;
       let eligible: string;
-      if (!hasEnoughUnits) eligible = "No, not enough units (need 36)";
+      if (!hasEnoughUnits) {
+        eligible = year === "Year 4"
+          ? "You're on internship mode, see you on Grad!"
+          : "No, not enough units (need 36)";
+      }
       else if (hasTooManyRs) eligible = "No, more than 2 R grades";
       else if (gpa >= 3.0 && gpa <= 4.0) eligible = "Yes";
       else eligible = "No";
@@ -422,7 +431,7 @@ export default function HonorsCalcu() {
   const liteStats = React.useMemo(() => {
     const stats: Record<string, { gpa: number; eligible: string; totalUnits: number }> = {};
     Object.entries(liteData).forEach(([year, data]) => {
-      stats[year] = calcLiteStats(data, showUnits);
+      stats[year] = calcLiteStats(data, showUnits, year);
     });
     return stats;
   }, [liteData, showUnits]);
