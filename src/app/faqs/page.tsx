@@ -51,7 +51,12 @@ export default function FAQPage() {
         {
           question: "Can I graduate with honors if I transfer credits?",
           answer: "Transfer credits are typically not included in GPA calculations for honors. Only courses taken at your current institution are usually considered for Latin honors eligibility."
-        },
+        }
+      ]
+    },
+    {
+      title: "Senior High School (SHS) Inquiries",
+      items: [
         {
           question: "What are the criteria for Senior High School Academic Excellence Awards?",
           answer: (
@@ -77,8 +82,54 @@ export default function FAQPage() {
                 </div>
               </div>
               <p className="text-xs text-muted-foreground italic mt-2">
-                * Note: All awards require a Final Subject Grade of 85.00 or higher in all subjects.
+                * Note: All awards require a Final Subject Grade of 85.00 or higher in all subjects. Grade 12 students are evaluated for graduation honors, while Grade 11 students are evaluated for year-level academic excellence.
               </p>
+            </div>
+          )
+        },
+        {
+          question: "How is the Physical Education (PE) Grade computed in Senior High School?",
+          answer: (
+            <div className="space-y-3">
+              <p>
+                Unlike regular subjects, Physical Education (PE) is computed as <strong>one subject only</strong> for the entire Senior High School program. It is graded using the formula suggested by the registrar:
+              </p>
+              <div className="bg-muted/50 p-4 rounded-lg space-y-2 border text-sm max-w-lg">
+                <p><strong>Midterm Grade</strong> = (PE 1 Final Grade + PE 2 Final Grade) / 2</p>
+                <p><strong>Endterm Grade</strong> = (PE 3 Final Grade + PE 4 Final Grade) / 2</p>
+                <p><strong>Final PE Grade</strong> = (Midterm Grade + Endterm Grade) / 2</p>
+              </div>
+              <p className="text-xs text-muted-foreground italic mt-2">
+                * Note: The final PE grade is counted as 1 of the 31 subjects of SHS.
+              </p>
+            </div>
+          )
+        },
+        {
+          question: "What is the difference between Lite Mode and Strict Grades Mode in the SHS Calculator?",
+          answer: (
+            <div className="space-y-3 text-sm">
+              <p>
+                The Senior High School calculator provides two modes of grade estimation:
+              </p>
+              <div className="space-y-3 mt-2">
+                <div className="p-3.5 bg-background rounded-lg border">
+                  <h4 className="font-semibold text-foreground text-sm mb-1 flex items-center gap-1.5">
+                    <span className="h-2 w-2 rounded-full bg-amber-500"></span> Lite Mode
+                  </h4>
+                  <p className="text-xs text-muted-foreground leading-relaxed">
+                    A quick estimator where you input your term averages directly. Note that this calculation may not be fully accurate, as the actual graduation honors policy calculates the direct average of all individual subject grades.
+                  </p>
+                </div>
+                <div className="p-3.5 bg-background rounded-lg border">
+                  <h4 className="font-semibold text-foreground text-sm mb-1 flex items-center gap-1.5">
+                    <span className="h-2 w-2 rounded-full bg-primary"></span> Strict Grades Mode
+                  </h4>
+                  <p className="text-xs text-muted-foreground leading-relaxed">
+                    The official and precise calculation method. It calculates the overall General Average using the direct average of all individual final grades of all subjects taken across Grade 11 and Grade 12 (including PE Final Grade as one subject). Under this mode, individual term averages and year-level averages do not determine graduation honors.
+                  </p>
+                </div>
+              </div>
             </div>
           )
         }
