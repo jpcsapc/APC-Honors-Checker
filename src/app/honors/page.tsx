@@ -1,7 +1,7 @@
 "use client"
 import * as React from 'react';
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Calculator, Zap, CheckCircle2 } from "lucide-react";
+import { ArrowLeft, Calculator, Zap, CheckCircle2, Upload } from "lucide-react";
 import { TermTable } from '../../components/TermTable';
 import Link from "next/link";
 import { Header } from "@/components/Header";
@@ -448,6 +448,104 @@ export default function HonorsCalcu() {
 
   const topSummaryYearKey = "Year 1";
 
+  // ── JSON Import ──
+  const fileInputRef = React.useRef<HTMLInputElement>(null);
+
+  const handleJsonImport = React.useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (evt) => {
+      try {
+        const json = JSON.parse(evt.target?.result as string);
+        const grades: Array<{
+          subject_code: string;
+          units: string;
+          grade: string;
+          period_id: number;
+          term: { school_year: string; term: string };
+        }> = json.grades || [];
+
+        if (grades.length === 0) {
+          alert("No grades found in the uploaded JSON.");
+          return;
+        }
+
+        // Collect unique school years and sort them to map to Year 1..4
+        const uniqueYears = [...new Set(grades.map(g => g.term.school_year))].sort();
+        const yearMap: Record<string, number> = {};
+        uniqueYears.forEach((sy, idx) => { yearMap[sy] = idx + 1; });
+
+        // Group by (Year X Term Y, subject_code) → pick period_id 6 (final) over 5 (midterm)
+        // period_id 6 is the final official submission; period_id 5 is the midterm draft.
+        const termBuckets: Record<string, Record<string, { grade: string; units: number; periodId: number }>> = {};
+
+        for (const entry of grades) {
+          const yearNum = yearMap[entry.term.school_year];
+          if (!yearNum || yearNum > 4) continue;
+          const termKey = `Year ${yearNum} Term ${entry.term.term}`;
+          if (!termBuckets[termKey]) termBuckets[termKey] = {};
+
+          const code = entry.subject_code;
+          const units = parseFloat(entry.units) || 0;
+          const periodId = entry.period_id || 0;
+
+          const existing = termBuckets[termKey][code];
+          // Keep the entry with the higher period_id (prefer 6 over 5)
+          if (!existing || periodId > existing.periodId) {
+            termBuckets[termKey][code] = {
+              grade: (entry.grade || "").trim(),
+              units,
+              periodId,
+            };
+          }
+        }
+
+        // Convert buckets into RowData per term
+        const newTermsData: Record<string, RowData[]> = {};
+
+        for (const [termKey, subjects] of Object.entries(termBuckets)) {
+          const rows: RowData[] = [];
+          for (const [code, data] of Object.entries(subjects)) {
+            const gradeUpper = data.grade.toUpperCase();
+            let gradeStr = data.grade;
+            let gradeNum: number;
+
+            if (gradeUpper === "R") {
+              gradeNum = 0;
+            } else if (gradeUpper === "NG") {
+              gradeNum = 0;
+            } else {
+              gradeNum = parseFloat(data.grade) || 0;
+              gradeStr = gradeNum > 0 ? gradeNum.toString() : data.grade;
+            }
+
+            const honorPoints = (gradeUpper === "R" || gradeUpper === "NG") ? 0 : gradeNum * data.units;
+
+            rows.push({
+              subjectCode: code,
+              unit: data.units,
+              grade: gradeStr,
+              honorPoints,
+            });
+          }
+          newTermsData[termKey] = rows;
+        }
+
+        setTermsData(newTermsData);
+        setLiteMode(false); // Switch to Full Mode to show imported data
+      } catch (err) {
+        console.error("Failed to parse JSON", err);
+        alert("Failed to parse the uploaded JSON file. Please check the format.");
+      }
+    };
+    reader.readAsText(file);
+
+    // Reset input so the same file can be re-uploaded
+    e.target.value = "";
+  }, []);
+
   return (
     <div className="min-h-screen bg-background">
       <Header title="College Grades Calculator" backHref="/" />
@@ -517,6 +615,25 @@ export default function HonorsCalcu() {
               <Zap className="h-3.5 w-3.5" />
               Lite Mode
             </label>
+          </div>
+
+          {/* Import JSON Button */}
+          <div className="flex items-center justify-center gap-2.5 mt-3">
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept=".json,application/json"
+              onChange={handleJsonImport}
+              className="hidden"
+              id="json-import-input"
+            />
+            <button
+              onClick={() => fileInputRef.current?.click()}
+              className="flex items-center gap-1.5 text-xs text-muted-foreground cursor-pointer select-none hover:text-foreground transition-colors px-3 py-1.5 border border-border rounded-md hover:bg-muted"
+            >
+              <Upload className="h-3.5 w-3.5" />
+              Import Grades (JSON)
+            </button>
           </div>
         </div>
 
