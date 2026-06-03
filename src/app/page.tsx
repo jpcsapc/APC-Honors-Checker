@@ -1,96 +1,118 @@
 "use client"
 
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Award, HelpCircle, MessageSquare, ArrowRightLeft } from "lucide-react"
+import { Award, HelpCircle, MessageSquare, ArrowRightLeft, ArrowRight } from "lucide-react"
 import Link from "next/link"
-import { ThemeToggle } from "@/components/theme-toggle"
+import { Header } from "@/components/Header"
+import { Footer } from "@/components/Footer"
 
 export default function FrontPage() {
-  const calculatorCards = [
-    {
-      title: "Grades Calculator",
-      description: "Calculate your academic standing, honors eligibility, and latin honors eligibility based on your grades",
-      icon: <Award className="h-5 w-5" />,
-      href: "/honors",
-    },
-    {
-      title: "Grade Converter",
-      description: "Convert between APC, UP, and Percentage grading systems",
-      icon: <ArrowRightLeft className="h-5 w-5" />,
-      href: "/grade-converter",
-    },
-    {
-      title: "FAQs",
-      description: "Frequently Asked Questions and help documentation",
-      icon: <HelpCircle className="h-5 w-5" />,
-      href: "/faqs",
-    },
-    {
-      title: "Submit Feedback",
-      description: "Share your experience, report bugs, or suggest new features",
-      icon: <MessageSquare className="h-5 w-5" />,
-      href: "/feedback",
-    },
-  ]
-
   return (
     <div className="min-h-screen bg-background">
-      {/* Header */}
-      <header className="border-b bg-card">
-        <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-          <h1 className="text-sm text-muted-foreground">APC Honors Checker</h1>
-          <ThemeToggle />
-        </div>
-      </header>
+      <Header />
 
-      {/* Main Content */} 
-      <main className="container mx-auto px-4 py-16">
-        {/* Hero Section */}
-        <div className="text-center mb-16">
-          <h1 className="text-4xl font-normal text-foreground mb-4">
+      <main className="max-w-5xl mx-auto px-6 pt-16 pb-4">
+        {/* Hero — left-aligned with accent bar */}
+        <section className="mb-16 pl-6 border-l-[3px] border-primary">
+          <h1 className="text-4xl font-medium tracking-tight text-foreground leading-tight">
             Asia Pacific College
             <br />
             Grades Calculator
           </h1>
-          <p className="text-muted-foreground text-lg">Calculate and Track Your Academic Journey</p>
-        </div>
-
-        {/* Calculator Cards */}
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 mb-16">
-          {calculatorCards.map((card, index) => (
-            <Card key={index} className="hover:shadow-md transition-shadow flex flex-col">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-lg">
-                  {card.icon}
-                  {card.title}
-                </CardTitle>
-              </CardHeader>
-
-              <CardContent className="flex-1 space-y-4">
-                <p className="text-muted-foreground text-sm leading-relaxed">
-                  {card.description}
-                </p>
-              </CardContent>
-
-              <div className="p-6 pt-0">
-                <Link href={card.href}>
-                  <Button variant="outline" className="w-full">
-                    Get Started
-                  </Button>
-                </Link>
-              </div>
-            </Card>
-          ))}
-        </div>
-
-        {/* Footer */}
-        <footer className="border-t pt-8">
-          <p className="text-center text-xs text-muted-foreground">
-            Created by the Developers of JPCS - APC | Edwin Gumba Jr. (SS221) & Marwin John Gonzales (IT241)
+          <p className="mt-3 text-lg text-muted-foreground max-w-lg">
+            Calculate and track your academic standing, honors eligibility, and graduation requirements.
           </p>
-        </footer>
+        </section>
+
+        {/* Primary tools — featured, larger */}
+        <section className="mb-8">
+          <div className="grid md:grid-cols-2 gap-5">
+            {/* Grades Calculator — primary */}
+            <Link href="/honors" className="group block">
+              <div className="border border-border rounded-lg p-6 bg-card hover:border-primary/40 transition-colors h-full flex flex-col">
+                <div className="flex items-center gap-3 mb-3">
+                  <Award className="h-5 w-5 text-primary shrink-0" />
+                  <h2 className="text-lg font-medium text-foreground">Grades Calculator</h2>
+                </div>
+                <p className="text-sm text-muted-foreground leading-relaxed mb-6 flex-1">
+                  Calculate your academic standing, honors eligibility, and latin honors eligibility based on your grades.
+                </p>
+                <div>
+                  <Button className="bg-primary text-primary-foreground hover:bg-primary/90 active:scale-[0.98] transition-transform">
+                    Open Calculator
+                    <ArrowRight className="ml-2 h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
+            </Link>
+
+            {/* SHS Calculator — primary */}
+            <Link href="/honors-shs" className="group block">
+              <div className="border border-border rounded-lg p-6 bg-card hover:border-primary/40 transition-colors h-full flex flex-col">
+                <div className="flex items-center gap-3 mb-3">
+                  <Award className="h-5 w-5 text-primary shrink-0" />
+                  <h2 className="text-lg font-medium text-foreground">SHS Grades Calculator</h2>
+                </div>
+                <p className="text-sm text-muted-foreground leading-relaxed mb-6 flex-1">
+                  Calculate your academic standing and honors eligibility based on your grades for Senior High School.
+                </p>
+                <div>
+                  <Button className="bg-primary text-primary-foreground hover:bg-primary/90 active:scale-[0.98] transition-transform">
+                    Open Calculator
+                    <ArrowRight className="ml-2 h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
+            </Link>
+          </div>
+        </section>
+
+        {/* Secondary tools — smaller row */}
+        <section className="mb-20">
+          <div className="grid sm:grid-cols-3 gap-4">
+            {/* Grade Converter */}
+            <Link href="/grade-converter" className="group block">
+              <div className="border border-border rounded-lg p-5 bg-card hover:border-primary/40 transition-colors h-full">
+                <div className="flex items-center gap-2.5 mb-2">
+                  <ArrowRightLeft className="h-4 w-4 text-primary shrink-0" />
+                  <h3 className="text-sm font-medium text-foreground">Grade Converter</h3>
+                </div>
+                <p className="text-xs text-muted-foreground leading-relaxed">
+                  Convert between APC, UP, and Percentage grading systems.
+                </p>
+              </div>
+            </Link>
+
+            {/* FAQs */}
+            <Link href="/faqs" className="group block">
+              <div className="border border-border rounded-lg p-5 bg-card hover:border-primary/40 transition-colors h-full">
+                <div className="flex items-center gap-2.5 mb-2">
+                  <HelpCircle className="h-4 w-4 text-primary shrink-0" />
+                  <h3 className="text-sm font-medium text-foreground">FAQs</h3>
+                </div>
+                <p className="text-xs text-muted-foreground leading-relaxed">
+                  Frequently asked questions and help documentation.
+                </p>
+              </div>
+            </Link>
+
+            {/* Feedback */}
+            <Link href="/feedback" className="group block">
+              <div className="border border-border rounded-lg p-5 bg-card hover:border-primary/40 transition-colors h-full">
+                <div className="flex items-center gap-2.5 mb-2">
+                  <MessageSquare className="h-4 w-4 text-primary shrink-0" />
+                  <h3 className="text-sm font-medium text-foreground">Submit Feedback</h3>
+                </div>
+                <p className="text-xs text-muted-foreground leading-relaxed">
+                  Share your experience, report bugs, or suggest new features.
+                </p>
+              </div>
+            </Link>
+          </div>
+        </section>
+
       </main>
+      <Footer />
     </div>
   )
 }

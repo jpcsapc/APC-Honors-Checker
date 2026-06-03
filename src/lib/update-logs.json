@@ -1,5 +1,5 @@
 [
-{
+  {
     "id": 1,
     "title": "Toast Notifications :D",
     "description": "Latest updates will now show through this notification! Cheers in keeping you updated on the changes made in this site ^^",
@@ -11,7 +11,7 @@
     "title": "Latin Honors Calculator Sunset",
     "description": "The Latin Honors calculator has been removed and consolidated into the main Grades (changed from Honors) Calculator. All Latin honors calculations are now available on the Grades Calculator page.",
     "created_at": "2026-05-03T00:00:00Z",
-    "is_visible": true
+    "is_visible": false
   },
   {
     "id": 3,
@@ -25,7 +25,7 @@
     "title": "Updating the Calculation of the Latin Honors",
     "description": "The Latin Honors calculation now follows one stated by the institution, based from the APC Student Handbook.",
     "created_at": "2026-05-03T00:00:00Z",
-    "is_visible": true
+    "is_visible": false
   },
   {
     "id": 5,
@@ -33,5 +33,19 @@
     "description": "The Grade Converter now supports the official APC and UP grading systems with accurate conversions. Convert between APC (US-based 4.0 scale), UP (Philippine-based 5.0 scale), and percentage grades. Features expanded grading tables with letter grades for both systems.",
     "created_at": "2026-05-03T00:00:00Z",
     "is_visible": false
+  },
+  {
+    "id": 6,
+    "title": "SHS Calculator Integration",
+    "description": "The SHS Calculator page is now fully functional with the same features and layout as the Grades Calculator. You can now compute your SHS grades and honors eligibility on a dedicated page.",
+    "created_at": "2026-06-03T00:00:00Z",
+    "is_visible": true
+  },
+  {
+    "id": 7,
+    "title": "Updated User Interface",
+    "description": "Updated the user interface of the Grades Calculator and Latin Honors Calculator pages to have a cleaner, more modern look. The layout is now more organized and easier to navigate, with better spacing and typography.",
+    "created_at": "2026-06-03T00:00:00Z",
+    "is_visible": true
   }
 ]
