@@ -1,7 +1,7 @@
 "use client"
 
 import { Button } from "@/components/ui/button"
-import { Award, HelpCircle, MessageSquare, ArrowRightLeft, ArrowRight } from "lucide-react"
+import { Award, HelpCircle, MessageSquare, ArrowRightLeft, ArrowRight, Target } from "lucide-react"
 import Link from "next/link"
 import { Header } from "@/components/Header"
 import { Footer } from "@/components/Footer"
@@ -59,6 +59,29 @@ export default function FrontPage() {
                 <div>
                   <Button className="bg-primary text-primary-foreground hover:bg-primary/90 active:scale-[0.98] transition-transform">
                     Open Calculator
+                    <ArrowRight className="ml-2 h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
+            </Link>
+          </div>
+
+          {/* Honor Goal Calculator — full-width featured card */}
+          <div className="mt-5">
+            <Link href="/honors-goal" className="group block">
+              <div className="border border-border rounded-lg p-6 bg-card hover:border-primary/40 transition-colors flex flex-col sm:flex-row sm:items-center gap-4">
+                <div className="flex-1">
+                  <div className="flex items-center gap-3 mb-3">
+                    <Target className="h-5 w-5 text-primary shrink-0" />
+                    <h2 className="text-lg font-medium text-foreground">Honor Goal Calculator</h2>
+                  </div>
+                  <p className="text-sm text-muted-foreground leading-relaxed">
+                    Calculate what grades you need in your remaining years to achieve your target Latin Honor based on your current standing.
+                  </p>
+                </div>
+                <div className="shrink-0">
+                  <Button className="bg-primary text-primary-foreground hover:bg-primary/90 active:scale-[0.98] transition-transform">
+                    Plan My Goal
                     <ArrowRight className="ml-2 h-4 w-4" />
                   </Button>
                 </div>
