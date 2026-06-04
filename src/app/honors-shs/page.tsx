@@ -1037,7 +1037,7 @@ export default function SHSHonorsCalcu() {
               <input
                 ref={fileInputRef}
                 type="file"
-                accept=".json,application/json"
+                accept=".json,application/json,text/plain"
                 onChange={handleJsonImport}
                 className="hidden"
                 id="json-import-input"
