@@ -438,7 +438,7 @@ export default function HonorsCalcu() {
 
   const liteLatinHonorsSummary = React.useMemo(() => {
     const yearsWithData = Object.values(liteStats).filter(s => s.gpa > 0);
-    if (yearsWithData.length === 0) return { overallGPA: "0.00", latinHonor: "-" };
+    if (yearsWithData.length === 0) return { overallGPA: "0.00", latinHonor: "-", rawGPA: 0 };
 
     const rawAverageGPA = yearsWithData.reduce((sum, s) => sum + s.gpa, 0) / yearsWithData.length;
 
@@ -452,8 +452,17 @@ export default function HonorsCalcu() {
     else if (rawAverageGPA >= 3.40) latinHonor = "Cum Laude";
     else latinHonor = "Academic Distinction";
 
-    return { overallGPA: truncateToDecimals(rawAverageGPA, 4).toFixed(4), latinHonor };
+    return { overallGPA: truncateToDecimals(rawAverageGPA, 4).toFixed(4), latinHonor, rawGPA: rawAverageGPA };
   }, [liteStats, residencyChecked, noFailsChecked, noExcessRepeatsChecked]);
+
+  // Lite Mode averages term grades instead of individual subject grades, so a result
+  // sitting right on a Latin Honors cutoff may flip once precise subject-level data is used.
+  const liteThresholdWarning = React.useMemo(() => {
+    if (liteLatinHonorsSummary.latinHonor === "-") return false;
+    const margin = 0.02;
+    const thresholds = [3.0, 3.40, 3.60, 3.80];
+    return thresholds.some(t => Math.abs(liteLatinHonorsSummary.rawGPA - t) <= margin);
+  }, [liteLatinHonorsSummary]);
 
   const topSummaryYearKey = "Year 1";
 
@@ -710,6 +719,14 @@ export default function HonorsCalcu() {
             )}
           </AnimatePresence>
         </div>
+
+        {liteMode && liteThresholdWarning && (
+          <div className="flex justify-center mb-10">
+            <div className="bg-amber-500/10 border border-amber-500/30 text-amber-600 dark:text-amber-500 rounded-lg p-4 max-w-xl text-sm leading-relaxed text-center">
+              <strong>Threshold Nearing (±0.02):</strong> Your GPA is very close to a Latin Honors cutoff. Lite Mode averages term grades instead of individual subjects, so this result may be inaccurate. <strong>Uncheck Lite Mode</strong> to go to Full Mode and import your JSON grade report for a precise result.
+            </div>
+          </div>
+        )}
 
         {/* Honors Checklist Card */}
         <div className="flex justify-center mb-10">

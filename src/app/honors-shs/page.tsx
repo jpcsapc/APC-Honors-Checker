@@ -751,9 +751,19 @@ export default function SHSHonorsCalcu() {
     return {
       overallAverage: overallAverage.toFixed(2),
       overallAward,
-      reason
+      reason,
+      rawAverage: overallAverage
     };
   }, [liteStats, liteData]);
+
+  // Lite Mode averages term grades instead of individual subject grades, so a result
+  // sitting right on an honors cutoff may flip once precise subject-level data is used.
+  const liteThresholdWarning = React.useMemo(() => {
+    if (liteSummary.rawAverage === undefined) return false;
+    const margin = 0.5;
+    const thresholds = [88.00, 93.00, 97.00];
+    return thresholds.some(t => Math.abs((liteSummary.rawAverage as number) - t) <= margin);
+  }, [liteSummary]);
 
   // Full Mode Calculation Stats
   const fullStats = React.useMemo(() => {
@@ -1102,6 +1112,14 @@ export default function SHSHonorsCalcu() {
             </p>
           )}
         </div>
+
+        {liteMode && liteThresholdWarning && (
+          <div className="flex justify-center mb-8">
+            <div className="bg-amber-500/10 border border-amber-500/30 text-amber-600 dark:text-amber-500 rounded-lg p-4 max-w-xl text-sm leading-relaxed text-center">
+              <strong>Threshold Nearing (±0.50):</strong> Your General Average is very close to an honors cutoff. Lite Mode averages term grades instead of individual subjects, so this result may be inaccurate. <strong>Check Strict Grades Mode</strong> and import your JSON grade report for a precise result.
+            </div>
+          </div>
+        )}
 
         <hr className="mb-10 border-border/100" />
 
